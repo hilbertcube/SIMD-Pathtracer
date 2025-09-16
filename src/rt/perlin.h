@@ -10,7 +10,6 @@ public:
         for (int i = 0; i < point_count; i++) {
             rand_float[i] = unit_vector(vec3f::random(-1, 1));
         }
-
         perlin_generate_perm(perm_x);
         perlin_generate_perm(perm_y);
         perlin_generate_perm(perm_z);

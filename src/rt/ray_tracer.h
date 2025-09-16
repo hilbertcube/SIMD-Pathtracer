@@ -19,6 +19,7 @@
 #include "quad.h"
 #include "constant_medium.h"
 #include "benchmark.h"
+#include "triangle.h"
 
 // Math
 #include "rtm/ray.h"
