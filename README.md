@@ -1,10 +1,5 @@
 # Ray tracing in one weekend, with SIMD
-
-This is an implementation in modern C++ with SIMD and OpenMP of Peter Shirley's  ["Ray Tracing In One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html) and ["Ray Tracing: The Next Week"](https://raytracing.github.io/books/RayTracingTheNextWeek.html).
-
-External dependencies:
-- [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h)
-- [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h)
+An optimized implementation of Peter Shirley’s classic ray tracing series: [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) and [*Ray Tracing: The Next Week*](https://raytracing.github.io/books/RayTracingTheNextWeek.html).  This version is written in **modern C++17**, enhanced with **SIMD intrinsics** and **OpenMP multithreading** for high performance.  
 
 ### Preview:
 
@@ -15,7 +10,7 @@ External dependencies:
 
 ## Features Added
 
-While Peter Shirley kept the original ray tracing code closer to C-style, I chose to fully reimplement it using modern C++ (C++17). Why? I really like new features in recent C++ updates, like static_assert, variadic template, nodiscard keyword, and many more.
+Peter Shirley’s originals were intentionally C-style. This project reimagines them with **modern C++ practices** and performance optimizations:  
 
 Some features added:
 - Generic vector class: implemented a generic N-dimensional vector class.
@@ -25,6 +20,9 @@ Some features added:
 - CPU SIMD intrinsics: Used for optimized vector operations and improved performance.
 
 ## Building with CMake
+### External dependencies used:
+- [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h)
+- [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h)
 
 ### Requirements
 - C++17 (GCC ≥ 9, Clang ≥ 10, or MSVC ≥ 2019)
@@ -35,7 +33,7 @@ Some features added:
 ### Build Instructions
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/SIMD-raytracer.git
+git clone https://github.com/hilbertcube/SIMD-raytracer.git
 cd SIMD-raytracer
 
 # Create a build directory
@@ -57,10 +55,5 @@ After building, you’ll find the executable inside the build/ directory:
 By default, it renders the final scene and saves it to `output.png` (or another format if specified).
 
 ## Future plans
-- BVH acceleration structure for large scenes
-
-- More advanced materials (glass dispersion, subsurface scattering)
-
-- Motion blur and depth of field tweaks
-
 - CUDA acceleration
+- Command line arguments
