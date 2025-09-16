@@ -19,6 +19,7 @@
 #include "quad.hpp"
 #include "constant_medium.hpp"
 #include "benchmark.hpp"
+#include "triangle.hpp"
 
 // Math
 #include "rtm/ray.hpp"
