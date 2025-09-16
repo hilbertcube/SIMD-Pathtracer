@@ -125,7 +125,7 @@ private:
     // Unit toggles
     bool enableNano     = false;
     bool enableMicro    = false;
-    bool enableMilli    = true;  // Default to milliseconds
+    bool enableMilli    = true;  // Default
     bool enableSeconds  = false;
     bool enableMinutes  = false;
     bool enableHours    = false;
@@ -257,7 +257,7 @@ public:
                                   SetupFunc&& setup, 
                                   BenchFunc&& benchmark, 
                                   TeardownFunc&& teardown,
-                                  size_t iterations = 100) {
+                                  size_t iterations = 10) {
         BenchmarkResult result;
         result.name = name;
         result.iterations = iterations;
@@ -298,7 +298,7 @@ public:
         out << std::endl;
     }
     
-    // Print summary of all benchmarks
+    // summary of all benchmarks
     void printSummary() const {
         if (results.empty()) {
             out << "[" << benchmark_name << "] No benchmarks have been run." << std::endl;

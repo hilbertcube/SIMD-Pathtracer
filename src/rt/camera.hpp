@@ -4,22 +4,14 @@
 #include <vector>
 #include <stdint.h>
 #include <sstream>
-#include <thread>
-#include <mutex>
 #include <functional>
-#include <memory>
-#include <immintrin.h>  // For SIMD
 #include <cstring>      // For memcpy
 #include <sstream>      // string stream
 #include <iomanip>
 #include <filesystem>
 
 // multithreading
-#include <thread>
-#include <atomic>
 #include <omp.h>
-#include <mutex>
-#include <functional>
 
 #include "rtm/constants.hpp"
 #include "rtm/random.hpp"
@@ -70,7 +62,7 @@ public:
         std::clog << "\rDone. \n";
         // Write to file
         save_framebuffer(framebuffer, image_width, image_height, output_filename);
-        std::clog << "\nImage saved to " << std::filesystem::current_path() / output_filename << std::endl;
+        std::clog << "Image saved to " << std::filesystem::current_path() / output_filename << std::endl;
     }
 
     void render_omp(const hittable& world)
@@ -95,15 +87,15 @@ public:
         std::clog << "\rDone. \n";
         // Write to file
         save_framebuffer(framebuffer, image_width, image_height, output_filename);
-        std::clog << "\nImage saved to " << std::filesystem::current_path() / output_filename << std::endl;
+        std::clog << "Image saved to " << std::filesystem::current_path() / output_filename << std::endl;
     }
 
-    // Structure to represent a tile in the image
     struct Tile {
         int x0, y0;      // Top-left corner
         int x1, y1;      // Bottom-right corner
         Tile(int _x0, int _y0, int _x1, int _y1) 
-            : x0(_x0), y0(_y0), x1(_x1), y1(_y1) {}
+            : x0(_x0), y0(_y0)
+            , x1(_x1), y1(_y1) {}
     };
 
     void render_tiles(const hittable& world)
@@ -113,7 +105,7 @@ public:
         
         // Calculate optimal tile size based on cache size
         // Typical L1 cache is 32KB-64KB. Each pixel is 3 floats (12 bytes)
-        // Use 32x32 tiles (~12 KB/tile)
+        // Use: 32x32 tiles (~12 KB/tile)
         const int TILE_SIZE = 32;
         
         // Create tiles
@@ -132,7 +124,7 @@ public:
         std::atomic<int> tiles_completed(0);
         const int total_tiles = tiles.size();
 
-        // Render tiles in parallel
+        // Render tiles
         #pragma omp parallel
         {
             // Each thread gets its own random number generator
@@ -147,8 +139,6 @@ public:
                 for (int j = tile.y0; j < tile.y1; ++j) {
                     for (int i = tile.x0; i < tile.x1; ++i) {
                         color pixel_color(0, 0, 0);
-                        
-                        // Sample the pixel
                         for (int sample = 0; sample < samples_per_pixel; ++sample) {
                             ray r = get_ray(i, j);
                             pixel_color += ray_color(r, max_depth, world);

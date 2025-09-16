@@ -6,6 +6,8 @@ External dependencies:
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h)
 - [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h)
 
+### Preview:
+
 ![Final scene](images/final_scene.png)
 ![Cornell Box](images/cornell_box.png)
 ![Perlin Sphere](images/light.png)
