@@ -1,6 +1,6 @@
 # Ray tracing in one weekend, with SIMD
 
-This is an implementation in modern C++ with SIMD and OpenMP of Peter Shirley's  ["Ray Tracing In One Weekend"](https://SIMD-raytracer.github.io/books/SIMD-raytracerInOneWeekend.html) and ["Ray Tracing: The Next Week"](https://SIMD-raytracer.github.io/books/SIMD-raytracerTheNextWeek.html).
+This is an implementation in modern C++ with SIMD and OpenMP of Peter Shirley's  ["Ray Tracing In One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html) and ["Ray Tracing: The Next Week"](https://raytracing.github.io/books/RayTracingTheNextWeek.html).
 
 External dependencies:
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h)
@@ -25,7 +25,7 @@ Some features added:
 ## Building with CMake
 
 ### Requirements
-- A C++17 (GCC ≥ 9, Clang ≥ 10, or MSVC ≥ 2019)
+- C++17 (GCC ≥ 9, Clang ≥ 10, or MSVC ≥ 2019)
 - [CMake](https://cmake.org/) ≥ 3.15
 - OpenMP support (optional but recommended for multithreading)
 - Intel/AMD cpu
