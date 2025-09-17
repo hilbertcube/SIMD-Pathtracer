@@ -358,24 +358,46 @@ void three_D_model() {
     auto green = make_shared<rt::lambertian>(rt::color(.12, .45, .15));
     auto light = make_shared<rt::diffuse_light>(rt::color(15, 15, 15));
 
+    auto blue = make_shared<rt::lambertian>(rt::color(0.4, 0.6, 0.9));
+
     world.add(make_shared<rt::quad>(rt::point3f(555,0,0), rt::vec3f(0,555,0), rt::vec3f(0,0,555), green));
     world.add(make_shared<rt::quad>(rt::point3f(0,0,0), rt::vec3f(0,555,0), rt::vec3f(0,0,555), red));
     world.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130,0,0), rt::vec3f(0,0,-105), light));
     world.add(make_shared<rt::quad>(rt::point3f(0,0,0), rt::vec3f(555,0,0), rt::vec3f(0,0,555), white));
     world.add(make_shared<rt::quad>(rt::point3f(555,555,555), rt::vec3f(-555,0,0), rt::vec3f(0,0,-555), white));
-    world.add(make_shared<rt::quad>(rt::point3f(0,0,555), rt::vec3f(555,0,0), rt::vec3f(0,555,0), white));
+    world.add(make_shared<rt::quad>(rt::point3f(0,0,555), rt::vec3f(555,0,0), rt::vec3f(0,555,0), blue));
 
-    // Suzanne model
-    auto suz_mat = make_shared<rt::lambertian>(rt::color(0.4, 0.8, 0.7));
-    auto suz_obj = rt::load_obj("model/suzanne.obj", suz_mat);
+    // Mirror
+    auto mirror = make_shared<rt::metal>(rt::color(0.95, 0.95, 0.95), 0.0f);
 
-    // First scale & rotate, then translate
-    rt::transform_mesh(*suz_obj, 140.0f, rt::vec3f(350,0,-550));
-    auto suzanne_bvh = make_shared<rt::bvh_node>(suz_obj->objects, 0, suz_obj->objects.size());
-    auto rotated = make_shared<rt::rotate_y>(suzanne_bvh, 180);
-    // Now translate after rotation
-    auto suzanne_final = make_shared<rt::translate>(rotated, rt::vec3f(278, 0, 278));
-    world.add(suzanne_final);
+    // Right wall mirror (x = 555)
+    {
+        rt::point3f origin(555 - 0.01f, 50, 50);
+        rt::vec3f height(0, 455, 0);
+        rt::vec3f width(0, 0, 455);
+        world.add(make_shared<rt::quad>(origin, height, width, mirror));
+    }
+    // Left wall mirror (x = 0)
+    {
+        rt::point3f origin(0 + 0.01f, 50, 50);   // tiny offset into +x to avoid z-fighting
+        rt::vec3f height(0, 455, 0);
+        rt::vec3f width(0, 0, 455);
+        world.add(make_shared<rt::quad>(origin, height, width, mirror));
+    }
+    // Back wall mirror (z = 555)
+    {
+        rt::point3f origin(50, 50, 555 - 0.01f);
+        rt::vec3f height(455, 0, 0);
+        rt::vec3f width(0, 455, 0);
+        world.add(make_shared<rt::quad>(origin, height, width, mirror));
+    }
+
+    // Dragon model
+    auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    auto dragon_obj = rt::load_obj("model/dragon.obj", dragon_mat);
+    rt::transform_mesh(*dragon_obj, 2.4f, rt::vec3f(278,100,210));
+    auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0, dragon_obj->objects.size());
+    world.add(dragon_bvh);
 
     // Tea pot
     // auto tea_mat = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
@@ -386,8 +408,8 @@ void three_D_model() {
 
     rt::Camera cam;
     cam.aspect_ratio      = 1.0f;
-    cam.image_width       = 600;
-    cam.samples_per_pixel = 2000;
+    cam.image_width       = 1000;
+    cam.samples_per_pixel = 3000;
     cam.max_depth         = 50;
     cam.background        = rt::color(0,0,0);
     cam.vfov     = 40;
@@ -428,11 +450,11 @@ void multiple_models() {
     world.add(box2);
 
     // Suzanne model
-    auto suz_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
-    auto suz_obj = rt::load_obj("model/suzanne.obj", suz_mat);
-    rt::transform_mesh(*suz_obj, 80.0f, rt::vec3f(110, 165, -450));
-    auto suzanne_bvh = make_shared<rt::bvh_node>(suz_obj->objects, 0, suz_obj->objects.size());
-    auto rotated = make_shared<rt::rotate_y>(suzanne_bvh, 200);
+    auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    auto dragon_obj = rt::load_obj("model/suzanne.obj", dragon_mat);
+    rt::transform_mesh(*dragon_obj, 80.0f, rt::vec3f(110, 165, -450));
+    auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0, dragon_obj->objects.size());
+    auto rotated = make_shared<rt::rotate_y>(dragon_bvh, 200);
     auto suzanne_final = make_shared<rt::translate>(rotated, rt::vec3f(278, 0, 278));
     world.add(suzanne_final);
 
@@ -470,7 +492,7 @@ void multiple_models() {
 int main() {
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
-    switch (10) {
+    switch (9) {
         case 1:  spheres_scene();               break;
         case 2:  checkered_spheres();           break;
         case 3:  earth();                       break;
