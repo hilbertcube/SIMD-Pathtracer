@@ -4,7 +4,8 @@ An optimized implementation of Peter Shirley’s classic ray tracing series: [*R
 ### Preview:
 
 ![Final scene](images/final_scene.png)
-![Cornell Box](images/cornell_box.png)
+![Cornell Box](images/merge.png)
+<!-- ![Cornell Box](images/teapot.png) -->
 ![Perlin Sphere](images/light.png)
 ![Spheres](images/spheres.png)
 
@@ -13,6 +14,7 @@ An optimized implementation of Peter Shirley’s classic ray tracing series: [*R
 Peter Shirley’s originals were intentionally C-style. This project reimagines them with **modern C++ practices** and performance optimizations:  
 
 Some features added:
+- A 3D model loader
 - Generic vector class: implemented a generic N-dimensional vector class.
 - Image writer: Instead of relying on PPM files, which is very slow and cumbersome, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.
 - Multithreading: Initially, I implemented a custom thread pool, but later transitioned to OpenMP for simplicity and better performance (skill issue on my part).
@@ -23,6 +25,7 @@ Some features added:
 ### External dependencies used:
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h)
 - [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h)
+- [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)
 
 ### Requirements
 - C++17 (GCC ≥ 9, Clang ≥ 10, or MSVC ≥ 2019)
