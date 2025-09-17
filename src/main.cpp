@@ -1,4 +1,5 @@
 #include "rt/ray_tracer.hpp"
+#include "rt/mesh.hpp"
 
 void spheres_scene() {
     // World
@@ -348,10 +349,55 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {
     cam.render_tiles(world);
 }
 
+void three_D_model() {
+    rt::hittable_list world;
+
+    // Cornell box
+    auto red   = make_shared<rt::lambertian>(rt::color(.65, .05, .05));
+    auto white = make_shared<rt::lambertian>(rt::color(.73, .73, .73));
+    auto green = make_shared<rt::lambertian>(rt::color(.12, .45, .15));
+    auto light = make_shared<rt::diffuse_light>(rt::color(15, 15, 15));
+
+    world.add(make_shared<rt::quad>(rt::point3f(555,0,0), rt::vec3f(0,555,0), rt::vec3f(0,0,555), green));
+    world.add(make_shared<rt::quad>(rt::point3f(0,0,0), rt::vec3f(0,555,0), rt::vec3f(0,0,555), red));
+    world.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130,0,0), rt::vec3f(0,0,-105), light));
+    world.add(make_shared<rt::quad>(rt::point3f(0,0,0), rt::vec3f(555,0,0), rt::vec3f(0,0,555), white));
+    world.add(make_shared<rt::quad>(rt::point3f(555,555,555), rt::vec3f(-555,0,0), rt::vec3f(0,0,-555), white));
+    world.add(make_shared<rt::quad>(rt::point3f(0,0,555), rt::vec3f(555,0,0), rt::vec3f(0,555,0), white));
+
+    auto mat = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
+    auto tea_pot = rt::load_obj("model/teapot.obj", mat);
+    // scale + move to Cornell box center
+    for (auto& obj : tea_pot->objects) {
+        auto tri = std::dynamic_pointer_cast<rt::mesh_triangle>(obj);
+        if (tri) {
+            tri->v0 = 80.0f * tri->v0 + rt::vec3f(278, 0, 278);
+            tri->v1 = 80.0f * tri->v1 + rt::vec3f(278, 0, 278);
+            tri->v2 = 80.0f * tri->v2 + rt::vec3f(278, 0, 278);
+        }
+    }
+    auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
+    world.add(teapot_bvh);
+
+    rt::Camera cam;
+    cam.aspect_ratio      = 1.0f;
+    cam.image_width       = 600;
+    cam.samples_per_pixel = 1000;
+    cam.max_depth         = 50;
+    cam.background        = rt::color(0,0,0);
+    cam.vfov     = 40;
+    cam.lookfrom = rt::point3f(278, 278, -800);
+    cam.lookat   = rt::point3f(278, 278, 0);
+    cam.vup      = rt::vec3f(0,1,0);
+    cam.output_filename = "3d_model.png";
+    cam.defocus_angle = 0;
+    cam.render_tiles(world);
+}
+
 int main() {
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
-    switch (7) {
+    switch (9) {
         case 1:  spheres_scene();               break;
         case 2:  checkered_spheres();           break;
         case 3:  earth();                       break;
@@ -360,6 +406,7 @@ int main() {
         case 6:  simple_light();                break;
         case 7:  cornell_box();                 break;
         case 8:  final_scene(1000, 2000, 40);   break;
+        case 9: three_D_model(); break;
         default: final_scene(400,   250,  4);   break;
     }
     return 0;
