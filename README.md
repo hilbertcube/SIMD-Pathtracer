@@ -14,7 +14,7 @@ An optimized implementation of Peter Shirley’s classic ray tracing series: [*R
 Peter Shirley’s originals were intentionally C-style. This project reimagines them with **modern C++ practices** and performance optimizations:  
 
 Some features added:
-- A 3D model loader
+- A 3D model importer.
 - Generic vector class: implemented a generic N-dimensional vector class.
 - Image writer: Instead of relying on PPM files, which is very slow and cumbersome, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.
 - Multithreading: Initially, I implemented a custom thread pool, but later transitioned to OpenMP for simplicity and better performance (skill issue on my part).
@@ -56,6 +56,9 @@ After building, you’ll find the executable inside the build/ directory:
 ./SIMD-raytracer
 ```
 By default, it renders the final scene and saves it to `output.png` (or another format if specified).
+
+### Usage
+To enable SIMD, simply add `#define _USE_SIMD_` before `#include "vector.hpp"`, but remember to do this only once, or else just use `#ifndef`.
 
 ## Future plans
 - CUDA acceleration
