@@ -3,7 +3,7 @@
 #include "hittable_list.h"
 #include <algorithm>
 
-#include "rtm/vector.h" // or your vec3f
+#include "rtm/vector.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "external/tiny_obj_loader.h"
