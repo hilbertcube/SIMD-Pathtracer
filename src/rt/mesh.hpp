@@ -98,4 +98,28 @@ shared_ptr<hittable_list> load_obj(
     return mesh;
 }
 
+// allow shear
+inline void transform_mesh(hittable_list& mesh, float scale, const vec3f& translate) {
+    for (auto& obj : mesh.objects) {
+        auto tri = std::dynamic_pointer_cast<mesh_triangle>(obj);
+        if (tri) {
+            tri->v0 = scale * tri->v0 + translate;
+            tri->v1 = scale * tri->v1 + translate;
+            tri->v2 = scale * tri->v2 + translate;
+        }
+    }
+}
+
+// only scale size
+inline void transform_mesh(hittable_list& mesh, const vec3f& scale, const vec3f& translate) {
+    for (auto& obj : mesh.objects) {
+        auto tri = std::dynamic_pointer_cast<mesh_triangle>(obj);
+        if (tri) {
+            tri->v0 = scale * tri->v0 + translate;
+            tri->v1 = scale * tri->v1 + translate;
+            tri->v2 = scale * tri->v2 + translate;
+        }
+    }
+}
+
 } // namespace rt
