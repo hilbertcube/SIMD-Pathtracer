@@ -365,24 +365,29 @@ void three_D_model() {
     world.add(make_shared<rt::quad>(rt::point3f(555,555,555), rt::vec3f(-555,0,0), rt::vec3f(0,0,-555), white));
     world.add(make_shared<rt::quad>(rt::point3f(0,0,555), rt::vec3f(555,0,0), rt::vec3f(0,555,0), white));
 
-    auto mat = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
-    auto tea_pot = rt::load_obj("model/teapot.obj", mat);
-    // scale + move to Cornell box center
-    for (auto& obj : tea_pot->objects) {
-        auto tri = std::dynamic_pointer_cast<rt::mesh_triangle>(obj);
-        if (tri) {
-            tri->v0 = 80.0f * tri->v0 + rt::vec3f(278, 0, 278);
-            tri->v1 = 80.0f * tri->v1 + rt::vec3f(278, 0, 278);
-            tri->v2 = 80.0f * tri->v2 + rt::vec3f(278, 0, 278);
-        }
-    }
-    auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
-    world.add(teapot_bvh);
+    // Suzanne model
+    auto suz_mat = make_shared<rt::lambertian>(rt::color(0.4, 0.8, 0.7));
+    auto suz_obj = rt::load_obj("model/suzanne.obj", suz_mat);
+
+    // First scale & rotate, then translate
+    rt::transform_mesh(*suz_obj, 140.0f, rt::vec3f(350,0,-550));
+    auto suzanne_bvh = make_shared<rt::bvh_node>(suz_obj->objects, 0, suz_obj->objects.size());
+    auto rotated = make_shared<rt::rotate_y>(suzanne_bvh, 180);
+    // Now translate after rotation
+    auto suzanne_final = make_shared<rt::translate>(rotated, rt::vec3f(278, 0, 278));
+    world.add(suzanne_final);
+
+    // Tea pot
+    // auto tea_mat = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
+    // auto tea_pot = rt::load_obj("model/teapot.obj", tea_mat);
+    // rt::transform_mesh(*tea_pot, 80.0f,rt::vec3f(278, 0, 278));
+    // auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
+    // world.add(teapot_bvh);
 
     rt::Camera cam;
     cam.aspect_ratio      = 1.0f;
     cam.image_width       = 600;
-    cam.samples_per_pixel = 1000;
+    cam.samples_per_pixel = 2000;
     cam.max_depth         = 50;
     cam.background        = rt::color(0,0,0);
     cam.vfov     = 40;
@@ -394,10 +399,78 @@ void three_D_model() {
     cam.render_tiles(world);
 }
 
+void multiple_models() {
+    rt::hittable_list world;
+
+    // Cornell box
+    auto red   = make_shared<rt::lambertian>(rt::color(.65, .05, .05));
+    auto white = make_shared<rt::lambertian>(rt::color(.73, .73, .73));
+    auto green = make_shared<rt::lambertian>(rt::color(.12, .45, .15));
+    auto light = make_shared<rt::diffuse_light>(rt::color(15, 15, 15));
+
+    world.add(make_shared<rt::quad>(rt::point3f(555,0,0), rt::vec3f(0,555,0), rt::vec3f(0,0,555), green));
+    world.add(make_shared<rt::quad>(rt::point3f(0,0,0), rt::vec3f(0,555,0), rt::vec3f(0,0,555), red));
+    world.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130,0,0), rt::vec3f(0,0,-105), light));
+    world.add(make_shared<rt::quad>(rt::point3f(0,0,0), rt::vec3f(555,0,0), rt::vec3f(0,0,555), white));
+    world.add(make_shared<rt::quad>(rt::point3f(555,555,555), rt::vec3f(-555,0,0), rt::vec3f(0,0,-555), white));
+    world.add(make_shared<rt::quad>(rt::point3f(0,0,555), rt::vec3f(555,0,0), rt::vec3f(0,555,0), white));
+
+    // left box
+    shared_ptr<rt::hittable> box1 = box(rt::point3f(0,0,0), rt::point3f(165,165,165), white);
+    box1 = make_shared<rt::rotate_y>(box1, 15.0f);
+    box1 = make_shared<rt::translate>(box1, rt::vec3f(285,0,295));
+    world.add(box1);
+
+    // right box
+    shared_ptr<rt::hittable> box2 = box(rt::point3f(0,0,0), rt::point3f(165,165,165), white);
+    box2 = make_shared<rt::rotate_y>(box2, -18.0f);
+    box2 = make_shared<rt::translate>(box2, rt::vec3f(130,0,65));
+    world.add(box2);
+
+    // Suzanne model
+    auto suz_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    auto suz_obj = rt::load_obj("model/suzanne.obj", suz_mat);
+    rt::transform_mesh(*suz_obj, 80.0f, rt::vec3f(110, 165, -450));
+    auto suzanne_bvh = make_shared<rt::bvh_node>(suz_obj->objects, 0, suz_obj->objects.size());
+    auto rotated = make_shared<rt::rotate_y>(suzanne_bvh, 200);
+    auto suzanne_final = make_shared<rt::translate>(rotated, rt::vec3f(278, 0, 278));
+    world.add(suzanne_final);
+
+    // Tea pot
+    auto tea_mat = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
+    auto tea_pot = rt::load_obj("model/teapot.obj", tea_mat);
+    rt::transform_mesh(*tea_pot, 40.0f,rt::vec3f(185, 160, 220));
+    auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
+    world.add(teapot_bvh);
+
+    // Spot the cow
+    auto spot_mat = make_shared<rt::lambertian>(rt::color(0, 0.8, 0.9));
+    auto spot_obj = rt::load_obj("model/spot.obj", spot_mat);
+    rt::transform_mesh(*spot_obj, 90.0f, rt::vec3f(420, 60, 80));
+    auto spot_bvh = make_shared<rt::bvh_node>(spot_obj->objects, 0, spot_obj->objects.size());
+    auto spot_rotated = make_shared<rt::rotate_y>(spot_bvh, 45.0f);
+    auto spot_final = make_shared<rt::translate>(spot_rotated, rt::vec3f(65, 0, 290));
+    world.add(spot_final);
+
+    rt::Camera cam;
+    cam.aspect_ratio      = 1.0f;
+    cam.image_width       = 600;
+    cam.samples_per_pixel = 1000;
+    cam.max_depth         = 50;
+    cam.background        = rt::color(0,0,0);
+    cam.vfov     = 40;
+    cam.lookfrom = rt::point3f(278, 278, -800);
+    cam.lookat   = rt::point3f(278, 278, 0);
+    cam.vup      = rt::vec3f(0,1,0);
+    cam.output_filename = "multiple_3d_models.png";
+    cam.defocus_angle = 0;
+    cam.render_tiles(world);
+}
+
 int main() {
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
-    switch (9) {
+    switch (10) {
         case 1:  spheres_scene();               break;
         case 2:  checkered_spheres();           break;
         case 3:  earth();                       break;
@@ -406,7 +479,8 @@ int main() {
         case 6:  simple_light();                break;
         case 7:  cornell_box();                 break;
         case 8:  final_scene(1000, 2000, 40);   break;
-        case 9: three_D_model(); break;
+        case 9: three_D_model();                break;
+        case 10: multiple_models();             break;
         default: final_scene(400,   250,  4);   break;
     }
     return 0;

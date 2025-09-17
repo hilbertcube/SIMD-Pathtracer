@@ -73,10 +73,10 @@ private:
 
 class rotate_y : public hittable {
 public:
-    rotate_y(shared_ptr<hittable> object, float angle) 
+    rotate_y(shared_ptr<hittable> object, float angle_degrees) 
         : object(object) 
     {
-        float radians = degrees_to_radians(angle);
+        float radians = degrees_to_radians(angle_degrees);
         sin_theta = std::sin(radians);
         cos_theta = std::cos(radians);
         bbox = object->bounding_box();
@@ -105,6 +105,11 @@ public:
         }
         bbox = AABB(min, max);
     }
+
+    // avoid annoying type cast warning
+    template <typename T>
+    rotate_y(std::shared_ptr<hittable> object, T angle_degrees)
+        : rotate_y(object, static_cast<float>(angle_degrees)) {}
 
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
         // Transform the ray from world space to object space.
