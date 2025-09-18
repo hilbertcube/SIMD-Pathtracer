@@ -11,7 +11,7 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 
 ## Features Added
 
-Peter Shirley’s originals were intentionally C-style. This project reimagines them with **modern C++ practices** and performance optimizations:  
+Peter Shirley’s originals were intentionally C-style. This project reimagines them with modern C++ practices and performance optimizations.
 
 Some features added:
 - A 3D model importer.
@@ -28,10 +28,9 @@ Some features added:
 - [tiny_obj_loader.h](https://github.com/tinyobjloader/tinyobjloader)
 
 ### Requirements
-- C++17 (GCC ≥ 9, Clang ≥ 10, or MSVC ≥ 2019)
-- [CMake](https://cmake.org/) ≥ 3.15
-- OpenMP support (optional but recommended for multithreading)
-- Intel/AMD cpu
+- C++17 (GCC >= 9, Clang >= 10, or MSVC >= 2019)
+- [CMake](https://cmake.org/)
+- OpenMP support
 
 ### Build Instructions
 ```bash

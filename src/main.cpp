@@ -409,14 +409,14 @@ void three_D_model() {
     rt::Camera cam;
     cam.aspect_ratio      = 1.0f;
     cam.image_width       = 1000;
-    cam.samples_per_pixel = 3000;
+    cam.samples_per_pixel = 200;
     cam.max_depth         = 50;
     cam.background        = rt::color(0,0,0);
     cam.vfov     = 40;
     cam.lookfrom = rt::point3f(278, 278, -800);
     cam.lookat   = rt::point3f(278, 278, 0);
     cam.vup      = rt::vec3f(0,1,0);
-    cam.output_filename = "3d_model.png";
+    cam.output_filename = "3d_model.jpg";
     cam.defocus_angle = 0;
     cam.render_tiles(world);
 }
