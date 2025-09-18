@@ -5,6 +5,7 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 
 ![Final scene](images/final_scene.png)
 ![Cornell Box](images/merge_cornell.png)
+![Cornell Box](images/metal_teapot.png)
 ![Cornell Box](images/dragon.png)
 ![Perlin Sphere](images/light.png)
 ![Spheres](images/spheres.png)
