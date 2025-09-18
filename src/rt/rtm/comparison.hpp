@@ -40,7 +40,6 @@ inline bool isPositive(T a, T epsilon = std::numeric_limits<T>::epsilon())
 {
     static_assert(std::is_floating_point_v<T>,
                   "T must be floating-point");
-
     if (std::fabs(a) > epsilon) {
         // Treat as zero
         return false;
