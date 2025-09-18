@@ -367,56 +367,56 @@ void three_D_model() {
     world.add(make_shared<rt::quad>(rt::point3f(555,555,555), rt::vec3f(-555,0,0), rt::vec3f(0,0,-555), white));
     world.add(make_shared<rt::quad>(rt::point3f(0,0,555), rt::vec3f(555,0,0), rt::vec3f(0,555,0), blue));
 
-    // Mirror
-    auto mirror = make_shared<rt::metal>(rt::color(0.95, 0.95, 0.95), 0.0f);
+    // // Mirror
+    // auto mirror = make_shared<rt::metal>(rt::color(0.95, 0.95, 0.95), 0.0f);
 
-    // Right wall mirror (x = 555)
-    {
-        rt::point3f origin(555 - 0.01f, 50, 50);
-        rt::vec3f height(0, 455, 0);
-        rt::vec3f width(0, 0, 455);
-        world.add(make_shared<rt::quad>(origin, height, width, mirror));
-    }
-    // Left wall mirror (x = 0)
-    {
-        rt::point3f origin(0 + 0.01f, 50, 50);   // tiny offset into +x to avoid z-fighting
-        rt::vec3f height(0, 455, 0);
-        rt::vec3f width(0, 0, 455);
-        world.add(make_shared<rt::quad>(origin, height, width, mirror));
-    }
-    // Back wall mirror (z = 555)
-    {
-        rt::point3f origin(50, 50, 555 - 0.01f);
-        rt::vec3f height(455, 0, 0);
-        rt::vec3f width(0, 455, 0);
-        world.add(make_shared<rt::quad>(origin, height, width, mirror));
-    }
+    // // Right wall mirror (x = 555)
+    // {
+    //     rt::point3f origin(555 - 0.01f, 50, 50);
+    //     rt::vec3f height(0, 455, 0);
+    //     rt::vec3f width(0, 0, 455);
+    //     world.add(make_shared<rt::quad>(origin, height, width, mirror));
+    // }
+    // // Left wall mirror (x = 0)
+    // {
+    //     rt::point3f origin(0 + 0.01f, 50, 50);   // tiny offset into +x to avoid z-fighting
+    //     rt::vec3f height(0, 455, 0);
+    //     rt::vec3f width(0, 0, 455);
+    //     world.add(make_shared<rt::quad>(origin, height, width, mirror));
+    // }
+    // // Back wall mirror (z = 555)
+    // {
+    //     rt::point3f origin(50, 50, 555 - 0.01f);
+    //     rt::vec3f height(455, 0, 0);
+    //     rt::vec3f width(0, 455, 0);
+    //     world.add(make_shared<rt::quad>(origin, height, width, mirror));
+    // }
 
-    // Dragon model
-    auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
-    auto dragon_obj = rt::load_obj("model/dragon.obj", dragon_mat);
-    rt::transform_mesh(*dragon_obj, 2.4f, rt::vec3f(278,100,210));
-    auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0, dragon_obj->objects.size());
-    world.add(dragon_bvh);
+    // // Dragon model
+    // auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    // auto dragon_obj = rt::load_obj("model/dragon.obj", dragon_mat);
+    // rt::transform_mesh(*dragon_obj, 2.4f, rt::vec3f(278,100,210));
+    // auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0, dragon_obj->objects.size());
+    // world.add(dragon_bvh);
 
     // Tea pot
-    // auto tea_mat = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
-    // auto tea_pot = rt::load_obj("model/teapot.obj", tea_mat);
-    // rt::transform_mesh(*tea_pot, 80.0f,rt::vec3f(278, 0, 278));
-    // auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
-    // world.add(teapot_bvh);
+    auto tea_mat = make_shared<rt::metal>(rt::color(0, 0, 0.8), 0.0f);
+    auto tea_pot = rt::load_obj("model/teapot.obj", tea_mat);
+    rt::transform_mesh(*tea_pot, 80.0f,rt::vec3f(278, 0, 278));
+    auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
+    world.add(teapot_bvh);
 
     rt::Camera cam;
     cam.aspect_ratio      = 1.0f;
     cam.image_width       = 1000;
-    cam.samples_per_pixel = 200;
+    cam.samples_per_pixel = 2000;
     cam.max_depth         = 50;
     cam.background        = rt::color(0,0,0);
     cam.vfov     = 40;
     cam.lookfrom = rt::point3f(278, 278, -800);
     cam.lookat   = rt::point3f(278, 278, 0);
     cam.vup      = rt::vec3f(0,1,0);
-    cam.output_filename = "3d_model.jpg";
+    cam.output_filename = "3d_model.png";
     cam.defocus_angle = 0;
     cam.render_tiles(world);
 }
