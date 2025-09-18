@@ -59,10 +59,6 @@ namespace simd_utils {
     
     // load vec onto ptr
     inline void store_vec3(__m128 vec, float* ptr) {
-        // Store only first 3 components
-        // _mm_store_ss(ptr, vec);
-        // _mm_store_ss(ptr + 1, _mm_shuffle_ps(vec, vec, _MM_SHUFFLE(1,1,1,1)));
-        // _mm_store_ss(ptr + 2, _mm_shuffle_ps(vec, vec, _MM_SHUFFLE(2,2,2,2)));
         _mm_storeu_ps(ptr, vec);
     }
 
