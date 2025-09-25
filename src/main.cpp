@@ -251,7 +251,7 @@ void cornell_box() {
 
     cam.aspect_ratio      = 1.0f;
     cam.image_width       = 600;
-    cam.samples_per_pixel = 1000;
+    cam.samples_per_pixel = 100;
     cam.max_depth         = 50;
     cam.background        = rt::color(0,0,0);
 
@@ -263,7 +263,7 @@ void cornell_box() {
 
     cam.defocus_angle = 0;
 
-    cam.render_tiles(world);
+    cam.render_omp(world);
 }
 
 void final_scene(int image_width, int samples_per_pixel, int max_depth) {
@@ -492,7 +492,7 @@ void multiple_models() {
 int main() {
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
-    switch (9) {
+    switch (7) {
         case 1:  spheres_scene();               break;
         case 2:  checkered_spheres();           break;
         case 3:  earth();                       break;
@@ -510,8 +510,3 @@ int main() {
 
 // cmake --build .\build\ --config Debug; .\build\Debug\main
 // cmake --build .\build\ --config Release; .\build\Release\main
-
-// cornell box [Debug]
-// omp: 168.956217 s
-// tiles + omp: 160.066773 s, 164.114298 s, 163.436055 s
-// SIMD + omp + tiles: 141.309591 s, 150.529486 s, 142.902596 s, 136.291196 s
