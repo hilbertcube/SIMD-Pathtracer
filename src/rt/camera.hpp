@@ -43,7 +43,6 @@ public:
     void render_serial(const hittable& world)
     {   
         initialize();
-        std::vector<color> framebuffer(image_width * image_height);
 
         for (int j{0}; j < image_height; ++j) {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
@@ -68,8 +67,6 @@ public:
     void render_omp(const hittable& world)
     {
         initialize();
-        std::vector<color> framebuffer(image_width * image_height);
-
         #pragma omp parallel for schedule(dynamic)
         for (int j = 0; j < image_height; ++j) {
             #pragma omp critical
@@ -101,8 +98,6 @@ public:
     void render_tiles(const hittable& world)
     {
         initialize();
-        std::vector<color> framebuffer(image_width * image_height);
-        
         // Calculate optimal tile size based on cache size
         // Typical L1 cache is 32KB-64KB. Each pixel is 3 floats (12 bytes)
         // Use: 32x32 tiles (~12 KB/tile)
@@ -173,11 +168,14 @@ private:
     vec3f u, v, w;              // Camera frame basis vector
     vec3f defocus_disk_u;       // Defocus disk horizontal radius
     vec3f defocus_disk_v;       // Defocus disk vertical radius
+    std::vector<color> framebuffer;
 
     void initialize()
     {
         image_height = static_cast<int>(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
+
+        framebuffer.reserve(image_width * image_height);
 
         pixel_samples_scale = 1.0f / samples_per_pixel;
 

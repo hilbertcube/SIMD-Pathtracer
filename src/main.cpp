@@ -409,7 +409,7 @@ void three_D_model() {
     rt::Camera cam;
     cam.aspect_ratio      = 1.0f;
     cam.image_width       = 1000;
-    cam.samples_per_pixel = 2000;
+    cam.samples_per_pixel = 20;
     cam.max_depth         = 50;
     cam.background        = rt::color(0,0,0);
     cam.vfov     = 40;
@@ -492,7 +492,7 @@ void multiple_models() {
 int main() {
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
-    switch (7) {
+    switch (9) {
         case 1:  spheres_scene();               break;
         case 2:  checkered_spheres();           break;
         case 3:  earth();                       break;
