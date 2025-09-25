@@ -3,3 +3,4 @@ src/rt/rtm/vec4_SIMD.hpp
 build/
 .vscode/
 images/ppm/
+benchmark.txt
