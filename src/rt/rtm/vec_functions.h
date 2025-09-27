@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vecN.h"
+#include "constants.h"
 
 namespace rt {
 // === BASIC UTILITIES ===

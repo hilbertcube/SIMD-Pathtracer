@@ -4,7 +4,7 @@
 #include "hittable.h"
 #include "hittable_list.h"
 
-#include "def.h"
+#include "extra/def.h"
 
 namespace rt {
 

@@ -8,7 +8,8 @@
 #include <stdint.h>
 
 // Common headers
-#include "def.h"
+#include "extra/def.h"
+#include "extra/benchmark.h"
 #include "hittable.h"
 #include "hittable_list.h"
 #include "sphere.h"
@@ -18,7 +19,6 @@
 #include "texture.h"
 #include "quad.h"
 #include "constant_medium.h"
-#include "benchmark.h"
 #include "triangle.h"
 
 // Math

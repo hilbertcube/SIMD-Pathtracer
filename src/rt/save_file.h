@@ -5,7 +5,7 @@
 #include <cctype>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "../external/stb/stb_image_write.h"
 
 #include "rtm/vector.h"
 #include "rtm/interval.h"
@@ -13,6 +13,23 @@
 #include "color.h"
 
 namespace rt {
+
+void write_color_ppm(std::ostream& out, const color& pixel_color)
+{
+    // Apply a linear to gamma transform for gamma 2
+    auto r = linear_to_gamma(pixel_color.r());
+    auto g = linear_to_gamma(pixel_color.g());
+    auto b = linear_to_gamma(pixel_color.b());
+ 
+    // Translate the [0, 1] component values to the byte range [0, 255]
+    static const interval intensity(0.000f, 0.999f);
+    int rbyte = static_cast<int>(256 * intensity.clamp(r));
+    int gbyte = static_cast<int>(256 * intensity.clamp(g));
+    int bbyte = static_cast<int>(256 * intensity.clamp(b));
+
+    // Write out pixel components
+    out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
+}
 
 // format extractor with edge cases handle (although not needed)
 inline std::string extract_file_format(const std::string& filename) {
@@ -36,11 +53,13 @@ void save_framebuffer(const std::vector<color>& framebuffer,
                       const std::string& filename)
 {
     const std::string format = extract_file_format(filename);
+    
+    // not recommended, very slow and produces very large files
     if (format == "ppm") {
         std::ofstream out(filename);
         out << "P3\n" << width << " " << height << "\n255\n";
         for (const color& c : framebuffer) {
-            write_color(out, c);
+            write_color_ppm(out, c);
         }
         return;
     }

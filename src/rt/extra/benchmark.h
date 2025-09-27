@@ -4,6 +4,8 @@
 #include <numeric>
 #include <chrono>
 #include <iostream>
+#include <iomanip>
+#include <algorithm>
 
 // Nested namespace (C++17)
 namespace rt::benchmark {

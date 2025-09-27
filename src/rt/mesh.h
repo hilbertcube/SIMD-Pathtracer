@@ -6,7 +6,7 @@
 #include "rtm/vector.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "external/tiny_obj_loader.h"
+#include "../external/tiny_obj_loader.h"
 
 namespace rt {
 

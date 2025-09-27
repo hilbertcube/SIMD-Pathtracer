@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VecN.h"  // Include the base VecN implementation
+#include "vecN.h"  // Include the base VecN implementation
 
 // SIMD capability detection
 #ifdef _MSC_VER
@@ -152,7 +152,8 @@ public:
         return *this;
     }
 
-    VecN<float, 3>& operator-=(const VecN<float, 3>& other) noexcept {
+    VecN<float, 3>& operator-=(const VecN<float, 3>& other) noexcept 
+    {
         __m128 a = simd_utils::load_vec3(e.data());
         __m128 b = simd_utils::load_vec3(other.data());
         __m128 result = _mm_sub_ps(a, b);
