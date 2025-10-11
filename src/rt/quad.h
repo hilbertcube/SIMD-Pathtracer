@@ -21,6 +21,7 @@ public:
         normal = unit_vector(n);
         D = dot(normal, Q);
         w = n / dot(n, n);
+        area = n.length();
         set_bounding_box();
     }
 
@@ -76,6 +77,26 @@ public:
         return true;
     }
 
+    // Light sampling: pick a uniform point on the quad, convert area density to solid angle.
+    float pdf_value(const point3f& origin, const vec3f& direction) const override
+    {
+        hit_record rec;
+        if (!this->hit(ray(origin, direction), interval(0.001f, INF), rec))
+            return 0.0f;
+
+        float distance_squared = rec.t * rec.t * direction.length_squared();
+        float cosine = std::fabs(dot(direction, rec.normal) / direction.length());
+        if (cosine <= 0.0f) return 0.0f;
+
+        return distance_squared / (cosine * area);
+    }
+
+    vec3f random(const point3f& origin) const override
+    {
+        point3f p = Q + (random_float() * u) + (random_float() * v);
+        return p - origin;
+    }
+
 private:
     point3f Q;
     vec3f u, v, w;
@@ -83,6 +104,7 @@ private:
     AABB bbox;
     vec3f normal;
     float D;
+    float area;
 };
 
 inline shared_ptr<hittable_list> box(const point3f& a, const point3f& b, shared_ptr<material> mat)

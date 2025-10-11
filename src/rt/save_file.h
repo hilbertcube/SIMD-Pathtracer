@@ -14,12 +14,15 @@
 
 namespace rt {
 
-void write_color_ppm(std::ostream& out, const color& pixel_color)
+// Replace NaN components with zero (a stray NaN sample would otherwise poison the pixel)
+inline float sanitize(float x) { return (x != x) ? 0.0f : x; }
+
+inline void write_color_ppm(std::ostream& out, const color& pixel_color)
 {
     // Apply a linear to gamma transform for gamma 2
-    auto r = linear_to_gamma(pixel_color.r());
-    auto g = linear_to_gamma(pixel_color.g());
-    auto b = linear_to_gamma(pixel_color.b());
+    auto r = linear_to_gamma(sanitize(pixel_color.r()));
+    auto g = linear_to_gamma(sanitize(pixel_color.g()));
+    auto b = linear_to_gamma(sanitize(pixel_color.b()));
  
     // Translate the [0, 1] component values to the byte range [0, 255]
     static const interval intensity(0.000f, 0.999f);
@@ -48,7 +51,7 @@ inline std::string extract_file_format(const std::string& filename) {
     return ""; // no dot found
 }
 
-void save_framebuffer(const std::vector<color>& framebuffer,
+inline void save_framebuffer(const std::vector<color>& framebuffer,
                       const int width, const int height,
                       const std::string& filename)
 {
@@ -72,9 +75,9 @@ void save_framebuffer(const std::vector<color>& framebuffer,
         for (int i = 0; i < width; ++i) {
             const color& pixel_color = framebuffer[j * width + i];
 
-            auto r = linear_to_gamma(pixel_color.r());
-            auto g = linear_to_gamma(pixel_color.g());
-            auto b = linear_to_gamma(pixel_color.b());
+            auto r = linear_to_gamma(sanitize(pixel_color.r()));
+            auto g = linear_to_gamma(sanitize(pixel_color.g()));
+            auto b = linear_to_gamma(sanitize(pixel_color.b()));
 
             int rbyte = static_cast<int>(256 * intensity.clamp(r));
             int gbyte = static_cast<int>(256 * intensity.clamp(g));

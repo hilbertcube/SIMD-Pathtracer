@@ -43,6 +43,24 @@ public:
         return hit_anything;
     }
 
+    float pdf_value(const point3f& origin, const vec3f& direction) const override
+    {
+        if (objects.empty()) return 0.0f;
+
+        float weight = 1.0f / objects.size();
+        float sum = 0.0f;
+        for (const auto& object : objects)
+            sum += weight * object->pdf_value(origin, direction);
+        return sum;
+    }
+
+    vec3f random(const point3f& origin) const override
+    {
+        if (objects.empty()) return vec3f(1, 0, 0);
+        int last = static_cast<int>(objects.size()) - 1;
+        return objects[random_int(0, last)]->random(origin);
+    }
+
     AABB bounding_box() const override { return bbox; }
 
 private:

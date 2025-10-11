@@ -9,6 +9,7 @@
 #include "rtm/vector.h"
 #include "rtm/ray.h"
 #include "rtm/constants.h"
+#include "rtm/ONB.h"
 
 namespace rt {
 
@@ -83,9 +84,52 @@ public:
         v = theta / PI;
     }
 
+    // Light sampling. Only valid for stationary spheres (uses the center at time 0).
+    float pdf_value(const point3f& origin, const vec3f& direction) const override
+    {
+        hit_record rec;
+        if (!this->hit(ray(origin, direction), interval(0.001f, INF), rec))
+            return 0.0f;
+
+        float dist_squared = (center.at(0) - origin).length_squared();
+        if (dist_squared <= radius * radius)        // origin inside the sphere
+            return 1.0f / (4.0f * PI);
+
+        float cos_theta_max = std::sqrt(1.0f - radius * radius / dist_squared);
+        float solid_angle = 2.0f * PI * (1.0f - cos_theta_max);
+        return 1.0f / solid_angle;
+    }
+
+    vec3f random(const point3f& origin) const override
+    {
+        vec3f direction = center.at(0) - origin;
+        float distance_squared = direction.length_squared();
+        if (distance_squared <= radius * radius)    // origin inside the sphere
+            return random_unit_vector<float, 3>();
+
+        ONB uvw(direction);
+        return uvw.transform(random_to_sphere(radius, distance_squared));
+    }
+
     AABB bounding_box() const override
     {
         return bbox;
+    }
+
+private:
+    // Random direction inside the cone (around +z) that a sphere of `radius`
+    // at `distance_squared` subtends.
+    static vec3f random_to_sphere(float radius, float distance_squared)
+    {
+        float r1 = random_float();
+        float r2 = random_float();
+        float z = 1.0f + r2 * (std::sqrt(1.0f - radius * radius / distance_squared) - 1.0f);
+
+        float phi = 2.0f * PI * r1;
+        float x = std::cos(phi) * std::sqrt(1.0f - z * z);
+        float y = std::sin(phi) * std::sqrt(1.0f - z * z);
+
+        return vec3f(x, y, z);
     }
 };
 

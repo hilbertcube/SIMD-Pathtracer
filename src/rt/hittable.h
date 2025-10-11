@@ -39,6 +39,19 @@ public:
     virtual bool hit(const ray& r, interval ray_t, hit_record& rec) const = 0;
 
     virtual AABB bounding_box() const = 0;
+
+    /// Density (over solid angle) of picking `direction` from `origin` via random().
+    /// Only needed for objects used as lights in importance sampling.
+    virtual float pdf_value(const point3f& origin, const vec3f& direction) const
+    {
+        return 0.0f;
+    }
+
+    /// Random direction from `origin` toward this object.
+    virtual vec3f random(const point3f& origin) const
+    {
+        return vec3f(1, 0, 0);
+    }
 };
 
 class translate : public hittable {

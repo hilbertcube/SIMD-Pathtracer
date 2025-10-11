@@ -166,6 +166,7 @@ void quads() {
     cam.image_width       = 1000;
     cam.samples_per_pixel = 100;
     cam.max_depth         = 50;
+    cam.background        = rt::color(0.70f, 0.80f, 1.00f);
 
     cam.vfov     = 80;
     cam.lookfrom = rt::point3f(0,0,9);
@@ -188,6 +189,11 @@ void simple_light() {
     world.add(make_shared<rt::sphere>(rt::point3f(0,7,0), 2.0f, difflight));
     world.add(make_shared<rt::quad>(rt::point3f(3,1,-2), rt::vec3f(2,0,0), rt::vec3f(0,2,0), difflight));
 
+    // Lights to importance-sample (geometry only; material is ignored)
+    rt::hittable_list lights;
+    lights.add(make_shared<rt::sphere>(rt::point3f(0,7,0), 2.0f, shared_ptr<rt::material>()));
+    lights.add(make_shared<rt::quad>(rt::point3f(3,1,-2), rt::vec3f(2,0,0), rt::vec3f(0,2,0), shared_ptr<rt::material>()));
+
     rt::Camera cam;
 
     cam.aspect_ratio      = 16.0f / 9.0f;
@@ -202,7 +208,7 @@ void simple_light() {
     cam.vup      = rt::vec3f(0, 1, 0);
     cam.defocus_angle = 0;
 
-    cam.render_tiles(world);
+    cam.render_tiles(world, lights);
 }
 
 void cornell_box() {
@@ -247,6 +253,10 @@ void cornell_box() {
     world.add(box2);
     world.add(pyramid_obj);
 
+    // Lights to importance-sample (geometry only; material is ignored)
+    rt::hittable_list lights;
+    lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130,0,0), rt::vec3f(0,0,-105), shared_ptr<rt::material>()));
+
     rt::Camera cam;
 
     cam.aspect_ratio      = 1.0f;
@@ -263,7 +273,7 @@ void cornell_box() {
 
     cam.defocus_angle = 0;
 
-    cam.render_omp(world);
+    cam.render_omp(world, lights);
 }
 
 void final_scene(int image_width, int samples_per_pixel, int max_depth) {
@@ -330,6 +340,10 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {
         )
     );
 
+    // Lights to importance-sample (geometry only; material is ignored)
+    rt::hittable_list lights;
+    lights.add(make_shared<rt::quad>(rt::point3f(123,554,147), rt::vec3f(300,0,0), rt::vec3f(0,0,265), shared_ptr<rt::material>()));
+
     rt::Camera cam;
 
     cam.aspect_ratio      = 1.0f;
@@ -346,7 +360,7 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {
     cam.defocus_angle = 0;
     cam.output_filename = "final_scene.png";
 
-    cam.render_tiles(world);
+    cam.render_tiles(world, lights);
 }
 
 void three_D_model() {
@@ -406,6 +420,10 @@ void three_D_model() {
     auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
     world.add(teapot_bvh);
 
+    // Lights to importance-sample (geometry only; material is ignored)
+    rt::hittable_list lights;
+    lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130,0,0), rt::vec3f(0,0,-105), shared_ptr<rt::material>()));
+
     rt::Camera cam;
     cam.aspect_ratio      = 1.0f;
     cam.image_width       = 1000;
@@ -418,7 +436,7 @@ void three_D_model() {
     cam.vup      = rt::vec3f(0,1,0);
     cam.output_filename = "3d_model.png";
     cam.defocus_angle = 0;
-    cam.render_tiles(world);
+    cam.render_tiles(world, lights);
 }
 
 void multiple_models() {
@@ -474,6 +492,10 @@ void multiple_models() {
     auto spot_final = make_shared<rt::translate>(spot_rotated, rt::vec3f(65, 0, 290));
     world.add(spot_final);
 
+    // Lights to importance-sample (geometry only; material is ignored)
+    rt::hittable_list lights;
+    lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130,0,0), rt::vec3f(0,0,-105), shared_ptr<rt::material>()));
+
     rt::Camera cam;
     cam.aspect_ratio      = 1.0f;
     cam.image_width       = 600;
@@ -486,7 +508,7 @@ void multiple_models() {
     cam.vup      = rt::vec3f(0,1,0);
     cam.output_filename = "multiple_3d_models.png";
     cam.defocus_angle = 0;
-    cam.render_tiles(world);
+    cam.render_tiles(world, lights);
 }
 
 int main() {

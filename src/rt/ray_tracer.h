@@ -15,6 +15,7 @@
 #include "sphere.h"
 #include "camera.h"
 #include "material.h"
+#include "pdf.h"
 #include "bvh_node.h"
 #include "texture.h"
 #include "quad.h"

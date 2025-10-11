@@ -1,5 +1,5 @@
 # Ray tracing in one weekend, with SIMD
-An optimized implementation of Peter Shirley’s classic ray tracing (actually path tracing) series: [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) and [*Ray Tracing: The Next Week*](https://raytracing.github.io/books/RayTracingTheNextWeek.html). This version is written in C++17, enhanced with SIMD intrinsics and OpenMP multithreading for better performance.
+An optimized implementation of Peter Shirley’s classic ray tracing (actually path tracing) series: [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) [*Ray Tracing: The Next Week*](https://raytracing.github.io/books/RayTracingTheNextWeek.html) and [*Ray Tracing: The Rest of Your Life*](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html). This version is written in C++17, enhanced with SIMD intrinsics and OpenMP multithreading for better performance.
 
 ### Preview:
 
@@ -15,6 +15,7 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 Peter Shirley’s originals were intentionally C-style. This project reimagines them with modern C++ practices and performance optimizations.
 
 Some features added:
+- Importance sampling (book 3): cosine-weighted diffuse bounces mixed with direct light sampling, plus stratified pixel samples. Pass the scene's lights with `cam.render_tiles(world, lights)`.
 - A 3D model importer.
 - Generic vector class: implemented a generic N-dimensional vector class.
 - Image Writer: Instead of relying on a PPM writer, which is very slow and produces very large files, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.
