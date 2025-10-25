@@ -530,5 +530,4 @@ int main() {
     return 0;
 }
 
-// cmake --build .\build\ --config Debug; .\build\Debug\main
-// cmake --build .\build\ --config Release; .\build\Release\main
+// cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build && ./build/main

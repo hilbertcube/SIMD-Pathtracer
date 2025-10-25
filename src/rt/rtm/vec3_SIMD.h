@@ -2,20 +2,13 @@
 
 #include "vecN.h"  // Include the base VecN implementation
 
-// SIMD capability detection
-#ifdef _MSC_VER
-    #include <intrin.h>
-#elif defined(__GNUC__) || defined(__clang__)
-    #include <x86intrin.h>
-#endif
-
 // Feature detection macros
-#if defined(__SSE__) || (defined(_M_X64) || defined(_M_IX86_FP) && _M_IX86_FP >= 1)
+#if defined(__SSE__)
     #define VECN_HAS_SSE 1
     #include <xmmintrin.h>
 #endif
 
-#if defined(__SSE2__) || (defined(_M_X64) || defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#if defined(__SSE2__)
     #define VECN_HAS_SSE2 1
     #include <emmintrin.h>
 #endif
@@ -93,9 +86,6 @@ private:
     std::array<float, 3> e;
     friend class VecN;
 public:
-#if defined(_MSC_VER)
-#pragma region _constructors_
-#endif
     // Constructors
     constexpr VecN() : e{0.0f, 0.0f, 0.0f} {}
     constexpr VecN(float value) : e{value, value, value}{}
@@ -103,9 +93,6 @@ public:
     constexpr VecN(const std::array<float, 3>& arr) : e(arr) {}
     constexpr VecN(const float arr[3]) : e{arr[0], arr[1], arr[2]}{}
     constexpr VecN(const VecN<float, 3>& other) : e(other.e) {}
-#if defined(_MSC_VER)
-#pragma endregion // Constructors Definition
-#endif
     constexpr float x() const noexcept { return e[0];}
     constexpr float y() const noexcept { return e[1];}
     constexpr float z() const noexcept { return e[2];}

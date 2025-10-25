@@ -1,10 +1,5 @@
 #pragma once
 
-// Disable strict warnings for this header from the Microsoft Visual C++ compiler.
-#ifdef _MSC_VER
-    #pragma warning (push, 0)
-#endif
-
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #endif
@@ -126,8 +121,3 @@ class rtw_image {
             *bptr = float_to_byte(*fptr);
     }
 };
-
-// Restore MSVC compiler warnings
-#ifdef _MSC_VER
-    #pragma warning (pop)
-#endif

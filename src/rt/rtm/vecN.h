@@ -30,9 +30,6 @@ private:
     // Makes all other VecN<U, N> specializations friends
     template <typename, size_t> friend class VecN;
 public:
-#if defined(_MSC_VER)
-#pragma region _constructors_
-#endif
     // Default constructor - zero vector
     constexpr VecN() : e{} {}
 
@@ -84,9 +81,6 @@ public:
             e[i] = static_cast<T>(other.e[i]);
         }
     }
-#if defined(_MSC_VER)
-#pragma endregion // Constructors Definition
-#endif
 
     // Component access methods (only available for appropriate dimensions)
     // Access only, no mutation. Use [] for mutation

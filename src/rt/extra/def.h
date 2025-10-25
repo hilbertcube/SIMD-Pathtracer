@@ -10,11 +10,4 @@ using std::weak_ptr;
 using std::sqrt;
 using std::floor;
 
-// compiler detection macros
-#if defined(_MSC_VER)
-    #define FORCE_INLINE __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
-    #define FORCE_INLINE inline __attribute__((always_inline))
-#else
-    #define FORCE_INLINE inline
-#endif
+#define FORCE_INLINE inline __attribute__((always_inline))

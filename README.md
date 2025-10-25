@@ -30,7 +30,7 @@ Some features added:
 - [tiny_obj_loader.h](https://github.com/tinyobjloader/tinyobjloader)
 
 ### Requirements
-- C++17 (GCC >= 9, Clang >= 10, or MSVC >= 2019)
+- C++17 (GCC >= 9 or Clang >= 10)
 - [CMake](https://cmake.org/)
 - OpenMP support
 
