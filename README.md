@@ -1,5 +1,5 @@
-# Ray tracing in one weekend, with SIMD
-An optimized implementation of Peter Shirley’s classic ray tracing (actually path tracing) series: [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) [*Ray Tracing: The Next Week*](https://raytracing.github.io/books/RayTracingTheNextWeek.html) and [*Ray Tracing: The Rest of Your Life*](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html). This version is written in C++17, enhanced with SIMD intrinsics and OpenMP multithreading for better performance.
+# Ray Tracing in One Weekend, in modern C++
+An optimized implementation of Peter Shirley’s classic ray tracing (actually path tracing) series: [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) [*Ray Tracing: The Next Week*](https://raytracing.github.io/books/RayTracingTheNextWeek.html) and [*Ray Tracing: The Rest of Your Life*](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html). This version is written in C++17 and uses OpenMP multithreading for better performance.
 
 ### Preview:
 
@@ -17,11 +17,11 @@ Peter Shirley’s originals were intentionally C-style. This project reimagines 
 Some features added:
 - Importance sampling (book 3): cosine-weighted diffuse bounces mixed with direct light sampling, plus stratified pixel samples. Pass the scene's lights with `cam.render_tiles(world, lights)`.
 - A 3D model importer.
-- Generic vector class: implemented a generic N-dimensional vector class.
+- Generic vector class: a small `Vector<T, N>` template (`vec3f`, `point3f` and `color` are `Vector<float, 3>`).
 - Image Writer: Instead of relying on a PPM writer, which is very slow and produces very large files, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.
 - Multithreading: Initially, I implemented a custom thread pool, but later transitioned to OpenMP for simplicity and better performance (skill issue on my part).
 - Tile-based rendering: The image is divided into tiles for more efficient parallel rendering.
-- CPU SIMD intrinsics: Used for optimized vector operations and improved performance.
+- No hand-written SIMD: an SSE `vec3` was tried and benchmarked, but with `-O3 -march=native` it was within ±15% of the plain version (faster on some scenes, slower on others), so it was removed to keep the code simple.
 
 ## Building with CMake
 ### External (header-only) dependencies
@@ -54,12 +54,9 @@ cmake --build .
 
 After building, you’ll find the executable inside the build/ directory:
 ```bash
-./SIMD-Pathtracer
+./main
 ```
-By default, it renders the final scene and saves it to `output.png` (or another format if specified).
-
-### Usage
-To enable SIMD, simply add `#define _USE_SIMD_` before `#include "vector.h"`, but remember to do this only once, or else just use `#ifndef`.
+The scene is picked by the `switch` in `main()` in [src/main.cpp](src/main.cpp). Each scene sets its own `output_filename` (`output.png` if it doesn't); the file is written to the current directory, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
 
 ## Future plans
 - CUDA acceleration

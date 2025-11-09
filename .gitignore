@@ -1,5 +1,4 @@
 test/
-src/rt/rtm/vec4_SIMD.h
 build/
 .vscode/
 images/ppm/
