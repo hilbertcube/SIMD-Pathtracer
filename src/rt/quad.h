@@ -1,6 +1,5 @@
 #pragma once
 
-// #include "rtm/vec3.h"
 #include <cmath>
 #include "rtm/vector.h"
 #include "hittable_list.h"
@@ -25,7 +24,7 @@ public:
         set_bounding_box();
     }
 
-    virtual void set_bounding_box()
+    void set_bounding_box()
     {
         // Compute the bounding box of all four vertices.
         auto bbox_diagonal1 = AABB(Q, Q + u + v);
@@ -40,7 +39,7 @@ public:
         float denominator = dot(normal, r.direction());
 
         // No hit if the ray is parallel to the plane.
-        if (std::fabs(denominator) < 1e-8) return false;
+        if (std::fabs(denominator) < 1e-8f) return false;
 
         // Return false if the hit point parameter t is outside the ray interval.
         float t = (D - dot(normal, r.origin())) / denominator;
@@ -57,13 +56,13 @@ public:
         // Ray hits the 2D shape; set the rest of the hit record and return true.
         rec.t = t;
         rec.p = intersection;
-        rec.mat = mat;
+        rec.mat = mat.get();
         rec.set_face_normal(r, normal);
 
         return true;
     }
 
-    virtual bool is_interior(float a, float b, hit_record& rec) const 
+    bool is_interior(float a, float b, hit_record& rec) const
     {
         interval unit_interval = interval(0, 1);
         // Given the hit point in plane coordinates, return false if it is outside the

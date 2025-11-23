@@ -45,7 +45,7 @@ public:
         rec.t = t;
         rec.p = r.at(t);
         rec.set_face_normal(r, unit_vector(cross(edge1, edge2)));
-        rec.mat = mat;
+        rec.mat = mat.get();
         return true;
     }
 

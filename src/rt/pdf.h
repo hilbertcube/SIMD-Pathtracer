@@ -36,6 +36,7 @@ struct sphere_pdf : public pdf {
 /// @brief Cosine-weighted hemisphere around a normal (ideal for Lambertian surfaces).
 class cosine_pdf : public pdf {
 public:
+    cosine_pdf() = default;
     explicit cosine_pdf(const vec3f& w) : uvw(w) {}
 
     float value(const vec3f& direction) const override
@@ -75,29 +76,24 @@ private:
     point3f origin;
 };
 
-/// @brief 50/50 mixture of two pdfs.
+/// @brief 50/50 mixture of two pdfs. Holds references: both must outlive it.
 class mixture_pdf : public pdf {
 public:
-    mixture_pdf(shared_ptr<pdf> p0, shared_ptr<pdf> p1)
-    {
-        p[0] = p0;
-        p[1] = p1;
-    }
+    mixture_pdf(const pdf& p0, const pdf& p1) : p0(p0), p1(p1) {}
 
     float value(const vec3f& direction) const override
     {
-        return 0.5f * p[0]->value(direction) + 0.5f * p[1]->value(direction);
+        return 0.5f * p0.value(direction) + 0.5f * p1.value(direction);
     }
 
     vec3f generate() const override
     {
-        if (random_float() < 0.5f)
-            return p[0]->generate();
-        return p[1]->generate();
+        return random_float() < 0.5f ? p0.generate() : p1.generate();
     }
 
 private:
-    shared_ptr<pdf> p[2];
+    const pdf& p0;
+    const pdf& p1;
 };
 
 } // namespace rt

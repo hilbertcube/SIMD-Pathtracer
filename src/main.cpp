@@ -189,6 +189,9 @@ void simple_light() {
     world.add(make_shared<rt::sphere>(rt::point3f(0,7,0), 2.0f, difflight));
     world.add(make_shared<rt::quad>(rt::point3f(3,1,-2), rt::vec3f(2,0,0), rt::vec3f(0,2,0), difflight));
 
+    // BVH over the top-level objects so rays skip whatever they can't reach
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
+
     // Lights to importance-sample (geometry only; material is ignored)
     rt::hittable_list lights;
     lights.add(make_shared<rt::sphere>(rt::point3f(0,7,0), 2.0f, shared_ptr<rt::material>()));
@@ -252,6 +255,9 @@ void cornell_box() {
     world.add(box1);
     world.add(box2);
     world.add(pyramid_obj);
+
+    // BVH over the top-level objects so rays skip whatever they can't reach
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
     // Lights to importance-sample (geometry only; material is ignored)
     rt::hittable_list lights;
@@ -340,6 +346,9 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {
         )
     );
 
+    // BVH over the top-level objects so rays skip whatever they can't reach
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
+
     // Lights to importance-sample (geometry only; material is ignored)
     rt::hittable_list lights;
     lights.add(make_shared<rt::quad>(rt::point3f(123,554,147), rt::vec3f(300,0,0), rt::vec3f(0,0,265), shared_ptr<rt::material>()));
@@ -420,6 +429,9 @@ void three_D_model() {
     auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
     world.add(teapot_bvh);
 
+    // BVH over the top-level objects so rays skip whatever they can't reach
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
+
     // Lights to importance-sample (geometry only; material is ignored)
     rt::hittable_list lights;
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130,0,0), rt::vec3f(0,0,-105), shared_ptr<rt::material>()));
@@ -491,6 +503,9 @@ void multiple_models() {
     auto spot_rotated = make_shared<rt::rotate_y>(spot_bvh, 45.0f);
     auto spot_final = make_shared<rt::translate>(spot_rotated, rt::vec3f(65, 0, 290));
     world.add(spot_final);
+
+    // BVH over the top-level objects so rays skip whatever they can't reach
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
     // Lights to importance-sample (geometry only; material is ignored)
     rt::hittable_list lights;

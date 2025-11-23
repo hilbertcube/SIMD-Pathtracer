@@ -64,7 +64,7 @@ public:
         vec3f outward_normal = (rec.p - current_center) / radius;
         rec.set_face_normal(r, outward_normal);
         get_sphere_uv(outward_normal, rec.u, rec.v);
-        rec.mat = mat;
+        rec.mat = mat.get();
 
         return true;
     }

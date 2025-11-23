@@ -56,7 +56,7 @@ public:
 
         rec.t = t;
         rec.p = p;
-        rec.mat = mat;
+        rec.mat = mat.get();
         rec.set_face_normal(r, normal);
         return true;
     }

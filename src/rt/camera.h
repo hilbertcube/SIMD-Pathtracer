@@ -298,8 +298,8 @@ namespace rt
             float pdf_value;
             if (lights)
             {
-                auto light_ptr = make_shared<hittable_pdf>(*lights, rec.p);
-                mixture_pdf p(light_ptr, srec.pdf_ptr);
+                hittable_pdf light_pdf(*lights, rec.p);
+                mixture_pdf p(light_pdf, *srec.pdf_ptr);
                 scattered = ray(rec.p, p.generate(), r.time());
                 pdf_value = p.value(scattered.direction());
             }

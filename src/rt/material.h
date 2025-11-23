@@ -8,12 +8,22 @@
 namespace rt {
 
 /// @brief What a material reports when a ray scatters off it.
+/// The pdf lives inside the record (no heap allocation per bounce); pdf_ptr points
+/// at one of the members, so the record must not be copied.
 class scatter_record {
 public:
-    color attenuation;          // Color reduction factor (albedo)
-    shared_ptr<pdf> pdf_ptr;    // Distribution of scattered directions (diffuse-like materials)
-    bool skip_pdf = false;      // true for specular materials: use skip_pdf_ray directly
-    ray skip_pdf_ray;           // The scattered ray when skip_pdf is true
+    color attenuation;              // Color reduction factor (albedo)
+    const pdf* pdf_ptr = nullptr;   // Distribution of scattered directions (diffuse-like materials)
+    bool skip_pdf = false;          // true for specular materials: use skip_pdf_ray directly
+    ray skip_pdf_ray;               // The scattered ray when skip_pdf is true
+
+    // Storage for the pdfs materials can pick from
+    cosine_pdf cosine;
+    sphere_pdf sphere;
+
+    scatter_record() = default;
+    scatter_record(const scatter_record&) = delete;
+    scatter_record& operator=(const scatter_record&) = delete;
 };
 
 class material {
@@ -70,7 +80,8 @@ public:
     bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override
     {
         srec.attenuation = tex->value(rec.u, rec.v, rec.p);
-        srec.pdf_ptr = make_shared<cosine_pdf>(rec.normal);
+        srec.cosine = cosine_pdf(rec.normal);
+        srec.pdf_ptr = &srec.cosine;
         srec.skip_pdf = false;
         return true;
     }
@@ -171,7 +182,7 @@ public:
     bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override
     {
         srec.attenuation = tex->value(rec.u, rec.v, rec.p);
-        srec.pdf_ptr = make_shared<sphere_pdf>();
+        srec.pdf_ptr = &srec.sphere;
         srec.skip_pdf = false;
         return true;
     }

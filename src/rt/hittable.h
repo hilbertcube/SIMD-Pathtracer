@@ -17,7 +17,7 @@ public:
     float t;
     float u, v;
     bool front_face;
-    shared_ptr<material> mat;
+    const material* mat = nullptr;  // Non-owning: objects keep their material alive
 
     // Sets the hit record normal vector
     // NOTE: the @param outward_normal is assumed to have a unit length

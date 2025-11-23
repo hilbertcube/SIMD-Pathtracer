@@ -9,6 +9,8 @@ namespace rt {
 class ONB
 {
 public:
+    ONB() = default;
+
     explicit ONB(const vec3f& n)
     {
         axis[2] = unit_vector(n);

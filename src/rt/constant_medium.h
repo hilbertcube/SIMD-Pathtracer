@@ -47,7 +47,7 @@ public:
 
         rec.normal = vec3f(1,0,0);  // arbitrary
         rec.front_face = true;     // also arbitrary
-        rec.mat = phase_function;
+        rec.mat = phase_function.get();
 
         return true;
     }
