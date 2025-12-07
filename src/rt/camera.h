@@ -70,6 +70,9 @@ namespace rt
         };
 
     private:
+        static constexpr int   RR_MIN_BOUNCES  = 3;     // Bounces before Russian roulette kicks in
+        static constexpr float RR_MAX_SURVIVAL = 0.95f; // Cap so bright paths still terminate eventually
+
         int image_height;          // Rendered image height
         int spp;                   // Samples per pixel actually taken (at least 1)
         int sqrt_spp;              // Side of the stratified sample grid
@@ -287,6 +290,17 @@ namespace rt
 
             if (!rec.mat->scatter(r, rec, srec))
                 return color_from_emission;
+
+            // Russian roulette: after a few bounces, end the path with probability 1 - p and
+            // boost survivors by 1/p. Unbiased, and dark surfaces stop wasting bounces early.
+            if (max_depth - depth >= RR_MIN_BOUNCES)
+            {
+                const color& a = srec.attenuation;
+                float p = std::fmin(RR_MAX_SURVIVAL, std::fmax(a.r(), std::fmax(a.g(), a.b())));
+                if (random_float() >= p)
+                    return color_from_emission;
+                srec.attenuation /= p;
+            }
 
             // Specular materials (metal, glass) pick their own ray; no pdf weighting
             if (srec.skip_pdf)
