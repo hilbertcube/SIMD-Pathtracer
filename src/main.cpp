@@ -1,3 +1,5 @@
+#include <cstdlib>
+
 #include "rt/ray_tracer.h"
 #include "rt/mesh.h"
 
@@ -68,7 +70,7 @@ void spheres_scene() {
     cam.vup               = rt::vec3f(0, 1, 0);
     cam.defocus_angle     = 0.6f;
     cam.focus_dist        = 10.0f;
-    cam.render_omp(world);
+    cam.render(world);
 }
 
 void checkered_spheres() {
@@ -94,7 +96,7 @@ void checkered_spheres() {
     cam.defocus_angle = 0;
     cam.output_filename = "checked_spheres.png";
 
-    cam.render_omp(world);
+    cam.render(world);
 }
 
 void earth() {
@@ -116,7 +118,7 @@ void earth() {
     cam.vup      = rt::vec3f(0, 1, 0);
     cam.defocus_angle = 0.0f;
     
-    cam.render_omp(rt::hittable_list(globe));
+    cam.render(rt::hittable_list(globe));
 }
 
 void perlin_spheres() {
@@ -140,7 +142,7 @@ void perlin_spheres() {
     cam.defocus_angle = 0.0f;
     cam.output_filename = "perlin_spheres.png";
 
-    cam.render_omp(world);
+    cam.render(world);
 }
 
 void quads() {
@@ -175,7 +177,7 @@ void quads() {
 
     cam.defocus_angle = 0;
 
-    cam.render_omp(world);
+    cam.render(world);
 }
 
 void simple_light() {
@@ -211,7 +213,7 @@ void simple_light() {
     cam.vup      = rt::vec3f(0, 1, 0);
     cam.defocus_angle = 0;
 
-    cam.render_tiles(world, lights);
+    cam.render(world, lights);
 }
 
 void cornell_box() {
@@ -279,7 +281,7 @@ void cornell_box() {
 
     cam.defocus_angle = 0;
 
-    cam.render_omp(world, lights);
+    cam.render(world, lights);
 }
 
 void final_scene(int image_width, int samples_per_pixel, int max_depth) {
@@ -369,7 +371,7 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {
     cam.defocus_angle = 0;
     cam.output_filename = "final_scene.png";
 
-    cam.render_tiles(world, lights);
+    cam.render(world, lights);
 }
 
 void three_D_model() {
@@ -448,7 +450,7 @@ void three_D_model() {
     cam.vup      = rt::vec3f(0,1,0);
     cam.output_filename = "3d_model.png";
     cam.defocus_angle = 0;
-    cam.render_tiles(world, lights);
+    cam.render(world, lights);
 }
 
 void multiple_models() {
@@ -523,13 +525,16 @@ void multiple_models() {
     cam.vup      = rt::vec3f(0,1,0);
     cam.output_filename = "multiple_3d_models.png";
     cam.defocus_angle = 0;
-    cam.render_tiles(world, lights);
+    cam.render(world, lights);
 }
 
-int main() {
+int main(int argc, char** argv) {
+    // Scene number from the command line, e.g. ./main 7 (defaults to 9)
+    int scene = argc > 1 ? std::atoi(argv[1]) : 9;
+
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
-    switch (9) {
+    switch (scene) {
         case 1:  spheres_scene();               break;
         case 2:  checkered_spheres();           break;
         case 3:  earth();                       break;
@@ -545,4 +550,4 @@ int main() {
     return 0;
 }
 
-// cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build && ./build/main
+// cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build && ./build/main 7

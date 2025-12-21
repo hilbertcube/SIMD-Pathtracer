@@ -3,6 +3,11 @@ project(Ray_tracer LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Default to an optimized build: a Debug build renders about 9x slower
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
 # Compiler Info
 message(STATUS "C Compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")

@@ -8,7 +8,6 @@
 #include <cstring> // For memcpy
 #include <iomanip>
 #include <filesystem>
-#include <atomic>
 #include <algorithm>
 
 // multithreading
@@ -44,30 +43,16 @@ namespace rt
         float focus_dist = 10.0f;   // Distance from camera lookfrom point to plane of perfect focus
         std::string output_filename = "output.png";
 
-        // Each render mode comes in two forms:
-        //   render_xxx(world)          - bounces sample only the material's own pdf.
-        //                                Use for scenes lit by the background / sky.
-        //   render_xxx(world, lights)  - importance-samples `lights` (mixed 50/50 with the
-        //                                material pdf). Much less noise for small lights.
-        //                                `lights` holds copies of the emitters' geometry;
-        //                                their material is ignored.
-
-        void render_serial(const hittable &world) { render_serial_impl(world, nullptr); }
-        void render_serial(const hittable &world, const hittable &lights) { render_serial_impl(world, &lights); }
-
-        void render_omp(const hittable &world) { render_omp_impl(world, nullptr); }
-        void render_omp(const hittable &world, const hittable &lights) { render_omp_impl(world, &lights); }
-
-        void render_tiles(const hittable &world) { render_tiles_impl(world, nullptr); }
-        void render_tiles(const hittable &world, const hittable &lights) { render_tiles_impl(world, &lights); }
-
-        struct Tile
-        {
-            int x0, y0; // Top-left corner
-            int x1, y1; // Bottom-right corner
-            Tile(int _x0, int _y0, int _x1, int _y1)
-                : x0(_x0), y0(_y0), x1(_x1), y1(_y1) {}
-        };
+        // Renders the image in parallel (OpenMP, one row per task) and saves it.
+        //   render(world)          - bounces sample only the material's own pdf.
+        //                            Use for scenes lit by the background / sky.
+        //   render(world, lights)  - importance-samples `lights` (mixed 50/50 with the
+        //                            material pdf). Much less noise for small lights.
+        //                            `lights` holds copies of the emitters' geometry;
+        //                            their material is ignored.
+        // For a single-threaded run, set OMP_NUM_THREADS=1.
+        void render(const hittable &world) { render_impl(world, nullptr); }
+        void render(const hittable &world, const hittable &lights) { render_impl(world, &lights); }
 
     private:
         static constexpr int   RR_MIN_BOUNCES  = 3;     // Bounces before Russian roulette kicks in
@@ -87,77 +72,21 @@ namespace rt
         vec3f defocus_disk_v;      // Defocus disk vertical radius
         std::vector<color> framebuffer;
 
-        void render_serial_impl(const hittable &world, const hittable *lights)
+        void render_impl(const hittable &world, const hittable *lights)
         {
             initialize();
-            for (int j{0}; j < image_height; ++j)
-            {
-                std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-                for (int i{0}; i < image_width; ++i)
-                    framebuffer[j * image_width + i] = sample_pixel(i, j, world, lights);
-            }
-            finish();
-        }
+            int rows_done = 0;
 
-        void render_omp_impl(const hittable &world, const hittable *lights)
-        {
-            initialize();
+            // Rows are handed out dynamically, so faster cores simply take more of them
             #pragma omp parallel for schedule(dynamic)
             for (int j = 0; j < image_height; ++j)
             {
-                #pragma omp critical
-                std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-
                 for (int i = 0; i < image_width; ++i)
                     framebuffer[j * image_width + i] = sample_pixel(i, j, world, lights);
-            }
-            finish();
-        }
 
-        void render_tiles_impl(const hittable &world, const hittable *lights)
-        {
-            initialize();
-            // Calculate optimal tile size based on cache size
-            // Typical L1 cache is 32KB-64KB. Each pixel is 3 floats (12 bytes)
-            // Use: 32x32 tiles (~12 KB/tile)
-            const int TILE_SIZE = 32;
-
-            // Create tiles
-            std::vector<Tile> tiles;
-            for (int y = 0; y < image_height; y += TILE_SIZE)
-            {
-                for (int x = 0; x < image_width; x += TILE_SIZE)
-                {
-                    tiles.emplace_back(
-                        x, y,
-                        std::min(x + TILE_SIZE, image_width),
-                        std::min(y + TILE_SIZE, image_height));
-                }
-            }
-
-            // Progress tracking
-            std::atomic<int> tiles_completed(0);
-            const int total_tiles = static_cast<int>(tiles.size());
-
-            // Render tiles
-            #pragma omp parallel for schedule(dynamic, 1)
-            for (int tile_idx = 0; tile_idx < total_tiles; ++tile_idx)
-            {
-                const Tile &tile = tiles[tile_idx];
-
-                // Process each pixel in the tile
-                for (int j = tile.y0; j < tile.y1; ++j)
-                    for (int i = tile.x0; i < tile.x1; ++i)
-                        framebuffer[j * image_width + i] = sample_pixel(i, j, world, lights);
-
-                int completed = ++tiles_completed;
                 #pragma omp critical
-                {
-                    float progress = (completed * 100.0f) / total_tiles;
-                    std::clog << "\rProgress: " << std::fixed << std::setprecision(1)
-                              << progress << "% [" << completed << "/" << total_tiles
-                              << " tiles]" << std::flush;
-                }
+                std::clog << "\rProgress: " << std::fixed << std::setprecision(1)
+                          << (++rows_done * 100.0f / image_height) << '%' << std::flush;
             }
             finish();
         }

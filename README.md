@@ -15,12 +15,11 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 Peter Shirley’s originals were intentionally C-style. This project reimagines them with modern C++ practices and performance optimizations.
 
 Some features added:
-- Importance sampling (book 3): cosine-weighted diffuse bounces mixed with direct light sampling, plus stratified pixel samples. Pass the scene's lights with `cam.render_tiles(world, lights)`.
+- Importance sampling (book 3): cosine-weighted diffuse bounces mixed with direct light sampling, plus stratified pixel samples. Pass the scene's lights with `cam.render(world, lights)`.
 - A 3D model importer.
 - Generic vector class: a small `Vector<T, N>` template (`vec3f`, `point3f` and `color` are `Vector<float, 3>`).
 - Image Writer: Instead of relying on a PPM writer, which is very slow and produces very large files, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.
 - Multithreading: Initially, I implemented a custom thread pool, but later transitioned to OpenMP for simplicity and better performance (skill issue on my part).
-- Tile-based rendering: The image is divided into tiles for more efficient parallel rendering.
 - No hand-written SIMD: an SSE `vec3` was tried and benchmarked, but with `-O3 -march=native` it was within ±15% of the plain version (faster on some scenes, slower on others), so it was removed to keep the code simple.
 
 ## Building with CMake
@@ -54,9 +53,9 @@ cmake --build .
 
 After building, you’ll find the executable inside the build/ directory:
 ```bash
-./main
+./main 7    # render scene 7 (the Cornell box)
 ```
-The scene is picked by the `switch` in `main()` in [src/main.cpp](src/main.cpp). Each scene sets its own `output_filename` (`output.png` if it doesn't); the file is written to the current directory, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
+The number picks a case of the `switch` in `main()` in [src/main.cpp](src/main.cpp): 1 spheres, 2 checkered spheres, 3 earth, 4 Perlin spheres, 5 quads, 6 simple light, 7 Cornell box, 8 Book 2 final scene, 9 teapot model (the default), 10 multiple models; any other number renders a quick preview of the final scene. Each scene sets its own `output_filename` (`output.png` if it doesn't); the file is written to the current directory, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
 
 ## Future plans
 - CUDA acceleration
