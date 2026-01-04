@@ -1,0 +1,3 @@
+# Third-party headers: keep them byte-for-byte as upstream
+src/external/*
+src/external/**/*

@@ -27,6 +27,18 @@ if(OpenMP_CXX_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
+# `cmake --build build --target format` applies .clang-format to the project's own sources
+find_program(CLANG_FORMAT clang-format)
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE FORMAT_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.h")
+    list(FILTER FORMAT_SOURCES EXCLUDE REGEX "/src/external/")
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT} -i ${FORMAT_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang-format")
+endif()
+
 file(GLOB C_SOURCES "src/*.c")
 file(GLOB CPP_SOURCES "src/*.cpp")
 

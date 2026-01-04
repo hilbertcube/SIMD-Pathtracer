@@ -1,0 +1,43 @@
+# Formatting rules for the ray tracer. Apply with:
+#   cmake --build build --target format
+# or: clang-format -i <files>
+# Third-party headers in src/external are excluded (see .clang-format-ignore).
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++17
+
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+NamespaceIndentation: None
+IndentCaseLabels: true
+PointerAlignment: Left
+
+# Opening braces stay on the same line, as in the Ray Tracing books
+BreakBeforeBraces: Attach
+
+# Keep short things short
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: All
+AllowShortCaseLabelsOnASingleLine: true
+
+# Keep the aligned "cam.x = ..." blocks and trailing comments tidy
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: None
+AlignTrailingComments: true
+
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: true
+BinPackParameters: true
+
+# Some headers rely on a #define coming right before an #include (stb, tinyobj)
+SortIncludes: Never
+IncludeBlocks: Preserve
+
+MaxEmptyLinesToKeep: 1
+InsertNewlineAtEOF: true
+...

@@ -5,33 +5,27 @@
 #include "quad.h"
 #include "hittable_list.h"
 
-namespace rt
-{
+namespace rt {
 class triangle : public hittable {
 public:
     triangle(const point3f& a, const point3f& b, const point3f& c, shared_ptr<material> mat)
-        : a(a), b(b), c(c), mat(mat)
-    {
+        : a(a), b(b), c(c), mat(mat) {
         // Precompute edges and normal
-        u = b - a;
-        v = c - a;
+        u      = b - a;
+        v      = c - a;
         normal = unit_vector(cross(u, v));
-        D = dot(normal, a);
+        D      = dot(normal, a);
         set_bounding_box();
     }
 
     void set_bounding_box() {
-        point3f min_point(
-            std::fmin(std::fmin(a.x(), b.x()), c.x()),
-            std::fmin(std::fmin(a.y(), b.y()), c.y()),
-            std::fmin(std::fmin(a.z(), b.z()), c.z())
-        );
+        point3f min_point(std::fmin(std::fmin(a.x(), b.x()), c.x()),
+                          std::fmin(std::fmin(a.y(), b.y()), c.y()),
+                          std::fmin(std::fmin(a.z(), b.z()), c.z()));
 
-        point3f max_point(
-            std::fmax(std::fmax(a.x(), b.x()), c.x()),
-            std::fmax(std::fmax(a.y(), b.y()), c.y()),
-            std::fmax(std::fmax(a.z(), b.z()), c.z())
-        );
+        point3f max_point(std::fmax(std::fmax(a.x(), b.x()), c.x()),
+                          std::fmax(std::fmax(a.y(), b.y()), c.y()),
+                          std::fmax(std::fmax(a.z(), b.z()), c.z()));
 
         bbox = AABB(min_point, max_point);
     }
@@ -51,11 +45,10 @@ public:
         vec3f c1 = cross(c - b, p - b);
         vec3f c2 = cross(a - c, p - c);
 
-        if (dot(normal, c0) < 0 || dot(normal, c1) < 0 || dot(normal, c2) < 0)
-            return false;
+        if (dot(normal, c0) < 0 || dot(normal, c1) < 0 || dot(normal, c2) < 0) return false;
 
-        rec.t = t;
-        rec.p = p;
+        rec.t   = t;
+        rec.p   = p;
         rec.mat = mat.get();
         rec.set_face_normal(r, normal);
         return true;
@@ -69,11 +62,8 @@ private:
     AABB bbox;
 };
 
-inline shared_ptr<hittable_list> pyramid(
-    const point3f& base_min, const point3f& base_max,
-    const point3f& apex,
-    shared_ptr<material> mat)
-{
+inline shared_ptr<hittable_list> pyramid(const point3f& base_min, const point3f& base_max,
+                                         const point3f& apex, shared_ptr<material> mat) {
     auto sides = make_shared<hittable_list>();
 
     // Base corners
@@ -95,6 +85,3 @@ inline shared_ptr<hittable_list> pyramid(
 }
 
 } // namespace rt
-
-
-

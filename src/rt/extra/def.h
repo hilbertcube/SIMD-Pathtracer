@@ -7,7 +7,7 @@ using std::unique_ptr;
 using std::weak_ptr;
 
 #include <cmath>
-using std::sqrt;
 using std::floor;
+using std::sqrt;
 
 #define FORCE_INLINE inline __attribute__((always_inline))

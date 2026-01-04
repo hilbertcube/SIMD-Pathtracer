@@ -12,9 +12,7 @@ public:
     AABB() {} // The default AABB is empty, since intervals are empty by default.
 
     // Box = x * y * z
-    AABB(const interval& x, const interval& y, const interval& z)
-      : x(x), y(y), z(z)
-    {
+    AABB(const interval& x, const interval& y, const interval& z) : x(x), y(y), z(z) {
         pad_to_minimums();
     }
 
@@ -43,11 +41,11 @@ public:
 
     bool hit(const ray& r, interval ray_t) const {
         const point3f& ray_orig = r.origin();
-        const vec3f&   ray_dir  = r.direction();
+        const vec3f& ray_dir    = r.direction();
 
         for (int axis = 0; axis < 3; axis++) {
             const interval& ax = axis_interval(axis);
-            const float adinv = 1.0f / ray_dir[axis];
+            const float adinv  = 1.0f / ray_dir[axis];
 
             auto t0 = (ax.min - ray_orig[axis]) * adinv;
             auto t1 = (ax.max - ray_orig[axis]) * adinv;
@@ -60,8 +58,7 @@ public:
                 if (t0 < ray_t.max) ray_t.max = t0;
             }
 
-            if (ray_t.max <= ray_t.min)
-                return false;
+            if (ray_t.max <= ray_t.min) return false;
         }
         return true;
     }
@@ -87,7 +84,7 @@ private:
     }
 };
 
-const AABB AABB::empty    = AABB(interval::empty,    interval::empty,    interval::empty);
+const AABB AABB::empty    = AABB(interval::empty, interval::empty, interval::empty);
 const AABB AABB::universe = AABB(interval::universe, interval::universe, interval::universe);
 
 AABB operator+(const AABB& bbox, const vec3f& offset) {

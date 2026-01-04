@@ -23,8 +23,8 @@ public:
     // ref: https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
         const float epsilon = std::numeric_limits<float>::epsilon();
-        vec3f edge1 = v1 - v0;
-        vec3f edge2 = v2 - v0;
+        vec3f edge1         = v1 - v0;
+        vec3f edge2         = v2 - v0;
 
         vec3f h = cross(r.direction(), edge2);
         float a = dot(edge1, h);
@@ -50,20 +50,15 @@ public:
     }
 
     AABB bounding_box() const override {
-        point3f min_pt(fmin(v0.x(), fmin(v1.x(), v2.x())),
-                      fmin(v0.y(), fmin(v1.y(), v2.y())),
-                      fmin(v0.z(), fmin(v1.z(), v2.z())));
-        point3f max_pt(fmax(v0.x(), fmax(v1.x(), v2.x())),
-                      fmax(v0.y(), fmax(v1.y(), v2.y())),
-                      fmax(v0.z(), fmax(v1.z(), v2.z())));
+        point3f min_pt(fmin(v0.x(), fmin(v1.x(), v2.x())), fmin(v0.y(), fmin(v1.y(), v2.y())),
+                       fmin(v0.z(), fmin(v1.z(), v2.z())));
+        point3f max_pt(fmax(v0.x(), fmax(v1.x(), v2.x())), fmax(v0.y(), fmax(v1.y(), v2.y())),
+                       fmax(v0.z(), fmax(v1.z(), v2.z())));
         return AABB(min_pt, max_pt);
     }
 };
 
-shared_ptr<hittable_list> load_obj(
-    const std::string& filename,
-    shared_ptr<material> default_mat)
-{
+shared_ptr<hittable_list> load_obj(const std::string& filename, shared_ptr<material> default_mat) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -84,10 +79,10 @@ shared_ptr<hittable_list> load_obj(
             std::array<point3f, 3> verts;
             for (int v = 0; v < fv; v++) {
                 tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
-                float vx = attrib.vertices[3 * idx.vertex_index + 0];
-                float vy = attrib.vertices[3 * idx.vertex_index + 1];
-                float vz = attrib.vertices[3 * idx.vertex_index + 2];
-                verts[v] = point3f(vx, vy, vz);
+                float vx             = attrib.vertices[3 * idx.vertex_index + 0];
+                float vy             = attrib.vertices[3 * idx.vertex_index + 1];
+                float vz             = attrib.vertices[3 * idx.vertex_index + 2];
+                verts[v]             = point3f(vx, vy, vz);
             }
             index_offset += fv;
 

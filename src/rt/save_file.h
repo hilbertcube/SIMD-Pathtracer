@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <algorithm>
-#include <fstream> 
+#include <fstream>
 #include <cctype>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -15,15 +15,16 @@
 namespace rt {
 
 // Replace NaN components with zero (a stray NaN sample would otherwise poison the pixel)
-inline float sanitize(float x) { return (x != x) ? 0.0f : x; }
+inline float sanitize(float x) {
+    return (x != x) ? 0.0f : x;
+}
 
-inline void write_color_ppm(std::ostream& out, const color& pixel_color)
-{
+inline void write_color_ppm(std::ostream& out, const color& pixel_color) {
     // Apply a linear to gamma transform for gamma 2
     auto r = linear_to_gamma(sanitize(pixel_color.r()));
     auto g = linear_to_gamma(sanitize(pixel_color.g()));
     auto b = linear_to_gamma(sanitize(pixel_color.b()));
- 
+
     // Translate the [0, 1] component values to the byte range [0, 255]
     static const interval intensity(0.000f, 0.999f);
     int rbyte = static_cast<int>(256 * intensity.clamp(r));
@@ -39,7 +40,7 @@ inline std::string extract_file_format(const std::string& filename) {
     // transform to lowercase
     std::string lower = filename;
     std::transform(lower.begin(), lower.end(), lower.begin(),
-                   [](unsigned char c){ return std::tolower(c); });
+                   [](unsigned char c) { return std::tolower(c); });
 
     for (int i = static_cast<int>(lower.size()) - 1; i >= 0; --i) {
         if (lower[i] == '.') {
@@ -51,12 +52,10 @@ inline std::string extract_file_format(const std::string& filename) {
     return ""; // no dot found
 }
 
-inline void save_framebuffer(const std::vector<color>& framebuffer,
-                      const int width, const int height,
-                      const std::string& filename)
-{
+inline void save_framebuffer(const std::vector<color>& framebuffer, const int width,
+                             const int height, const std::string& filename) {
     const std::string format = extract_file_format(filename);
-    
+
     // not recommended, very slow and produces very large files
     if (format == "ppm") {
         std::ofstream out(filename);
@@ -83,7 +82,7 @@ inline void save_framebuffer(const std::vector<color>& framebuffer,
             int gbyte = static_cast<int>(256 * intensity.clamp(g));
             int bbyte = static_cast<int>(256 * intensity.clamp(b));
 
-            int idx = (j * width + i) * 3;
+            int idx               = (j * width + i) * 3;
             image_buffer[idx + 0] = static_cast<unsigned char>(rbyte);
             image_buffer[idx + 1] = static_cast<unsigned char>(gbyte);
             image_buffer[idx + 2] = static_cast<unsigned char>(bbyte);
@@ -92,19 +91,15 @@ inline void save_framebuffer(const std::vector<color>& framebuffer,
 
     if (format == "png") {
         stbi_write_png(filename.c_str(), width, height, 3, image_buffer.data(), width * 3);
-    }
-    else if (format == "jpg" || format == "jpeg") {
+    } else if (format == "jpg" || format == "jpeg") {
         stbi_write_jpg(filename.c_str(), width, height, 3, image_buffer.data(), 90); // quality
-    }
-    else if (format == "bmp") {
+    } else if (format == "bmp") {
         stbi_write_bmp(filename.c_str(), width, height, 3, image_buffer.data());
-    }
-    else if (format == "tga") {
+    } else if (format == "tga") {
         stbi_write_tga(filename.c_str(), width, height, 3, image_buffer.data());
-    }
-    else {
+    } else {
         throw std::runtime_error("Unsupported format: " + format);
     }
 }
 
-}
+} // namespace rt
