@@ -44,40 +44,4 @@ private:
     ONB uvw;
 };
 
-/// @brief Directions from `origin` toward a hittable (e.g. a light), using its
-/// pdf_value()/random().
-class hittable_pdf : public pdf {
-public:
-    hittable_pdf(const hittable& objects, const point3f& origin)
-        : objects(objects), origin(origin) {}
-
-    float value(const vec3f& direction) const override {
-        return objects.pdf_value(origin, direction);
-    }
-
-    vec3f generate() const override { return objects.random(origin); }
-
-private:
-    const hittable& objects;
-    point3f origin;
-};
-
-/// @brief 50/50 mixture of two pdfs. Holds references: both must outlive it.
-class mixture_pdf : public pdf {
-public:
-    mixture_pdf(const pdf& p0, const pdf& p1) : p0(p0), p1(p1) {}
-
-    float value(const vec3f& direction) const override {
-        return 0.5f * p0.value(direction) + 0.5f * p1.value(direction);
-    }
-
-    vec3f generate() const override {
-        return random_float() < 0.5f ? p0.generate() : p1.generate();
-    }
-
-private:
-    const pdf& p0;
-    const pdf& p1;
-};
-
 } // namespace rt

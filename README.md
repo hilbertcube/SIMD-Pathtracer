@@ -15,7 +15,7 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 Peter Shirley’s originals were intentionally C-style. This project reimagines them with modern C++ practices and performance optimizations.
 
 Some features added:
-- Importance sampling (book 3): cosine-weighted diffuse bounces mixed with direct light sampling, plus stratified pixel samples. Pass the scene's lights with `cam.render(world, lights)`.
+- Importance sampling (book 3, extended): cosine-weighted diffuse bounces plus direct light sampling with shadow rays, combined with multiple importance sampling (power heuristic), and stratified pixel samples. Book 3's 50/50 mixture pdf has no shadow ray, so lights hidden behind glass or other objects caused fireflies; MIS removes them. Pass the scene's lights with `cam.render(world, lights)`.
 - A 3D model importer.
 - Generic vector class: a small `Vector<T, N>` template (`vec3f`, `point3f` and `color` are `Vector<float, 3>`).
 - Image Writer: Instead of relying on a PPM writer, which is very slow and produces very large files, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.

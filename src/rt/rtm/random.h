@@ -18,6 +18,28 @@
 #define USE_XORSHIFT32
 #endif
 
+// SEEDING
+// Scenes are built on the main thread before rendering, and some are generated randomly
+// (sphere layouts, box heights, Perlin noise). The main thread starts from a fixed seed so
+// those scenes come out the same on every run. Every other thread is seeded from the clock,
+// and Camera reseeds the main thread from the clock before it renders, so sampling noise
+// stays independent between runs.
+constexpr uint32_t SCENE_SEED = 88675123u;
+
+inline const std::thread::id main_thread_id = std::this_thread::get_id();
+
+// Different for every thread and every run; never 0 (XorShift would get stuck at 0)
+inline uint32_t clock_seed() {
+    auto t = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    return static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()) ^
+                                 static_cast<uint32_t>(t)) |
+           1u;
+}
+
+inline uint32_t initial_seed() {
+    return std::this_thread::get_id() == main_thread_id ? SCENE_SEED : clock_seed();
+}
+
 // XorShift32 (fast PRNG)
 #ifdef USE_XORSHIFT32
 struct XorShift32 {
@@ -40,17 +62,22 @@ struct XorShift32 {
     }
 };
 
-inline thread_local XorShift32 tls_rng{static_cast<uint32_t>(
-    std::hash<std::thread::id>{}(std::this_thread::get_id()) ^
-    static_cast<uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count()))};
+inline thread_local XorShift32 tls_rng{initial_seed()};
 #endif // USE_XORSHIFT32
 
 // std::mt19937 (standard PRNG)
 #ifdef USE_MT19937
-inline thread_local std::mt19937 tls_rng{static_cast<uint32_t>(
-    std::hash<std::thread::id>{}(std::this_thread::get_id()) ^
-    static_cast<uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count()))};
+inline thread_local std::mt19937 tls_rng{initial_seed()};
 #endif // USE_MT19937
+
+// Restart the calling thread's generator from `seed`
+inline void seed_rng(uint32_t seed) {
+#ifdef USE_XORSHIFT32
+    tls_rng = XorShift32(seed ? seed : 1u);
+#else
+    tls_rng.seed(seed);
+#endif
+}
 
 // API FUNCTIONS
 // Random integer in [min, max]

@@ -73,6 +73,9 @@ private:
 
     void render_impl(const hittable& world, const hittable* lights) {
         initialize();
+        // The main thread built the scene from the fixed scene seed; its share of the
+        // rendering should still get fresh random numbers each run
+        seed_rng(clock_seed());
         int rows_done = 0;
 
 // Rows are handed out dynamically, so faster cores simply take more of them
@@ -192,56 +195,86 @@ private:
         return camera_center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
 
-    color ray_color(const ray& r, int depth, const hittable& world, const hittable* lights) const {
+    // Power heuristic: how much of a sample to credit to the strategy with density `a`
+    // when another strategy could have produced the same direction with density `b`.
+    static float mis_weight(float a, float b) { return a * a / (a * a + b * b); }
+
+    /**
+     * Radiance arriving along r.
+     *
+     * At diffuse-like hits, light is gathered two ways and combined with multiple
+     * importance sampling (MIS):
+     *   1. Light sampling: pick a direction toward `lights` and trace a shadow ray. It only
+     *      counts if the first thing it hits emits, so lights hidden behind glass or other
+     *      objects contribute nothing (instead of inflating the other samples).
+     *   2. Material sampling: continue the path along a direction drawn from the
+     *      material's pdf. Emission found at the next hit is scaled by `emission_weight`,
+     *      that direction's MIS weight, so lights aren't counted twice.
+     */
+    color ray_color(const ray& r, int depth, const hittable& world, const hittable* lights,
+                    float emission_weight = 1.0f) const {
         // If we've exceeded the ray bounce limit, no more light is gathered
         if (depth <= 0) return color(0, 0, 0);
 
         hit_record rec;
-
         if (!world.hit(r, interval(0.001f, INF), rec)) return background;
 
         scatter_record srec;
-        color color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+        color emission = emission_weight * rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
+        if (!rec.mat->scatter(r, rec, srec)) return emission;
 
-        if (!rec.mat->scatter(r, rec, srec)) return color_from_emission;
-
-        // Russian roulette: after a few bounces, end the path with probability 1 - p and
-        // boost survivors by 1/p. Unbiased, and dark surfaces stop wasting bounces early.
-        if (max_depth - depth >= RR_MIN_BOUNCES) {
-            const color& a = srec.attenuation;
-            float p        = std::fmin(RR_MAX_SURVIVAL, std::fmax(a.r(), std::fmax(a.g(), a.b())));
-            if (random_float() >= p) return color_from_emission;
-            srec.attenuation /= p;
-        }
-
-        // Specular materials (metal, glass) pick their own ray; no pdf weighting
-        if (srec.skip_pdf)
-            return color_from_emission +
+        // Specular materials (metal, glass) pick their own ray: nothing to importance-sample
+        if (srec.skip_pdf) {
+            if (!russian_roulette(depth, srec.attenuation)) return emission;
+            return emission +
                    srec.attenuation * ray_color(srec.skip_pdf_ray, depth - 1, world, lights);
-
-        // Diffuse-like materials: sample a direction from a pdf and weight by
-        // (material density / sampling density)
-        ray scattered;
-        float pdf_value;
-        if (lights) {
-            hittable_pdf light_pdf(*lights, rec.p);
-            mixture_pdf p(light_pdf, *srec.pdf_ptr);
-            scattered = ray(rec.p, p.generate(), r.time());
-            pdf_value = p.value(scattered.direction());
-        } else {
-            scattered = ray(rec.p, srec.pdf_ptr->generate(), r.time());
-            pdf_value = srec.pdf_ptr->value(scattered.direction());
         }
+
+        const pdf& material_pdf = *srec.pdf_ptr;
+        color direct(0, 0, 0);
+
+        // 1. Light sampling with a shadow ray
+        if (lights) {
+            ray to_light(rec.p, lights->random(rec.p), r.time());
+            float light_pdf = lights->pdf_value(rec.p, to_light.direction());
+            float f         = light_pdf > 0.0f ? rec.mat->scattering_pdf(r, rec, to_light) : 0.0f;
+
+            hit_record light_rec;
+            if (f > 0.0f && world.hit(to_light, interval(0.001f, INF), light_rec)) {
+                color Le = light_rec.mat->emitted(to_light, light_rec, light_rec.u, light_rec.v,
+                                                  light_rec.p);
+                float w  = mis_weight(light_pdf, material_pdf.value(to_light.direction()));
+                direct   = srec.attenuation * Le * (f * w / light_pdf);
+            }
+        }
+
+        // 2. Material sampling, continuing the path
+        if (!russian_roulette(depth, srec.attenuation)) return emission + direct;
+
+        ray scattered(rec.p, material_pdf.generate(), r.time());
+        float pdf_value = material_pdf.value(scattered.direction());
 
         // A zero (or NaN) density carries no usable energy; dividing would give inf/NaN
-        if (!(pdf_value > 0.0f)) return color_from_emission;
+        if (!(pdf_value > 0.0f)) return emission + direct;
 
-        float scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+        float f = rec.mat->scattering_pdf(r, rec, scattered);
+        float w =
+            lights ? mis_weight(pdf_value, lights->pdf_value(rec.p, scattered.direction())) : 1.0f;
 
-        color sample_color       = ray_color(scattered, depth - 1, world, lights);
-        color color_from_scatter = (srec.attenuation * scattering_pdf * sample_color) / pdf_value;
+        color incoming = ray_color(scattered, depth - 1, world, lights, w);
+        return emission + direct + srec.attenuation * incoming * (f / pdf_value);
+    }
 
-        return color_from_emission + color_from_scatter;
+    // Russian roulette: after a few bounces, end the path with probability 1 - p and boost
+    // survivors by 1/p. Unbiased, and dark surfaces stop wasting bounces early.
+    bool russian_roulette(int depth, color& attenuation) const {
+        if (max_depth - depth < RR_MIN_BOUNCES) return true;
+        float p =
+            std::fmin(RR_MAX_SURVIVAL,
+                      std::fmax(attenuation.r(), std::fmax(attenuation.g(), attenuation.b())));
+        if (random_float() >= p) return false;
+        attenuation /= p;
+        return true;
     }
 };
 
