@@ -5,11 +5,14 @@
 #include "quad.h"
 #include "hittable_list.h"
 
-namespace rt {
-class triangle : public hittable {
+namespace rt
+{
+class triangle : public hittable
+{
 public:
     triangle(const point3f& a, const point3f& b, const point3f& c, shared_ptr<material> mat)
-        : a(a), b(b), c(c), mat(mat) {
+        : a(a), b(b), c(c), mat(mat)
+    {
         // Precompute edges and normal
         u      = b - a;
         v      = c - a;
@@ -18,7 +21,8 @@ public:
         set_bounding_box();
     }
 
-    void set_bounding_box() {
+    void set_bounding_box()
+    {
         point3f min_point(std::fmin(std::fmin(a.x(), b.x()), c.x()),
                           std::fmin(std::fmin(a.y(), b.y()), c.y()),
                           std::fmin(std::fmin(a.z(), b.z()), c.z()));
@@ -32,12 +36,15 @@ public:
 
     AABB bounding_box() const override { return bbox; }
 
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+    bool hit(const ray& r, interval ray_t, hit_record& rec) const override
+    {
         float denom = dot(normal, r.direction());
-        if (std::fabs(denom) < 1e-8) return false;
+        if (std::fabs(denom) < 1e-8)
+            return false;
 
         float t = (D - dot(normal, r.origin())) / denom;
-        if (!ray_t.contains(t)) return false;
+        if (!ray_t.contains(t))
+            return false;
 
         point3f p = r.at(t);
         // Inside-outside test using cross products
@@ -45,7 +52,8 @@ public:
         vec3f c1 = cross(c - b, p - b);
         vec3f c2 = cross(a - c, p - c);
 
-        if (dot(normal, c0) < 0 || dot(normal, c1) < 0 || dot(normal, c2) < 0) return false;
+        if (dot(normal, c0) < 0 || dot(normal, c1) < 0 || dot(normal, c2) < 0)
+            return false;
 
         rec.t   = t;
         rec.p   = p;
@@ -63,7 +71,8 @@ private:
 };
 
 inline shared_ptr<hittable_list> pyramid(const point3f& base_min, const point3f& base_max,
-                                         const point3f& apex, shared_ptr<material> mat) {
+                                         const point3f& apex, shared_ptr<material> mat)
+{
     auto sides = make_shared<hittable_list>();
 
     // Base corners

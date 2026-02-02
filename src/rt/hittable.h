@@ -6,10 +6,12 @@
 #include "rtm/vector.h"
 #include "AABB.h"
 
-namespace rt {
+namespace rt
+{
 class material;
 
-class hit_record {
+class hit_record
+{
 public:
     point3f p;
     vec3f normal;
@@ -20,14 +22,16 @@ public:
 
     // Sets the hit record normal vector
     // NOTE: the @param outward_normal is assumed to have a unit length
-    void set_face_normal(const ray& r, const vec3f& outward_normal) {
+    void set_face_normal(const ray& r, const vec3f& outward_normal)
+    {
         front_face = (dot(r.direction(), outward_normal) < 0);
         normal     = front_face ? outward_normal : -outward_normal;
     }
 };
 
 // an abstract class of hittable objects
-class hittable {
+class hittable
+{
 protected:
     hittable() {}
 
@@ -47,17 +51,22 @@ public:
     virtual vec3f random(const point3f& origin) const { return vec3f(1, 0, 0); }
 };
 
-class translate : public hittable {
+class translate : public hittable
+{
 public:
-    translate(shared_ptr<hittable> object, const vec3f& offset) : object(object), offset(offset) {
+    translate(shared_ptr<hittable> object, const vec3f& offset) : object(object), offset(offset)
+    {
         bbox = object->bounding_box() + offset;
     }
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+
+    bool hit(const ray& r, interval ray_t, hit_record& rec) const override
+    {
         // Move the ray backwards by the offset
         ray offset_r(r.origin() - offset, r.direction(), r.time());
 
         // Determine whether an intersection exists along the offset ray (and if so, where)
-        if (!object->hit(offset_r, ray_t, rec)) return false;
+        if (!object->hit(offset_r, ray_t, rec))
+            return false;
 
         // Move the intersection point forwards by the offset
         rec.p += offset;
@@ -73,9 +82,11 @@ private:
     AABB bbox;
 };
 
-class rotate_y : public hittable {
+class rotate_y : public hittable
+{
 public:
-    rotate_y(shared_ptr<hittable> object, float angle_degrees) : object(object) {
+    rotate_y(shared_ptr<hittable> object, float angle_degrees) : object(object)
+    {
         float radians = degrees_to_radians(angle_degrees);
         sin_theta     = std::sin(radians);
         cos_theta     = std::cos(radians);
@@ -84,9 +95,12 @@ public:
         point3f min(INF, INF, INF);
         point3f max(-INF, -INF, -INF);
 
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2; j++) {
-                for (int k = 0; k < 2; k++) {
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                for (int k = 0; k < 2; k++)
+                {
                     auto x = i * bbox.x.max + (1 - i) * bbox.x.min;
                     auto y = j * bbox.y.max + (1 - j) * bbox.y.min;
                     auto z = k * bbox.z.max + (1 - k) * bbox.z.min;
@@ -96,7 +110,8 @@ public:
 
                     vec3f tester(newx, y, newz);
 
-                    for (int c = 0; c < 3; c++) {
+                    for (int c = 0; c < 3; c++)
+                    {
                         min[c] = std::fmin(min[c], tester[c]);
                         max[c] = std::fmax(max[c], tester[c]);
                     }
@@ -109,9 +124,12 @@ public:
     // avoid annoying type cast warning
     template <typename T>
     rotate_y(std::shared_ptr<hittable> object, T angle_degrees)
-        : rotate_y(object, static_cast<float>(angle_degrees)) {}
+        : rotate_y(object, static_cast<float>(angle_degrees))
+    {
+    }
 
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+    bool hit(const ray& r, interval ray_t, hit_record& rec) const override
+    {
         // Transform the ray from world space to object space.
         auto origin =
             point3f((cos_theta * r.origin().x()) - (sin_theta * r.origin().z()), r.origin().y(),
@@ -124,7 +142,8 @@ public:
         ray rotated_r(origin, direction, r.time());
 
         // Determine whether an intersection exists in object space (and if so, where).
-        if (!object->hit(rotated_r, ray_t, rec)) return false;
+        if (!object->hit(rotated_r, ray_t, rec))
+            return false;
 
         // Transform the intersection from object space back to world space.
         rec.p = point3f((cos_theta * rec.p.x()) + (sin_theta * rec.p.z()), rec.p.y(),

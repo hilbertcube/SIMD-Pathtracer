@@ -3,10 +3,12 @@
 
 #include "constants.h"
 
-namespace rt {
+namespace rt
+{
 
 // an interval class to manage real-valued intervals with a minimum and a maximum
-class interval {
+class interval
+{
 public:
     float min, max;
 
@@ -14,7 +16,8 @@ public:
 
     interval(float min, float max) : min(min), max(max) {}
 
-    interval(const interval& a, const interval& b) {
+    interval(const interval& a, const interval& b)
+    {
         // Create the interval tightly enclosing the two input intervals.
         min = a.min <= b.min ? a.min : b.min;
         max = a.max >= b.max ? a.max : b.max;
@@ -26,13 +29,17 @@ public:
 
     bool surrounds(float x) const { return min < x && x < max; }
 
-    float clamp(float x) const {
-        if (x < min) return min;
-        if (x > max) return max;
+    float clamp(float x) const
+    {
+        if (x < min)
+            return min;
+        if (x > max)
+            return max;
         return x;
     }
 
-    interval expand(float delta) const {
+    interval expand(float delta) const
+    {
         auto padding = delta / 2;
         return interval(min - padding, max + padding);
     }
@@ -43,11 +50,13 @@ public:
 const interval interval::empty    = interval(+INF, -INF);
 const interval interval::universe = interval(-INF, +INF);
 
-interval operator+(const interval& ival, float displacement) {
+interval operator+(const interval& ival, float displacement)
+{
     return interval(ival.min + displacement, ival.max + displacement);
 }
 
-interval operator+(float displacement, const interval& ival) {
+interval operator+(float displacement, const interval& ival)
+{
     return ival + displacement;
 }
 

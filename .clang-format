@@ -14,16 +14,20 @@ NamespaceIndentation: None
 IndentCaseLabels: true
 PointerAlignment: Left
 
-# Opening braces stay on the same line, as in the Ray Tracing books
-BreakBeforeBraces: Attach
+# Opening braces go on their own line (Allman style)
+BreakBeforeBraces: Allman
 
-# Keep short things short
+# Control flow is never squeezed onto one line: an if/loop body always gets its own line.
+# Short member functions defined inside a class (getters, trivial operators) may stay on one
+# line, as may empty bodies; everything else is broken out.
+SeparateDefinitionBlocks: Always
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: WithoutElse
-AllowShortLoopsOnASingleLine: true
-AllowShortBlocksOnASingleLine: Empty
-AllowShortLambdasOnASingleLine: All
-AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortLambdasOnASingleLine: Inline
 
 # Keep the aligned "cam.x = ..." blocks and trailing comments tidy
 AlignConsecutiveAssignments: Consecutive

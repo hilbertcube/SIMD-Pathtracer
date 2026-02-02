@@ -12,14 +12,17 @@
 #include "rtm/random.h"
 #include "color.h"
 
-namespace rt {
+namespace rt
+{
 
 // Replace NaN components with zero (a stray NaN sample would otherwise poison the pixel)
-inline float sanitize(float x) {
+inline float sanitize(float x)
+{
     return (x != x) ? 0.0f : x;
 }
 
-inline void write_color_ppm(std::ostream& out, const color& pixel_color) {
+inline void write_color_ppm(std::ostream& out, const color& pixel_color)
+{
     // Apply a linear to gamma transform for gamma 2
     auto r = linear_to_gamma(sanitize(pixel_color.r()));
     auto g = linear_to_gamma(sanitize(pixel_color.g()));
@@ -36,16 +39,20 @@ inline void write_color_ppm(std::ostream& out, const color& pixel_color) {
 }
 
 // format extractor with edge cases handle (although not needed)
-inline std::string extract_file_format(const std::string& filename) {
+inline std::string extract_file_format(const std::string& filename)
+{
     // transform to lowercase
     std::string lower = filename;
     std::transform(lower.begin(), lower.end(), lower.begin(),
                    [](unsigned char c) { return std::tolower(c); });
 
-    for (int i = static_cast<int>(lower.size()) - 1; i >= 0; --i) {
-        if (lower[i] == '.') {
+    for (int i = static_cast<int>(lower.size()) - 1; i >= 0; --i)
+    {
+        if (lower[i] == '.')
+        {
             // dot is first char: treat as hidden file, not extension
-            if (i == 0) return "";
+            if (i == 0)
+                return "";
             return lower.substr(i + 1);
         }
     }
@@ -53,14 +60,17 @@ inline std::string extract_file_format(const std::string& filename) {
 }
 
 inline void save_framebuffer(const std::vector<color>& framebuffer, const int width,
-                             const int height, const std::string& filename) {
+                             const int height, const std::string& filename)
+{
     const std::string format = extract_file_format(filename);
 
     // not recommended, very slow and produces very large files
-    if (format == "ppm") {
+    if (format == "ppm")
+    {
         std::ofstream out(filename);
         out << "P3\n" << width << " " << height << "\n255\n";
-        for (const color& c : framebuffer) {
+        for (const color& c : framebuffer)
+        {
             write_color_ppm(out, c);
         }
         return;
@@ -70,8 +80,10 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
     std::vector<unsigned char> image_buffer(width * height * 3);
     static const interval intensity(0.000f, 0.999f);
 
-    for (int j = 0; j < height; ++j) {
-        for (int i = 0; i < width; ++i) {
+    for (int j = 0; j < height; ++j)
+    {
+        for (int i = 0; i < width; ++i)
+        {
             const color& pixel_color = framebuffer[j * width + i];
 
             auto r = linear_to_gamma(sanitize(pixel_color.r()));
@@ -89,15 +101,24 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
         }
     }
 
-    if (format == "png") {
+    if (format == "png")
+    {
         stbi_write_png(filename.c_str(), width, height, 3, image_buffer.data(), width * 3);
-    } else if (format == "jpg" || format == "jpeg") {
+    }
+    else if (format == "jpg" || format == "jpeg")
+    {
         stbi_write_jpg(filename.c_str(), width, height, 3, image_buffer.data(), 90); // quality
-    } else if (format == "bmp") {
+    }
+    else if (format == "bmp")
+    {
         stbi_write_bmp(filename.c_str(), width, height, 3, image_buffer.data());
-    } else if (format == "tga") {
+    }
+    else if (format == "tga")
+    {
         stbi_write_tga(filename.c_str(), width, height, 3, image_buffer.data());
-    } else {
+    }
+    else
+    {
         throw std::runtime_error("Unsupported format: " + format);
     }
 }

@@ -4,16 +4,21 @@
 #include "rtm/vector.h"
 #include "hittable_list.h"
 
-namespace rt {
-class quad : public hittable {
+namespace rt
+{
+class quad : public hittable
+{
 public:
-    // Q: starting corner
-    // u: vector represent the first side
-    // v: vector representing the second side
-    // basically: three corners
-    // mat: material
+    /*
+     * Q: starting corner
+     * u: vector represent the first side
+     * v: vector representing the second side
+     * basically: three corners
+     * mat: material
+     */
     quad(const point3f& Q, const vec3f& u, const vec3f& v, shared_ptr<material> mat)
-        : Q(Q), u(u), v(v), mat(mat) {
+        : Q(Q), u(u), v(v), mat(mat)
+    {
         auto n = cross(u, v);
         normal = unit_vector(n);
         D      = dot(normal, Q);
@@ -22,7 +27,8 @@ public:
         set_bounding_box();
     }
 
-    void set_bounding_box() {
+    void set_bounding_box()
+    {
         // Compute the bounding box of all four vertices.
         auto bbox_diagonal1 = AABB(Q, Q + u + v);
         auto bbox_diagonal2 = AABB(Q + u, Q + v);
@@ -31,22 +37,26 @@ public:
 
     AABB bounding_box() const override { return bbox; }
 
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+    bool hit(const ray& r, interval ray_t, hit_record& rec) const override
+    {
         float denominator = dot(normal, r.direction());
 
         // No hit if the ray is parallel to the plane.
-        if (std::fabs(denominator) < 1e-8f) return false;
+        if (std::fabs(denominator) < 1e-8f)
+            return false;
 
         // Return false if the hit point parameter t is outside the ray interval.
         float t = (D - dot(normal, r.origin())) / denominator;
-        if (!ray_t.contains(t)) return false;
+        if (!ray_t.contains(t))
+            return false;
 
         point3f intersection      = r.at(t);
         vec3f planar_hitpt_vector = intersection - Q;
         auto alpha                = dot(w, cross(planar_hitpt_vector, v));
         auto beta                 = dot(w, cross(u, planar_hitpt_vector));
 
-        if (!is_interior(alpha, beta, rec)) return false;
+        if (!is_interior(alpha, beta, rec))
+            return false;
 
         // Ray hits the 2D shape; set the rest of the hit record and return true.
         rec.t   = t;
@@ -57,12 +67,14 @@ public:
         return true;
     }
 
-    bool is_interior(float a, float b, hit_record& rec) const {
+    bool is_interior(float a, float b, hit_record& rec) const
+    {
         interval unit_interval = interval(0, 1);
         // Given the hit point in plane coordinates, return false if it is outside the
         // primitive, otherwise set the hit record UV coordinates and return true.
 
-        if (!unit_interval.contains(a) || !unit_interval.contains(b)) return false;
+        if (!unit_interval.contains(a) || !unit_interval.contains(b))
+            return false;
 
         rec.u = a;
         rec.v = b;
@@ -70,18 +82,22 @@ public:
     }
 
     // Light sampling: pick a uniform point on the quad, convert area density to solid angle.
-    float pdf_value(const point3f& origin, const vec3f& direction) const override {
+    float pdf_value(const point3f& origin, const vec3f& direction) const override
+    {
         hit_record rec;
-        if (!this->hit(ray(origin, direction), interval(0.001f, INF), rec)) return 0.0f;
+        if (!this->hit(ray(origin, direction), interval(0.001f, INF), rec))
+            return 0.0f;
 
         float distance_squared = rec.t * rec.t * direction.length_squared();
         float cosine           = std::fabs(dot(direction, rec.normal) / direction.length());
-        if (cosine <= 0.0f) return 0.0f;
+        if (cosine <= 0.0f)
+            return 0.0f;
 
         return distance_squared / (cosine * area);
     }
 
-    vec3f random(const point3f& origin) const override {
+    vec3f random(const point3f& origin) const override
+    {
         point3f p = Q + (random_float() * u) + (random_float() * v);
         return p - origin;
     }
@@ -96,7 +112,8 @@ private:
     float area;
 };
 
-inline shared_ptr<hittable_list> box(const point3f& a, const point3f& b, shared_ptr<material> mat) {
+inline shared_ptr<hittable_list> box(const point3f& a, const point3f& b, shared_ptr<material> mat)
+{
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
 
     auto sides = make_shared<hittable_list>();

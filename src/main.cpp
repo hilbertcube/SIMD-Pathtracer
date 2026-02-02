@@ -3,7 +3,8 @@
 #include "rt/ray_tracer.h"
 #include "rt/mesh.h"
 
-void spheres_scene() {
+void spheres_scene()
+{
     // World
     rt::hittable_list world;
 
@@ -15,28 +16,36 @@ void spheres_scene() {
     world.add(make_shared<rt::sphere>(rt::point3f(0.0f, -1000.0f, 0.0f), 1000.0f,
                                       make_shared<rt::lambertian>(ground_material)));
 
-    for (int a = -11; a < 11; a++) {
-        for (int b = -11; b < 11; b++) {
+    for (int a = -11; a < 11; a++)
+    {
+        for (int b = -11; b < 11; b++)
+        {
             // random material
             float choose_mat = random_float(); // (0, 1)
             rt::point3f center(a + 0.9f * random_float(), 0.2f, b + 0.9f * random_float());
 
-            if ((center - rt::point3f(4.0f, 0.2f, 0.0f)).length() > 0.9f) {
+            if ((center - rt::point3f(4.0f, 0.2f, 0.0f)).length() > 0.9f)
+            {
                 shared_ptr<rt::material> sphere_material;
 
-                if (choose_mat < 0.8f) {
+                if (choose_mat < 0.8f)
+                {
                     // diffuse
                     auto albedo     = rt::color::random() * rt::color::random();
                     sphere_material = make_shared<rt::lambertian>(albedo);
                     auto center2    = center + rt::vec3f(0.0f, random_float(0.0f, 0.5f), 0.0f);
                     world.add(make_shared<rt::sphere>(center, 0.2f, sphere_material));
-                } else if (choose_mat < 0.95f) {
+                }
+                else if (choose_mat < 0.95f)
+                {
                     // metal
                     auto albedo     = rt::color::random(0.5f, 1.0f);
                     auto fuzz       = random_float(0.5f, 1.0f);
                     sphere_material = make_shared<rt::metal>(albedo, fuzz);
                     world.add(make_shared<rt::sphere>(center, 0.2f, sphere_material));
-                } else {
+                }
+                else
+                {
                     // glass
                     sphere_material = make_shared<rt::dielectrics>(1.5f);
                     world.add(make_shared<rt::sphere>(center, 0.2f, sphere_material));
@@ -74,7 +83,8 @@ void spheres_scene() {
     cam.render(world);
 }
 
-void checkered_spheres() {
+void checkered_spheres()
+{
     // World
     rt::hittable_list world;
 
@@ -103,7 +113,8 @@ void checkered_spheres() {
     cam.render(world);
 }
 
-void earth() {
+void earth()
+{
     auto earth_texture = make_shared<rt::image_texture>("texture/earth2048.bmp");
     auto earth_surface = make_shared<rt::lambertian>(earth_texture);
     auto globe = make_shared<rt::sphere>(rt::point3f(0.0f, 0.0f, 0.0f), 2.0f, earth_surface);
@@ -125,7 +136,8 @@ void earth() {
     cam.render(rt::hittable_list(globe));
 }
 
-void perlin_spheres() {
+void perlin_spheres()
+{
     rt::hittable_list world;
 
     auto pertext = make_shared<rt::noise_texture>(4.0f);
@@ -151,7 +163,8 @@ void perlin_spheres() {
     cam.render(world);
 }
 
-void quads() {
+void quads()
+{
     rt::hittable_list world;
 
     // Materials
@@ -191,7 +204,8 @@ void quads() {
     cam.render(world);
 }
 
-void simple_light() {
+void simple_light()
+{
     rt::hittable_list world;
 
     auto pertext = make_shared<rt::noise_texture>(4.0f);
@@ -231,7 +245,8 @@ void simple_light() {
     cam.render(world, lights);
 }
 
-void cornell_box() {
+void cornell_box()
+{
     rt::hittable_list world;
 
     auto red   = make_shared<rt::lambertian>(rt::color(.65, .05, .05));
@@ -304,13 +319,16 @@ void cornell_box() {
     cam.render(world, lights);
 }
 
-void final_scene(int image_width, int samples_per_pixel, int max_depth) {
+void final_scene(int image_width, int samples_per_pixel, int max_depth)
+{
     rt::hittable_list boxes1;
     auto ground = make_shared<rt::lambertian>(rt::color(0.48, 0.83, 0.53));
 
     int boxes_per_side = 20;
-    for (int i = 0; i < boxes_per_side; i++) {
-        for (int j = 0; j < boxes_per_side; j++) {
+    for (int i = 0; i < boxes_per_side; i++)
+    {
+        for (int j = 0; j < boxes_per_side; j++)
+        {
             auto w  = 100.0f;
             auto x0 = -1000.0f + i * w;
             auto z0 = -1000.0f + j * w;
@@ -364,7 +382,8 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {
     rt::hittable_list boxes2;
     auto white = make_shared<rt::lambertian>(rt::color(0.73, 0.73, 0.73));
     int ns     = 1000;
-    for (int j = 0; j < ns; j++) {
+    for (int j = 0; j < ns; j++)
+    {
         boxes2.add(make_shared<rt::sphere>(rt::point3f::random(0, 165), 10.0f, white));
     }
 
@@ -399,7 +418,8 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth) {
     cam.render(world, lights);
 }
 
-void three_D_model() {
+void three_D_model()
+{
     rt::hittable_list world;
 
     // Cornell box
@@ -426,34 +446,38 @@ void three_D_model() {
     // // Mirror
     // auto mirror = make_shared<rt::metal>(rt::color(0.95, 0.95, 0.95), 0.0f);
 
-    // // Right wall mirror (x = 555)
-    // {
-    //     rt::point3f origin(555 - 0.01f, 50, 50);
-    //     rt::vec3f height(0, 455, 0);
-    //     rt::vec3f width(0, 0, 455);
-    //     world.add(make_shared<rt::quad>(origin, height, width, mirror));
-    // }
-    // // Left wall mirror (x = 0)
-    // {
-    //     rt::point3f origin(0 + 0.01f, 50, 50);   // tiny offset into +x to avoid z-fighting
-    //     rt::vec3f height(0, 455, 0);
-    //     rt::vec3f width(0, 0, 455);
-    //     world.add(make_shared<rt::quad>(origin, height, width, mirror));
-    // }
-    // // Back wall mirror (z = 555)
-    // {
-    //     rt::point3f origin(50, 50, 555 - 0.01f);
-    //     rt::vec3f height(455, 0, 0);
-    //     rt::vec3f width(0, 455, 0);
-    //     world.add(make_shared<rt::quad>(origin, height, width, mirror));
-    // }
+    /*
+     * // Right wall mirror (x = 555)
+     * {
+     *     rt::point3f origin(555 - 0.01f, 50, 50);
+     *     rt::vec3f height(0, 455, 0);
+     *     rt::vec3f width(0, 0, 455);
+     *     world.add(make_shared<rt::quad>(origin, height, width, mirror));
+     * }
+     * // Left wall mirror (x = 0)
+     * {
+     *     rt::point3f origin(0 + 0.01f, 50, 50);   // tiny offset into +x to avoid z-fighting
+     *     rt::vec3f height(0, 455, 0);
+     *     rt::vec3f width(0, 0, 455);
+     *     world.add(make_shared<rt::quad>(origin, height, width, mirror));
+     * }
+     * // Back wall mirror (z = 555)
+     * {
+     *     rt::point3f origin(50, 50, 555 - 0.01f);
+     *     rt::vec3f height(455, 0, 0);
+     *     rt::vec3f width(0, 455, 0);
+     *     world.add(make_shared<rt::quad>(origin, height, width, mirror));
+     * }
+     */
 
-    // // Dragon model
-    // auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
-    // auto dragon_obj = rt::load_obj("model/dragon.obj", dragon_mat);
-    // rt::transform_mesh(*dragon_obj, 2.4f, rt::vec3f(278,100,210));
-    // auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0,
-    // dragon_obj->objects.size()); world.add(dragon_bvh);
+    /*
+     * // Dragon model
+     * auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+     * auto dragon_obj = rt::load_obj("model/dragon.obj", dragon_mat);
+     * rt::transform_mesh(*dragon_obj, 2.4f, rt::vec3f(278,100,210));
+     * auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0,
+     * dragon_obj->objects.size()); world.add(dragon_bvh);
+     */
 
     // Tea pot
     auto tea_mat = make_shared<rt::metal>(rt::color(0, 0, 0.8), 0.0f);
@@ -485,7 +509,8 @@ void three_D_model() {
     cam.render(world, lights);
 }
 
-void multiple_models() {
+void multiple_models()
+{
     rt::hittable_list world;
 
     // Cornell box
@@ -567,24 +592,48 @@ void multiple_models() {
     cam.render(world, lights);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     // Scene number from the command line, e.g. ./main 7 (defaults to 9)
     int scene = argc > 1 ? std::atoi(argv[1]) : 9;
 
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
-    switch (scene) {
-        case 1: spheres_scene(); break;
-        case 2: checkered_spheres(); break;
-        case 3: earth(); break;
-        case 4: perlin_spheres(); break;
-        case 5: quads(); break;
-        case 6: simple_light(); break;
-        case 7: cornell_box(); break;
-        case 8: final_scene(1000, 2000, 40); break;
-        case 9: three_D_model(); break;
-        case 10: multiple_models(); break;
-        default: final_scene(400, 250, 4); break;
+    switch (scene)
+    {
+        case 1:
+            spheres_scene();
+            break;
+        case 2:
+            checkered_spheres();
+            break;
+        case 3:
+            earth();
+            break;
+        case 4:
+            perlin_spheres();
+            break;
+        case 5:
+            quads();
+            break;
+        case 6:
+            simple_light();
+            break;
+        case 7:
+            cornell_box();
+            break;
+        case 8:
+            final_scene(1000, 2000, 40);
+            break;
+        case 9:
+            three_D_model();
+            break;
+        case 10:
+            multiple_models();
+            break;
+        default:
+            final_scene(400, 250, 4);
+            break;
     }
     return 0;
 }

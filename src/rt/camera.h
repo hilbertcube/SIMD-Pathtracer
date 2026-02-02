@@ -23,8 +23,10 @@
 #include "pdf.h"
 #include "save_file.h"
 
-namespace rt {
-class Camera {
+namespace rt
+{
+class Camera
+{
 public:
     float aspect_ratio    = 1.0f; // Ratio of image width over height
     int image_width       = 100;  // Rendered image width in px
@@ -41,15 +43,19 @@ public:
     float focus_dist    = 10.0f; // Distance from camera lookfrom point to plane of perfect focus
     std::string output_filename = "output.png";
 
-    // Renders the image in parallel (OpenMP, one row per task) and saves it.
-    //   render(world)          - bounces sample only the material's own pdf.
-    //                            Use for scenes lit by the background / sky.
-    //   render(world, lights)  - importance-samples `lights` (mixed 50/50 with the
-    //                            material pdf). Much less noise for small lights.
-    //                            `lights` holds copies of the emitters' geometry;
-    //                            their material is ignored.
-    // For a single-threaded run, set OMP_NUM_THREADS=1.
+    /*
+     * Renders the image in parallel (OpenMP, one row per task) and saves it.
+     *   render(world)          - bounces sample only the material's own pdf.
+     *                            Use for scenes lit by the background / sky.
+     *   render(world, lights)  - also samples `lights` directly with shadow rays,
+     *                            combined with material sampling by MIS (see
+     *                            ray_color). Much less noise for small lights.
+     *                            `lights` holds copies of the emitters' geometry;
+     *                            their material is ignored.
+     * For a single-threaded run, set OMP_NUM_THREADS=1.
+     */
     void render(const hittable& world) { render_impl(world, nullptr); }
+
     void render(const hittable& world, const hittable& lights) { render_impl(world, &lights); }
 
 private:
@@ -71,7 +77,8 @@ private:
     vec3f defocus_disk_v;      // Defocus disk vertical radius
     std::vector<color> framebuffer;
 
-    void render_impl(const hittable& world, const hittable* lights) {
+    void render_impl(const hittable& world, const hittable* lights)
+    {
         initialize();
         // The main thread built the scene from the fixed scene seed; its share of the
         // rendering should still get fresh random numbers each run
@@ -80,7 +87,8 @@ private:
 
 // Rows are handed out dynamically, so faster cores simply take more of them
 #pragma omp parallel for schedule(dynamic)
-        for (int j = 0; j < image_height; ++j) {
+        for (int j = 0; j < image_height; ++j)
+        {
             for (int i = 0; i < image_width; ++i)
                 framebuffer[j * image_width + i] = sample_pixel(i, j, world, lights);
 
@@ -91,7 +99,8 @@ private:
         finish();
     }
 
-    void finish() {
+    void finish()
+    {
         std::clog << "\rDone. \n";
         // Write to file
         save_framebuffer(framebuffer, image_width, image_height, output_filename);
@@ -99,7 +108,8 @@ private:
                   << std::endl;
     }
 
-    void initialize() {
+    void initialize()
+    {
         image_height = static_cast<int>(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
 
@@ -110,7 +120,8 @@ private:
         // (when samples_per_pixel is not a perfect square) are taken uniformly at random.
         spp      = std::max(1, samples_per_pixel);
         sqrt_spp = static_cast<int>(std::sqrt(static_cast<float>(spp)));
-        while ((sqrt_spp + 1) * (sqrt_spp + 1) <= spp) ++sqrt_spp; // guard float rounding
+        while ((sqrt_spp + 1) * (sqrt_spp + 1) <= spp)
+            ++sqrt_spp; // guard float rounding
         pixel_samples_scale = 1.0f / spp;
         recip_sqrt_spp      = 1.0f / sqrt_spp;
 
@@ -147,7 +158,8 @@ private:
     }
 
     // Average of all samples for pixel (i, j)
-    color sample_pixel(int i, int j, const hittable& world, const hittable* lights) const {
+    color sample_pixel(int i, int j, const hittable& world, const hittable* lights) const
+    {
         color pixel_color(0, 0, 0);
         for (int s_j = 0; s_j < sqrt_spp; ++s_j)
             for (int s_i = 0; s_i < sqrt_spp; ++s_i)
@@ -163,13 +175,15 @@ private:
     ray get_ray(int i, int j) const { return make_ray(i, j, sample_squared()); }
 
     // Camera ray through a random point in sub-pixel cell (s_i, s_j) of pixel (i, j)
-    ray get_ray(int i, int j, int s_i, int s_j) const {
+    ray get_ray(int i, int j, int s_i, int s_j) const
+    {
         return make_ray(i, j, sample_square_stratified(s_i, s_j));
     }
 
     // Construct a camera ray originating from the defocus disk and directed at
     // pixel (i, j) displaced by `offset` (in pixel units, within [-.5, .5]).
-    ray make_ray(int i, int j, const vec3f& offset) const {
+    ray make_ray(int i, int j, const vec3f& offset) const
+    {
         auto pixel_sample =
             pixel00_loc + (i + offset.x()) * pixel_delta_u + (j + offset.y()) * pixel_delta_v;
         auto ray_origin    = (defocus_angle <= 0) ? camera_center : defocus_disk_sample();
@@ -178,19 +192,22 @@ private:
         return ray(ray_origin, ray_direction, ray_time);
     }
 
-    vec3f sample_squared() const {
+    vec3f sample_squared() const
+    {
         // Random point in the unit square [-.5, .5] x [-.5, .5]
         return vec3f(random_float() - 0.5f, random_float() - 0.5f, 0.0f);
     }
 
-    vec3f sample_square_stratified(int s_i, int s_j) const {
+    vec3f sample_square_stratified(int s_i, int s_j) const
+    {
         // Random point in sub-cell (s_i, s_j) of the unit square [-.5, .5] x [-.5, .5]
         float px = ((s_i + random_float()) * recip_sqrt_spp) - 0.5f;
         float py = ((s_j + random_float()) * recip_sqrt_spp) - 0.5f;
         return vec3f(px, py, 0.0f);
     }
 
-    point3f defocus_disk_sample() const {
+    point3f defocus_disk_sample() const
+    {
         auto p = random_in_unit_disk<float>();
         return camera_center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
@@ -212,20 +229,26 @@ private:
      *      that direction's MIS weight, so lights aren't counted twice.
      */
     color ray_color(const ray& r, int depth, const hittable& world, const hittable* lights,
-                    float emission_weight = 1.0f) const {
+                    float emission_weight = 1.0f) const
+    {
         // If we've exceeded the ray bounce limit, no more light is gathered
-        if (depth <= 0) return color(0, 0, 0);
+        if (depth <= 0)
+            return color(0, 0, 0);
 
         hit_record rec;
-        if (!world.hit(r, interval(0.001f, INF), rec)) return background;
+        if (!world.hit(r, interval(0.001f, INF), rec))
+            return background;
 
         scatter_record srec;
         color emission = emission_weight * rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
-        if (!rec.mat->scatter(r, rec, srec)) return emission;
+        if (!rec.mat->scatter(r, rec, srec))
+            return emission;
 
         // Specular materials (metal, glass) pick their own ray: nothing to importance-sample
-        if (srec.skip_pdf) {
-            if (!russian_roulette(depth, srec.attenuation)) return emission;
+        if (srec.skip_pdf)
+        {
+            if (!russian_roulette(depth, srec.attenuation))
+                return emission;
             return emission +
                    srec.attenuation * ray_color(srec.skip_pdf_ray, depth - 1, world, lights);
         }
@@ -234,13 +257,15 @@ private:
         color direct(0, 0, 0);
 
         // 1. Light sampling with a shadow ray
-        if (lights) {
+        if (lights)
+        {
             ray to_light(rec.p, lights->random(rec.p), r.time());
             float light_pdf = lights->pdf_value(rec.p, to_light.direction());
             float f         = light_pdf > 0.0f ? rec.mat->scattering_pdf(r, rec, to_light) : 0.0f;
 
             hit_record light_rec;
-            if (f > 0.0f && world.hit(to_light, interval(0.001f, INF), light_rec)) {
+            if (f > 0.0f && world.hit(to_light, interval(0.001f, INF), light_rec))
+            {
                 color Le = light_rec.mat->emitted(to_light, light_rec, light_rec.u, light_rec.v,
                                                   light_rec.p);
                 float w  = mis_weight(light_pdf, material_pdf.value(to_light.direction()));
@@ -249,13 +274,15 @@ private:
         }
 
         // 2. Material sampling, continuing the path
-        if (!russian_roulette(depth, srec.attenuation)) return emission + direct;
+        if (!russian_roulette(depth, srec.attenuation))
+            return emission + direct;
 
         ray scattered(rec.p, material_pdf.generate(), r.time());
         float pdf_value = material_pdf.value(scattered.direction());
 
         // A zero (or NaN) density carries no usable energy; dividing would give inf/NaN
-        if (!(pdf_value > 0.0f)) return emission + direct;
+        if (!(pdf_value > 0.0f))
+            return emission + direct;
 
         float f = rec.mat->scattering_pdf(r, rec, scattered);
         float w =
@@ -267,12 +294,15 @@ private:
 
     // Russian roulette: after a few bounces, end the path with probability 1 - p and boost
     // survivors by 1/p. Unbiased, and dark surfaces stop wasting bounces early.
-    bool russian_roulette(int depth, color& attenuation) const {
-        if (max_depth - depth < RR_MIN_BOUNCES) return true;
+    bool russian_roulette(int depth, color& attenuation) const
+    {
+        if (max_depth - depth < RR_MIN_BOUNCES)
+            return true;
         float p =
             std::fmin(RR_MAX_SURVIVAL,
                       std::fmax(attenuation.r(), std::fmax(attenuation.g(), attenuation.b())));
-        if (random_float() >= p) return false;
+        if (random_float() >= p)
+            return false;
         attenuation /= p;
         return true;
     }

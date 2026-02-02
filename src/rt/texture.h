@@ -3,16 +3,20 @@
 #include "rtw_stb_image.h"
 #include "perlin.h"
 
-namespace rt {
-class texture {
+namespace rt
+{
+class texture
+{
 public:
     texture() {}
+
     virtual ~texture() = default;
 
     virtual color value(float u, float v, const point3f& p) const = 0;
 };
 
-class solid_color : public texture {
+class solid_color : public texture
+{
 public:
     solid_color(const color& albedo) : albedo(albedo) {}
 
@@ -24,15 +28,21 @@ private:
     color albedo;
 };
 
-class checker_texture : public texture {
+class checker_texture : public texture
+{
 public:
     checker_texture(float scale, shared_ptr<texture> even, shared_ptr<texture> odd)
-        : inv_scale(1.0f / scale), even(even), odd(odd) {}
+        : inv_scale(1.0f / scale), even(even), odd(odd)
+    {
+    }
 
     checker_texture(float scale, const color& c1, const color& c2)
-        : checker_texture(scale, make_shared<solid_color>(c1), make_shared<solid_color>(c2)) {}
+        : checker_texture(scale, make_shared<solid_color>(c1), make_shared<solid_color>(c2))
+    {
+    }
 
-    color value(float u, float v, const point3f& p) const override {
+    color value(float u, float v, const point3f& p) const override
+    {
         auto xInteger = static_cast<int>(floor(inv_scale * p.x()));
         auto yInteger = static_cast<int>(floor(inv_scale * p.y()));
         auto zInteger = static_cast<int>(floor(inv_scale * p.z()));
@@ -47,13 +57,16 @@ private:
     shared_ptr<texture> even, odd;
 };
 
-class image_texture : public texture {
+class image_texture : public texture
+{
 public:
     image_texture(const char* filename) : image(filename) {}
 
-    color value(float u, float v, const point3f& p) const override {
+    color value(float u, float v, const point3f& p) const override
+    {
         // If no texture data, return solid cyan
-        if (image.height() <= 0) return color(0, 1, 1);
+        if (image.height() <= 0)
+            return color(0, 1, 1);
 
         u = interval(0, 1).clamp(u);
         v = 1.0f - interval(0, 1).clamp(v);
@@ -69,11 +82,13 @@ private:
     rtw_image image;
 };
 
-class noise_texture : public texture {
+class noise_texture : public texture
+{
 public:
     noise_texture(float scale) : scale(scale) {}
 
-    color value(float u, float v, const point3f& p) const override {
+    color value(float u, float v, const point3f& p) const override
+    {
         return color(0.5f, 0.5f, 0.5f) *
                (1.0f + sin(scale * p.z() + 10.0f * noise.turbulence(p, 7)));
     }
