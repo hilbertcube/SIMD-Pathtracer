@@ -83,23 +83,37 @@ public:
         auto sep   = [&](std::string s)
         {
             if (!first)
+            {
                 out << ", ";
+            }
             out << s;
             first = false;
         };
 
         if (enableNano)
+        {
             sep(std::to_string(ns) + " ns");
+        }
         if (enableMicro)
+        {
             sep(std::to_string(ns / 1'000.0) + " us");
+        }
         if (enableMilli)
+        {
             sep(std::to_string(ns / 1'000'000.0) + " ms");
+        }
         if (enableSeconds)
+        {
             sep(std::to_string(ns / 1e9) + " s");
+        }
         if (enableMinutes)
+        {
             sep(std::to_string(ns / (60.0 * 1e9)) + " min");
+        }
         if (enableHours)
+        {
             sep(std::to_string(ns / (3600.0 * 1e9)) + " h");
+        }
 
         out << std::endl;
     }

@@ -4,3 +4,6 @@
 
 # Add clang-format and format the project
 43209da3f847de15798466bc51263efa7619f38b
+
+# Stricter formatting and block comments
+d0de02c87b4fe29f048313b15cd100d40292d89a

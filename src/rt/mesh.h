@@ -35,22 +35,30 @@ public:
         vec3f h = cross(r.direction(), edge2);
         float a = dot(edge1, h);
         if (fabs(a) < epsilon)
+        {
             return false; // ray parallel
+        }
 
         float f = 1.0f / a;
         vec3f s = r.origin() - v0;
         float u = f * dot(s, h);
         if (u < 0.0f || u > 1.0f)
+        {
             return false;
+        }
 
         vec3f q = cross(s, edge1);
         float v = f * dot(r.direction(), q);
         if (v < 0.0f || u + v > 1.0f)
+        {
             return false;
+        }
 
         float t = f * dot(edge2, q);
         if (!ray_t.surrounds(t))
+        {
             return false;
+        }
 
         rec.t = t;
         rec.p = r.at(t);

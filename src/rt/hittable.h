@@ -66,7 +66,9 @@ public:
 
         // Determine whether an intersection exists along the offset ray (and if so, where)
         if (!object->hit(offset_r, ray_t, rec))
+        {
             return false;
+        }
 
         // Move the intersection point forwards by the offset
         rec.p += offset;
@@ -143,7 +145,9 @@ public:
 
         // Determine whether an intersection exists in object space (and if so, where).
         if (!object->hit(rotated_r, ray_t, rec))
+        {
             return false;
+        }
 
         // Transform the intersection from object space back to world space.
         rec.p = point3f((cos_theta * rec.p.x()) + (sin_theta * rec.p.z()), rec.p.y(),

@@ -40,11 +40,15 @@ public:
     {
         float denom = dot(normal, r.direction());
         if (std::fabs(denom) < 1e-8)
+        {
             return false;
+        }
 
         float t = (D - dot(normal, r.origin())) / denom;
         if (!ray_t.contains(t))
+        {
             return false;
+        }
 
         point3f p = r.at(t);
         // Inside-outside test using cross products
@@ -53,7 +57,9 @@ public:
         vec3f c2 = cross(a - c, p - c);
 
         if (dot(normal, c0) < 0 || dot(normal, c1) < 0 || dot(normal, c2) < 0)
+        {
             return false;
+        }
 
         rec.t   = t;
         rec.p   = p;

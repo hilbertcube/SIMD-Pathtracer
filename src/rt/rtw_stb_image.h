@@ -34,28 +34,48 @@ public:
 
         // Hunt for the image file in some likely locations.
         if (imagedir && load(std::string(imagedir) + "/" + image_filename))
+        {
             return;
+        }
 
         if (load(filename))
+        {
             return;
+        }
         std::string back_dir = "../";
 
         if (load(filename))
+        {
             return;
+        }
         if (load(image_dir + filename))
+        {
             return;
+        }
         if (load("../" + image_dir + filename))
+        {
             return;
+        }
         if (load("../../" + image_dir + filename))
+        {
             return;
+        }
         if (load("../../../" + image_dir + filename))
+        {
             return;
+        }
         if (load("../../../../" + image_dir + filename))
+        {
             return;
+        }
         if (load("../../../../../" + image_dir + filename))
+        {
             return;
+        }
         if (load("../../../../../../" + image_dir + filename))
+        {
             return;
+        }
 
         std::cerr << "ERROR: Could not load image file '" << image_filename << "'.\n";
     }
@@ -79,7 +99,9 @@ public:
         auto n = bytes_per_pixel; // Dummy out parameter: original components per pixel
         fdata  = stbi_loadf(filename.c_str(), &image_width, &image_height, &n, bytes_per_pixel);
         if (fdata == nullptr)
+        {
             return false;
+        }
 
         bytes_per_scanline = image_width * bytes_per_pixel;
         convert_to_bytes();
@@ -96,7 +118,9 @@ public:
         // data, returns magenta.
         static unsigned char magenta[] = {255, 0, 255};
         if (bdata == nullptr)
+        {
             return magenta;
+        }
 
         x = clamp(x, 0, image_width);
         y = clamp(y, 0, image_height);
@@ -116,18 +140,26 @@ private:
     {
         // Return the value clamped to the range [low, high).
         if (x < low)
+        {
             return low;
+        }
         if (x < high)
+        {
             return x;
+        }
         return high - 1;
     }
 
     static unsigned char float_to_byte(float value)
     {
         if (value <= 0.0)
+        {
             return 0;
+        }
         if (1.0 <= value)
+        {
             return 255;
+        }
         return static_cast<unsigned char>(256.0 * value);
     }
 
@@ -145,6 +177,8 @@ private:
         auto* bptr = bdata;
         auto* fptr = fdata;
         for (auto i = 0; i < total_bytes; i++, fptr++, bptr++)
+        {
             *bptr = float_to_byte(*fptr);
+        }
     }
 };

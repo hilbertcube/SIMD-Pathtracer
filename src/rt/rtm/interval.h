@@ -32,9 +32,13 @@ public:
     float clamp(float x) const
     {
         if (x < min)
+        {
             return min;
+        }
         if (x > max)
+        {
             return max;
+        }
         return x;
     }
 

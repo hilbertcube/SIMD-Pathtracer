@@ -28,7 +28,9 @@ public:
     constexpr explicit Vector(T value)
     {
         for (T& c : e)
+        {
             c = value;
+        }
     }
 
     // One value per component: Vector<float, 3>(1, 2, 3)
@@ -74,44 +76,58 @@ public:
     {
         Vector result;
         for (std::size_t i = 0; i < N; ++i)
+        {
             result.e[i] = -e[i];
+        }
         return result;
     }
 
     constexpr Vector& operator+=(const Vector& v)
     {
         for (std::size_t i = 0; i < N; ++i)
+        {
             e[i] += v.e[i];
+        }
         return *this;
     }
 
     constexpr Vector& operator-=(const Vector& v)
     {
         for (std::size_t i = 0; i < N; ++i)
+        {
             e[i] -= v.e[i];
+        }
         return *this;
     }
 
     constexpr Vector& operator*=(const Vector& v)
     {
         for (std::size_t i = 0; i < N; ++i)
+        {
             e[i] *= v.e[i];
+        }
         return *this;
     } // component-wise
 
     constexpr Vector& operator*=(T t)
     {
         for (T& c : e)
+        {
             c *= t;
+        }
         return *this;
     }
 
     constexpr Vector& operator/=(T t)
     {
         if constexpr (std::is_floating_point_v<T>)
+        {
             return *this *= T(1) / t; // one division instead of N
+        }
         for (T& c : e)
+        {
             c /= t;
+        }
         return *this;
     }
 
@@ -126,7 +142,9 @@ public:
     {
         Vector result;
         for (T& c : result.e)
+        {
             c = random_real<T>(min, max);
+        }
         return result;
     }
 };
@@ -177,7 +195,9 @@ constexpr T dot(const Vector<T, N>& u, const Vector<T, N>& v)
 {
     T sum = T(0);
     for (std::size_t i = 0; i < N; ++i)
+    {
         sum += u[i] * v[i];
+    }
     return sum;
 }
 

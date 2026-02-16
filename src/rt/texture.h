@@ -66,7 +66,9 @@ public:
     {
         // If no texture data, return solid cyan
         if (image.height() <= 0)
+        {
             return color(0, 1, 1);
+        }
 
         u = interval(0, 1).clamp(u);
         v = 1.0f - interval(0, 1).clamp(v);

@@ -43,12 +43,16 @@ public:
 
         // No hit if the ray is parallel to the plane.
         if (std::fabs(denominator) < 1e-8f)
+        {
             return false;
+        }
 
         // Return false if the hit point parameter t is outside the ray interval.
         float t = (D - dot(normal, r.origin())) / denominator;
         if (!ray_t.contains(t))
+        {
             return false;
+        }
 
         point3f intersection      = r.at(t);
         vec3f planar_hitpt_vector = intersection - Q;
@@ -56,7 +60,9 @@ public:
         auto beta                 = dot(w, cross(u, planar_hitpt_vector));
 
         if (!is_interior(alpha, beta, rec))
+        {
             return false;
+        }
 
         // Ray hits the 2D shape; set the rest of the hit record and return true.
         rec.t   = t;
@@ -74,7 +80,9 @@ public:
         // primitive, otherwise set the hit record UV coordinates and return true.
 
         if (!unit_interval.contains(a) || !unit_interval.contains(b))
+        {
             return false;
+        }
 
         rec.u = a;
         rec.v = b;
@@ -86,12 +94,16 @@ public:
     {
         hit_record rec;
         if (!this->hit(ray(origin, direction), interval(0.001f, INF), rec))
+        {
             return 0.0f;
+        }
 
         float distance_squared = rec.t * rec.t * direction.length_squared();
         float cosine           = std::fabs(dot(direction, rec.normal) / direction.length());
         if (cosine <= 0.0f)
+        {
             return 0.0f;
+        }
 
         return distance_squared / (cosine * area);
     }

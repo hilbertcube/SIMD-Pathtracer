@@ -52,7 +52,9 @@ inline std::string extract_file_format(const std::string& filename)
         {
             // dot is first char: treat as hidden file, not extension
             if (i == 0)
+            {
                 return "";
+            }
             return lower.substr(i + 1);
         }
     }

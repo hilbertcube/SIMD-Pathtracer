@@ -176,7 +176,9 @@ public:
                   const point3f& p) const override
     {
         if (!rec.front_face)
+        {
             return color(0, 0, 0);
+        }
         return tex->value(u, v, p);
     }
 

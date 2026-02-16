@@ -35,7 +35,9 @@ public:
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override
     {
         if (nodes.empty())
+        {
             return false;
+        }
 
         const point3f& o   = r.origin();
         const float inv[3] = {1.0f / r.direction().x(), 1.0f / r.direction().y(),
@@ -43,7 +45,9 @@ public:
 
         float t_enter;
         if (!nodes[0].hit(o, inv, ray_t.min, ray_t.max, t_enter))
+        {
             return false;
+        }
 
         struct Entry
         {
@@ -106,7 +110,9 @@ public:
             do
             {
                 if (sp == 0)
+                {
                     return hit_anything;
+                }
                 --sp;
             } while (stack[sp].t_enter > ray_t.max);
             current = stack[sp].node;
@@ -131,11 +137,15 @@ private:
                 float t0 = (bmin[axis] - o[axis]) * inv[axis];
                 float t1 = (bmax[axis] - o[axis]) * inv[axis];
                 if (inv[axis] < 0.0f)
+                {
                     std::swap(t0, t1);
+                }
                 t_min = t0 > t_min ? t0 : t_min;
                 t_max = t1 < t_max ? t1 : t_max;
                 if (t_max <= t_min)
+                {
                     return false;
+                }
             }
             t_enter = t_min;
             return true;
@@ -162,7 +172,9 @@ private:
         {
             float dx = bmax[0] - bmin[0], dy = bmax[1] - bmin[1], dz = bmax[2] - bmin[2];
             if (dx < 0 || dy < 0 || dz < 0)
+            {
                 return 0.0f; // empty
+            }
             return 2.0f * (dx * dy + dy * dz + dz * dx);
         }
     };
@@ -183,7 +195,9 @@ private:
     void build()
     {
         if (owned.empty())
+        {
             return;
+        }
 
         std::vector<BuildPrim> info(owned.size());
         for (size_t i = 0; i < owned.size(); ++i)
@@ -201,7 +215,9 @@ private:
 
         std::vector<uint32_t> order(owned.size());
         for (uint32_t i = 0; i < order.size(); ++i)
+        {
             order[i] = i;
+        }
 
         nodes.reserve(2 * owned.size());
         nodes.push_back({});
@@ -237,7 +253,9 @@ private:
         node.first = first;
         node.count = count;
         if (count <= 1)
+        {
             return;
+        }
 
         // Find the cheapest SAH split over all three axes
         int best_axis    = -1;
@@ -248,7 +266,9 @@ private:
         {
             float lo = centroids.bmin[axis], hi = centroids.bmax[axis];
             if (hi - lo <= 0.0f)
+            {
                 continue; // all centroids coincide on this axis
+            }
             float scale = BINS / (hi - lo);
 
             Bounds bin_bounds[BINS];
@@ -282,7 +302,9 @@ private:
             for (int i = 0; i < BINS - 1; ++i)
             {
                 if (left_count[i] == 0 || right_count[i] == 0)
+                {
                     continue;
+                }
                 float cost = left_count[i] * left_area[i] + right_count[i] * right_area[i];
                 if (cost < best_cost)
                 {
@@ -297,7 +319,9 @@ private:
         {
             // All centroids coincide: no plane separates them, so just halve big lists
             if (count > MAX_LEAF)
+            {
                 split_children(node_index, first, count, count / 2, info, order);
+            }
             return;
         }
 
@@ -305,14 +329,18 @@ private:
         float leaf_cost  = count * bounds.area();
         float split_cost = bounds.area() + best_cost;
         if (count <= MAX_LEAF && split_cost >= leaf_cost)
+        {
             return;
+        }
 
         auto mid_it =
             std::partition(order.begin() + first, order.begin() + first + count,
                            [&](uint32_t i) { return info[i].centroid[best_axis] < best_split; });
         uint32_t left_count = static_cast<uint32_t>(mid_it - (order.begin() + first));
         if (left_count == 0 || left_count == count)
+        {
             left_count = count / 2; // float edge case
+        }
 
         split_children(node_index, first, count, left_count, info, order);
     }

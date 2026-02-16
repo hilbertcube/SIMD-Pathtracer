@@ -34,7 +34,9 @@ Vector<T, N> random_unit_vector()
         auto p  = Vector<T, N>::random(-1, 1);
         T lensq = p.length_squared();
         if (std::numeric_limits<T>::epsilon() < lensq && lensq <= T(1))
+        {
             return p / std::sqrt(lensq);
+        }
     }
 }
 
@@ -46,7 +48,9 @@ Vector<T, 2> random_in_unit_disk()
     {
         auto p = Vector<T, 2>::random(-1, 1);
         if (p.length_squared() < T(1))
+        {
             return p;
+        }
     }
 }
 
@@ -87,7 +91,9 @@ std::ostream& operator<<(std::ostream& out, const Vector<T, N>& v)
 {
     out << '(';
     for (std::size_t i = 0; i < N; ++i)
+    {
         out << (i ? ", " : "") << v[i];
+    }
     return out << ')';
 }
 

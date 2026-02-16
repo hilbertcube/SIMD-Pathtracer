@@ -51,7 +51,9 @@ public:
 
         auto discriminant = h * h - a * c;
         if (discriminant < 0)
+        {
             return false;
+        }
 
         auto sqrtd = std::sqrt(discriminant);
 
@@ -61,7 +63,9 @@ public:
         {
             root = (h + sqrtd) / a;
             if (root <= ray_t.min || ray_t.max <= root)
+            {
                 return false;
+            }
         }
         rec.t                = root;
         rec.p                = r.at(rec.t);
@@ -96,11 +100,15 @@ public:
     {
         hit_record rec;
         if (!this->hit(ray(origin, direction), interval(0.001f, INF), rec))
+        {
             return 0.0f;
+        }
 
         float dist_squared = (center.at(0) - origin).length_squared();
         if (dist_squared <= radius * radius) // origin inside the sphere
+        {
             return 1.0f / (4.0f * PI);
+        }
 
         float cos_theta_max = std::sqrt(1.0f - radius * radius / dist_squared);
         float solid_angle   = 2.0f * PI * (1.0f - cos_theta_max);
@@ -112,7 +120,9 @@ public:
         vec3f direction        = center.at(0) - origin;
         float distance_squared = direction.length_squared();
         if (distance_squared <= radius * radius) // origin inside the sphere
+        {
             return random_unit_vector<float, 3>();
+        }
 
         ONB uvw(direction);
         return uvw.transform(random_to_sphere(radius, distance_squared));

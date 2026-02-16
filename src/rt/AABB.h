@@ -41,9 +41,13 @@ public:
     const interval& axis_interval(int n) const
     {
         if (n == 1)
+        {
             return y;
+        }
         if (n == 2)
+        {
             return z;
+        }
         return x;
     }
 
@@ -63,20 +67,30 @@ public:
             if (t0 < t1)
             {
                 if (t0 > ray_t.min)
+                {
                     ray_t.min = t0;
+                }
                 if (t1 < ray_t.max)
+                {
                     ray_t.max = t1;
+                }
             }
             else
             {
                 if (t1 > ray_t.min)
+                {
                     ray_t.min = t1;
+                }
                 if (t0 < ray_t.max)
+                {
                     ray_t.max = t0;
+                }
             }
 
             if (ray_t.max <= ray_t.min)
+            {
                 return false;
+            }
         }
         return true;
     }
@@ -86,9 +100,13 @@ public:
         // Returns the index of the longest axis of the bounding box.
 
         if (x.size() > y.size())
+        {
             return x.size() > z.size() ? 0 : 2;
+        }
         else
+        {
             return y.size() > z.size() ? 1 : 2;
+        }
     }
 
     static const AABB empty, universe;
@@ -99,11 +117,17 @@ private:
     {
         float delta = 0.0001f;
         if (x.size() < delta)
+        {
             x = x.expand(delta);
+        }
         if (y.size() < delta)
+        {
             y = y.expand(delta);
+        }
         if (z.size() < delta)
+        {
             z = z.expand(delta);
+        }
     }
 };
 

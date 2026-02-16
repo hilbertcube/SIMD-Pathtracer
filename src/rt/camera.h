@@ -90,7 +90,9 @@ private:
         for (int j = 0; j < image_height; ++j)
         {
             for (int i = 0; i < image_width; ++i)
+            {
                 framebuffer[j * image_width + i] = sample_pixel(i, j, world, lights);
+            }
 
 #pragma omp critical
             std::clog << "\rProgress: " << std::fixed << std::setprecision(1)
@@ -121,7 +123,9 @@ private:
         spp      = std::max(1, samples_per_pixel);
         sqrt_spp = static_cast<int>(std::sqrt(static_cast<float>(spp)));
         while ((sqrt_spp + 1) * (sqrt_spp + 1) <= spp)
+        {
             ++sqrt_spp; // guard float rounding
+        }
         pixel_samples_scale = 1.0f / spp;
         recip_sqrt_spp      = 1.0f / sqrt_spp;
 
@@ -162,11 +166,17 @@ private:
     {
         color pixel_color(0, 0, 0);
         for (int s_j = 0; s_j < sqrt_spp; ++s_j)
+        {
             for (int s_i = 0; s_i < sqrt_spp; ++s_i)
+            {
                 pixel_color += ray_color(get_ray(i, j, s_i, s_j), max_depth, world, lights);
+            }
+        }
 
         for (int s = sqrt_spp * sqrt_spp; s < spp; ++s)
+        {
             pixel_color += ray_color(get_ray(i, j), max_depth, world, lights);
+        }
 
         return pixel_samples_scale * pixel_color;
     }
@@ -233,22 +243,30 @@ private:
     {
         // If we've exceeded the ray bounce limit, no more light is gathered
         if (depth <= 0)
+        {
             return color(0, 0, 0);
+        }
 
         hit_record rec;
         if (!world.hit(r, interval(0.001f, INF), rec))
+        {
             return background;
+        }
 
         scatter_record srec;
         color emission = emission_weight * rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
         if (!rec.mat->scatter(r, rec, srec))
+        {
             return emission;
+        }
 
         // Specular materials (metal, glass) pick their own ray: nothing to importance-sample
         if (srec.skip_pdf)
         {
             if (!russian_roulette(depth, srec.attenuation))
+            {
                 return emission;
+            }
             return emission +
                    srec.attenuation * ray_color(srec.skip_pdf_ray, depth - 1, world, lights);
         }
@@ -275,14 +293,18 @@ private:
 
         // 2. Material sampling, continuing the path
         if (!russian_roulette(depth, srec.attenuation))
+        {
             return emission + direct;
+        }
 
         ray scattered(rec.p, material_pdf.generate(), r.time());
         float pdf_value = material_pdf.value(scattered.direction());
 
         // A zero (or NaN) density carries no usable energy; dividing would give inf/NaN
         if (!(pdf_value > 0.0f))
+        {
             return emission + direct;
+        }
 
         float f = rec.mat->scattering_pdf(r, rec, scattered);
         float w =
@@ -297,12 +319,16 @@ private:
     bool russian_roulette(int depth, color& attenuation) const
     {
         if (max_depth - depth < RR_MIN_BOUNCES)
+        {
             return true;
+        }
         float p =
             std::fmin(RR_MAX_SURVIVAL,
                       std::fmax(attenuation.r(), std::fmax(attenuation.g(), attenuation.b())));
         if (random_float() >= p)
+        {
             return false;
+        }
         attenuation /= p;
         return true;
     }

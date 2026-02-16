@@ -29,6 +29,9 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
 AllowShortLambdasOnASingleLine: Inline
 
+# Every if/else/loop body gets braces, even a single statement
+InsertBraces: true
+
 # Keep the aligned "cam.x = ..." blocks and trailing comments tidy
 AlignConsecutiveAssignments: Consecutive
 AlignConsecutiveDeclarations: None
