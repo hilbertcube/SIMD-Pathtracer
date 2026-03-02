@@ -18,7 +18,7 @@ class Vector
     static_assert(std::is_arithmetic_v<T>, "T must be an arithmetic type");
     static_assert(N > 0, "N must be greater than 0");
 
-    std::array<T, N> e{};
+    std::array<T, N> components{};
 
 public:
     // Zero vector
@@ -27,31 +27,31 @@ public:
     // Every component set to value: Vector<float, 3>(0.5f)
     constexpr explicit Vector(T value)
     {
-        for (T& c : e)
+        for (T& component : components)
         {
-            c = value;
+            component = value;
         }
     }
 
     // One value per component: Vector<float, 3>(1, 2, 3)
     template <typename... Args, typename = std::enable_if_t<sizeof...(Args) == N && (N > 1) &&
                                                             (std::is_arithmetic_v<Args> && ...)>>
-    constexpr explicit Vector(Args... args) : e{static_cast<T>(args)...}
+    constexpr explicit Vector(Args... args) : components{static_cast<T>(args)...}
     {
     }
 
-    constexpr T x() const { return e[0]; }
+    constexpr T x() const { return components[0]; }
 
     constexpr T y() const
     {
         static_assert(N >= 2);
-        return e[1];
+        return components[1];
     }
 
     constexpr T z() const
     {
         static_assert(N >= 3);
-        return e[2];
+        return components[2];
     }
 
     constexpr T r() const { return x(); }
@@ -63,13 +63,13 @@ public:
     constexpr T& operator[](std::size_t i)
     {
         assert(i < N);
-        return e[i];
+        return components[i];
     }
 
     constexpr T operator[](std::size_t i) const
     {
         assert(i < N);
-        return e[i];
+        return components[i];
     }
 
     constexpr Vector operator-() const
@@ -77,7 +77,7 @@ public:
         Vector result;
         for (std::size_t i = 0; i < N; ++i)
         {
-            result.e[i] = -e[i];
+            result.components[i] = -components[i];
         }
         return result;
     }
@@ -86,7 +86,7 @@ public:
     {
         for (std::size_t i = 0; i < N; ++i)
         {
-            e[i] += v.e[i];
+            components[i] += v.components[i];
         }
         return *this;
     }
@@ -95,7 +95,7 @@ public:
     {
         for (std::size_t i = 0; i < N; ++i)
         {
-            e[i] -= v.e[i];
+            components[i] -= v.components[i];
         }
         return *this;
     }
@@ -104,29 +104,29 @@ public:
     {
         for (std::size_t i = 0; i < N; ++i)
         {
-            e[i] *= v.e[i];
+            components[i] *= v.components[i];
         }
         return *this;
     } // component-wise
 
-    constexpr Vector& operator*=(T t)
+    constexpr Vector& operator*=(T scalar)
     {
-        for (T& c : e)
+        for (T& component : components)
         {
-            c *= t;
+            component *= scalar;
         }
         return *this;
     }
 
-    constexpr Vector& operator/=(T t)
+    constexpr Vector& operator/=(T scalar)
     {
         if constexpr (std::is_floating_point_v<T>)
         {
-            return *this *= T(1) / t; // one division instead of N
+            return *this *= T(1) / scalar; // one division instead of N
         }
-        for (T& c : e)
+        for (T& component : components)
         {
-            c /= t;
+            component /= scalar;
         }
         return *this;
     }
@@ -141,9 +141,9 @@ public:
     static Vector random(T min, T max)
     {
         Vector result;
-        for (T& c : result.e)
+        for (T& component : result.components)
         {
-            c = random_real<T>(min, max);
+            component = random_real<T>(min, max);
         }
         return result;
     }
@@ -151,61 +151,62 @@ public:
 
 // Vector-vector arithmetic (* is component-wise)
 template <typename T, std::size_t N>
-constexpr Vector<T, N> operator+(Vector<T, N> u, const Vector<T, N>& v)
+constexpr Vector<T, N> operator+(Vector<T, N> left, const Vector<T, N>& right)
 {
-    return u += v;
+    return left += right;
 }
 
 template <typename T, std::size_t N>
-constexpr Vector<T, N> operator-(Vector<T, N> u, const Vector<T, N>& v)
+constexpr Vector<T, N> operator-(Vector<T, N> left, const Vector<T, N>& right)
 {
-    return u -= v;
+    return left -= right;
 }
 
 template <typename T, std::size_t N>
-constexpr Vector<T, N> operator*(Vector<T, N> u, const Vector<T, N>& v)
+constexpr Vector<T, N> operator*(Vector<T, N> left, const Vector<T, N>& right)
 {
-    return u *= v;
+    return left *= right;
 }
 
 // Scalar arithmetic; the scalar is converted to the vector's type, so 0.5 * vec3f stays a vec3f
 template <typename T, std::size_t N, typename S,
           typename = std::enable_if_t<std::is_arithmetic_v<S>>>
-constexpr Vector<T, N> operator*(Vector<T, N> v, S s)
+constexpr Vector<T, N> operator*(Vector<T, N> vector, S scalar)
 {
-    return v *= static_cast<T>(s);
+    return vector *= static_cast<T>(scalar);
 }
 
 template <typename T, std::size_t N, typename S,
           typename = std::enable_if_t<std::is_arithmetic_v<S>>>
-constexpr Vector<T, N> operator*(S s, Vector<T, N> v)
+constexpr Vector<T, N> operator*(S scalar, Vector<T, N> vector)
 {
-    return v *= static_cast<T>(s);
+    return vector *= static_cast<T>(scalar);
 }
 
 template <typename T, std::size_t N, typename S,
           typename = std::enable_if_t<std::is_arithmetic_v<S>>>
-constexpr Vector<T, N> operator/(Vector<T, N> v, S s)
+constexpr Vector<T, N> operator/(Vector<T, N> vector, S scalar)
 {
-    return v /= static_cast<T>(s);
+    return vector /= static_cast<T>(scalar);
 }
 
 template <typename T, std::size_t N>
-constexpr T dot(const Vector<T, N>& u, const Vector<T, N>& v)
+constexpr T dot(const Vector<T, N>& left, const Vector<T, N>& right)
 {
     T sum = T(0);
     for (std::size_t i = 0; i < N; ++i)
     {
-        sum += u[i] * v[i];
+        sum += left[i] * right[i];
     }
     return sum;
 }
 
 template <typename T>
-constexpr Vector<T, 3> cross(const Vector<T, 3>& u, const Vector<T, 3>& v)
+constexpr Vector<T, 3> cross(const Vector<T, 3>& left, const Vector<T, 3>& right)
 {
-    return Vector<T, 3>(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
-                        u[0] * v[1] - u[1] * v[0]);
+    return Vector<T, 3>(left[1] * right[2] - left[2] * right[1],
+                        left[2] * right[0] - left[0] * right[2],
+                        left[0] * right[1] - left[1] * right[0]);
 }
 
 using vec2f   = Vector<float, 2>;

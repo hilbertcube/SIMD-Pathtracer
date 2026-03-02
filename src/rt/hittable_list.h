@@ -25,22 +25,22 @@ public:
     void add(shared_ptr<hittable> object)
     {
         objects.push_back(object);
-        bbox = AABB(bbox, object->bounding_box());
+        bounds = AABB(bounds, object->bounding_box());
     }
 
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override
+    bool hit(const ray& incoming, interval t_range, hit_record& record) const override
     {
-        hit_record temp_rec;
+        hit_record candidate;
         bool hit_anything  = false;
-        auto closes_so_far = ray_t.max;
+        auto closes_so_far = t_range.max;
 
         for (const auto& object : objects)
         {
-            if (object->hit(r, interval(ray_t.min, closes_so_far), temp_rec))
+            if (object->hit(incoming, interval(t_range.min, closes_so_far), candidate))
             {
                 hit_anything  = true;
-                closes_so_far = temp_rec.t;
-                rec           = temp_rec;
+                closes_so_far = candidate.t;
+                record        = candidate;
             }
         }
 
@@ -73,10 +73,10 @@ public:
         return objects[random_int(0, last)]->random(origin);
     }
 
-    AABB bounding_box() const override { return bbox; }
+    AABB bounding_box() const override { return bounds; }
 
 private:
-    AABB bbox;
+    AABB bounds;
 };
 
 } // namespace rt

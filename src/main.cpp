@@ -8,27 +8,28 @@ void spheres_scene()
     // World
     rt::hittable_list world;
 
-    // auto ground_material = make_shared<rt::lambertian>(rt::color(0.5f, 0.5f, 0.5f));
-    auto ground_material =
+    // auto ground_texture = make_shared<rt::lambertian>(rt::color(0.5f, 0.5f, 0.5f));
+    auto ground_texture =
         make_shared<rt::checker_texture>(0.32f,                        // scale
                                          rt::color(0.5f, 0.5f, 0.5f),  // odd color
                                          rt::color(0.9f, 0.9f, 0.9f)); // even color
     world.add(make_shared<rt::sphere>(rt::point3f(0.0f, -1000.0f, 0.0f), 1000.0f,
-                                      make_shared<rt::lambertian>(ground_material)));
+                                      make_shared<rt::lambertian>(ground_texture)));
 
-    for (int a = -11; a < 11; a++)
+    for (int grid_x = -11; grid_x < 11; grid_x++)
     {
-        for (int b = -11; b < 11; b++)
+        for (int grid_z = -11; grid_z < 11; grid_z++)
         {
             // random material
-            float choose_mat = random_float(); // (0, 1)
-            rt::point3f center(a + 0.9f * random_float(), 0.2f, b + 0.9f * random_float());
+            float material_choice = random_float(); // (0, 1)
+            rt::point3f center(grid_x + 0.9f * random_float(), 0.2f,
+                               grid_z + 0.9f * random_float());
 
             if ((center - rt::point3f(4.0f, 0.2f, 0.0f)).length() > 0.9f)
             {
                 shared_ptr<rt::material> sphere_material;
 
-                if (choose_mat < 0.8f)
+                if (material_choice < 0.8f)
                 {
                     // diffuse
                     auto albedo     = rt::color::random() * rt::color::random();
@@ -36,7 +37,7 @@ void spheres_scene()
                     auto center2    = center + rt::vec3f(0.0f, random_float(0.0f, 0.5f), 0.0f);
                     world.add(make_shared<rt::sphere>(center, 0.2f, sphere_material));
                 }
-                else if (choose_mat < 0.95f)
+                else if (material_choice < 0.95f)
                 {
                     // metal
                     auto albedo     = rt::color::random(0.5f, 1.0f);
@@ -55,32 +56,32 @@ void spheres_scene()
     }
 
     // three big spheres
-    auto material1 = make_shared<rt::dielectrics>(1.5f);
-    world.add(make_shared<rt::sphere>(rt::point3f(0, 1, 0), 1.0f, material1));
+    auto glass_material = make_shared<rt::dielectrics>(1.5f);
+    world.add(make_shared<rt::sphere>(rt::point3f(0, 1, 0), 1.0f, glass_material));
 
-    auto sphere_mat = make_shared<rt::lambertian>(rt::color(0.4f, 0.2f, 0.1f));
-    world.add(make_shared<rt::sphere>(rt::point3f(-4, 1, 0), 1.0f, sphere_mat));
+    auto brown_material = make_shared<rt::lambertian>(rt::color(0.4f, 0.2f, 0.1f));
+    world.add(make_shared<rt::sphere>(rt::point3f(-4, 1, 0), 1.0f, brown_material));
 
-    auto material3 = make_shared<rt::metal>(rt::color(0.7f, 0.6f, 0.5f), 0.0f);
-    world.add(make_shared<rt::sphere>(rt::point3f(4, 1, 0), 1.0f, material3));
+    auto metal_material = make_shared<rt::metal>(rt::color(0.7f, 0.6f, 0.5f), 0.0f);
+    world.add(make_shared<rt::sphere>(rt::point3f(4, 1, 0), 1.0f, metal_material));
 
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 16.0f / 9.0f;
-    cam.image_width       = 1000;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0.70f, 0.80f, 1.00f);
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 100;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0.70f, 0.80f, 1.00f);
 
-    cam.vfov          = 20;
-    cam.lookfrom      = rt::point3f(13, 2, 3);
-    cam.lookat        = rt::point3f(0, 0, 0);
-    cam.vup           = rt::vec3f(0, 1, 0);
-    cam.defocus_angle = 0.6f;
-    cam.focus_dist    = 10.0f;
-    cam.render(world);
+    camera.field_of_view  = 20;
+    camera.look_from      = rt::point3f(13, 2, 3);
+    camera.look_at        = rt::point3f(0, 0, 0);
+    camera.view_up        = rt::vec3f(0, 1, 0);
+    camera.defocus_angle  = 0.6f;
+    camera.focus_distance = 10.0f;
+    camera.render(world);
 }
 
 void checkered_spheres()
@@ -95,22 +96,22 @@ void checkered_spheres()
     world.add(make_shared<rt::sphere>(rt::point3f(0.0f, 10.0f, 0.0f), 10.0f,
                                       make_shared<rt::lambertian>(checker)));
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 16.0f / 9.0f;
-    cam.image_width       = 1000;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0.70f, 0.80f, 1.00f);
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 100;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0.70f, 0.80f, 1.00f);
 
-    cam.vfov            = 20;
-    cam.lookfrom        = rt::point3f(13, 2, 3);
-    cam.lookat          = rt::point3f(0, 0, 0);
-    cam.vup             = rt::vec3f(0, 1, 0);
-    cam.defocus_angle   = 0;
-    cam.output_filename = "checked_spheres.png";
+    camera.field_of_view   = 20;
+    camera.look_from       = rt::point3f(13, 2, 3);
+    camera.look_at         = rt::point3f(0, 0, 0);
+    camera.view_up         = rt::vec3f(0, 1, 0);
+    camera.defocus_angle   = 0;
+    camera.output_filename = "checked_spheres.png";
 
-    cam.render(world);
+    camera.render(world);
 }
 
 void earth()
@@ -119,48 +120,48 @@ void earth()
     auto earth_surface = make_shared<rt::lambertian>(earth_texture);
     auto globe = make_shared<rt::sphere>(rt::point3f(0.0f, 0.0f, 0.0f), 2.0f, earth_surface);
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 16.0f / 9.0f;
-    cam.image_width       = 1000;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0.70f, 0.80f, 1.00f);
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 100;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0.70f, 0.80f, 1.00f);
 
-    cam.vfov          = 20;
-    cam.lookfrom      = rt::point3f(0, 0, 12);
-    cam.lookat        = rt::point3f(0, 0, 0);
-    cam.vup           = rt::vec3f(0, 1, 0);
-    cam.defocus_angle = 0.0f;
+    camera.field_of_view = 20;
+    camera.look_from     = rt::point3f(0, 0, 12);
+    camera.look_at       = rt::point3f(0, 0, 0);
+    camera.view_up       = rt::vec3f(0, 1, 0);
+    camera.defocus_angle = 0.0f;
 
-    cam.render(rt::hittable_list(globe));
+    camera.render(rt::hittable_list(globe));
 }
 
 void perlin_spheres()
 {
     rt::hittable_list world;
 
-    auto pertext = make_shared<rt::noise_texture>(4.0f);
+    auto marble_texture = make_shared<rt::noise_texture>(4.0f);
     world.add(make_shared<rt::sphere>(rt::point3f(0, -1000, 0), 1000.0f,
-                                      make_shared<rt::lambertian>(pertext)));
-    world.add(
-        make_shared<rt::sphere>(rt::point3f(0, 2, 0), 2.0f, make_shared<rt::lambertian>(pertext)));
+                                      make_shared<rt::lambertian>(marble_texture)));
+    world.add(make_shared<rt::sphere>(rt::point3f(0, 2, 0), 2.0f,
+                                      make_shared<rt::lambertian>(marble_texture)));
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 16.0f / 9.0f;
-    cam.image_width       = 1000;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0.70f, 0.80f, 1.00f);
-    cam.vfov              = 20;
-    cam.lookfrom          = rt::point3f(13, 2, 3);
-    cam.lookat            = rt::point3f(0, 0, 0);
-    cam.vup               = rt::vec3f(0, 1, 0);
-    cam.defocus_angle     = 0.0f;
-    cam.output_filename   = "perlin_spheres.png";
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 100;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0.70f, 0.80f, 1.00f);
+    camera.field_of_view     = 20;
+    camera.look_from         = rt::point3f(13, 2, 3);
+    camera.look_at           = rt::point3f(0, 0, 0);
+    camera.view_up           = rt::vec3f(0, 1, 0);
+    camera.defocus_angle     = 0.0f;
+    camera.output_filename   = "perlin_spheres.png";
 
-    cam.render(world);
+    camera.render(world);
 }
 
 void quads()
@@ -186,38 +187,38 @@ void quads()
     world.add(make_shared<rt::quad>(rt::point3f(-2, -3, 5), rt::vec3f(4, 0, 0), rt::vec3f(0, 0, -4),
                                     lower_teal));
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 16.0f / 9.0f;
-    cam.image_width       = 1000;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0.70f, 0.80f, 1.00f);
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 100;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0.70f, 0.80f, 1.00f);
 
-    cam.vfov     = 80;
-    cam.lookfrom = rt::point3f(0, 0, 9);
-    cam.lookat   = rt::point3f(0, 0, 0);
-    cam.vup      = rt::vec3f(0, 1, 0);
+    camera.field_of_view = 80;
+    camera.look_from     = rt::point3f(0, 0, 9);
+    camera.look_at       = rt::point3f(0, 0, 0);
+    camera.view_up       = rt::vec3f(0, 1, 0);
 
-    cam.defocus_angle = 0;
+    camera.defocus_angle = 0;
 
-    cam.render(world);
+    camera.render(world);
 }
 
 void simple_light()
 {
     rt::hittable_list world;
 
-    auto pertext = make_shared<rt::noise_texture>(4.0f);
+    auto marble_texture = make_shared<rt::noise_texture>(4.0f);
     world.add(make_shared<rt::sphere>(rt::point3f(0, -1000, 0), 1000.0f,
-                                      make_shared<rt::lambertian>(pertext)));
-    world.add(
-        make_shared<rt::sphere>(rt::point3f(0, 2, 0), 2.0f, make_shared<rt::lambertian>(pertext)));
+                                      make_shared<rt::lambertian>(marble_texture)));
+    world.add(make_shared<rt::sphere>(rt::point3f(0, 2, 0), 2.0f,
+                                      make_shared<rt::lambertian>(marble_texture)));
 
-    auto difflight = make_shared<rt::diffuse_light>(rt::color(4, 4, 4));
-    world.add(make_shared<rt::sphere>(rt::point3f(0, 7, 0), 2.0f, difflight));
+    auto light_material = make_shared<rt::diffuse_light>(rt::color(4, 4, 4));
+    world.add(make_shared<rt::sphere>(rt::point3f(0, 7, 0), 2.0f, light_material));
     world.add(make_shared<rt::quad>(rt::point3f(3, 1, -2), rt::vec3f(2, 0, 0), rt::vec3f(0, 2, 0),
-                                    difflight));
+                                    light_material));
 
     // BVH over the top-level objects so rays skip whatever they can't reach
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
@@ -228,21 +229,21 @@ void simple_light()
     lights.add(make_shared<rt::quad>(rt::point3f(3, 1, -2), rt::vec3f(2, 0, 0), rt::vec3f(0, 2, 0),
                                      shared_ptr<rt::material>()));
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 16.0f / 9.0f;
-    cam.image_width       = 1000;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0, 0, 0);
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 100;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0, 0, 0);
 
-    cam.vfov          = 20;
-    cam.lookfrom      = rt::point3f(26, 3, 6);
-    cam.lookat        = rt::point3f(0, 2, 0);
-    cam.vup           = rt::vec3f(0, 1, 0);
-    cam.defocus_angle = 0;
+    camera.field_of_view = 20;
+    camera.look_from     = rt::point3f(26, 3, 6);
+    camera.look_at       = rt::point3f(0, 2, 0);
+    camera.view_up       = rt::vec3f(0, 1, 0);
+    camera.defocus_angle = 0;
 
-    cam.render(world, lights);
+    camera.render(world, lights);
 }
 
 void cornell_box()
@@ -268,29 +269,31 @@ void cornell_box()
                                     rt::vec3f(0, 555, 0), white));
 
     // left box
-    shared_ptr<rt::hittable> box1 = box(rt::point3f(0, 0, 0), rt::point3f(165, 330, 165), white);
-    box1                          = make_shared<rt::rotate_y>(box1, 15.0f);
-    box1                          = make_shared<rt::translate>(box1, rt::vec3f(265, 0, 295));
+    shared_ptr<rt::hittable> tall_box =
+        box(rt::point3f(0, 0, 0), rt::point3f(165, 330, 165), white);
+    tall_box = make_shared<rt::rotate_y>(tall_box, 15.0f);
+    tall_box = make_shared<rt::translate>(tall_box, rt::vec3f(265, 0, 295));
 
     // right box
-    shared_ptr<rt::hittable> box2 = box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
-    box2                          = make_shared<rt::rotate_y>(box2, -18.0f);
-    box2                          = make_shared<rt::translate>(box2, rt::vec3f(130, 0, 65));
+    shared_ptr<rt::hittable> short_box =
+        box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
+    short_box = make_shared<rt::rotate_y>(short_box, -18.0f);
+    short_box = make_shared<rt::translate>(short_box, rt::vec3f(130, 0, 65));
 
     // sphere
-    auto sphere_mat = make_shared<rt::lambertian>(rt::color(0.4f, 0.2f, 0.1f));
-    world.add(make_shared<rt::sphere>(rt::point3f(200, 215, 200), 50.0f, sphere_mat));
+    auto brown_material = make_shared<rt::lambertian>(rt::color(0.4f, 0.2f, 0.1f));
+    world.add(make_shared<rt::sphere>(rt::point3f(200, 215, 200), 50.0f, brown_material));
 
     // Add pyramid in the center-left area
-    auto pyramid_mat                     = make_shared<rt::lambertian>(rt::color(.12, .45, .5));
-    shared_ptr<rt::hittable> pyramid_obj = pyramid(rt::point3f(325, 0, 100),   // base min corner
-                                                   rt::point3f(475, 0, 200),   // base max corner
-                                                   rt::point3f(400, 150, 150), // apex point
-                                                   pyramid_mat);
+    auto pyramid_material                  = make_shared<rt::lambertian>(rt::color(.12, .45, .5));
+    shared_ptr<rt::hittable> pyramid_shape = pyramid(rt::point3f(325, 0, 100),   // base min corner
+                                                     rt::point3f(475, 0, 200),   // base max corner
+                                                     rt::point3f(400, 150, 150), // apex point
+                                                     pyramid_material);
 
-    world.add(box1);
-    world.add(box2);
-    world.add(pyramid_obj);
+    world.add(tall_box);
+    world.add(short_box);
+    world.add(pyramid_shape);
 
     // BVH over the top-level objects so rays skip whatever they can't reach
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
@@ -300,50 +303,51 @@ void cornell_box()
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
                                      rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 1.0f;
-    cam.image_width       = 600;
-    cam.samples_per_pixel = 100;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0, 0, 0);
+    camera.aspect_ratio      = 1.0f;
+    camera.image_width       = 600;
+    camera.samples_per_pixel = 100;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0, 0, 0);
 
-    cam.vfov            = 40;
-    cam.lookfrom        = rt::point3f(278, 278, -800);
-    cam.lookat          = rt::point3f(278, 278, 0);
-    cam.vup             = rt::vec3f(0, 1, 0);
-    cam.output_filename = "cornell_box.png";
+    camera.field_of_view   = 40;
+    camera.look_from       = rt::point3f(278, 278, -800);
+    camera.look_at         = rt::point3f(278, 278, 0);
+    camera.view_up         = rt::vec3f(0, 1, 0);
+    camera.output_filename = "cornell_box.png";
 
-    cam.defocus_angle = 0;
+    camera.defocus_angle = 0;
 
-    cam.render(world, lights);
+    camera.render(world, lights);
 }
 
 void final_scene(int image_width, int samples_per_pixel, int max_depth)
 {
-    rt::hittable_list boxes1;
-    auto ground = make_shared<rt::lambertian>(rt::color(0.48, 0.83, 0.53));
+    rt::hittable_list ground_boxes;
+    auto ground_material = make_shared<rt::lambertian>(rt::color(0.48, 0.83, 0.53));
 
     int boxes_per_side = 20;
     for (int i = 0; i < boxes_per_side; i++)
     {
         for (int j = 0; j < boxes_per_side; j++)
         {
-            auto w  = 100.0f;
-            auto x0 = -1000.0f + i * w;
-            auto z0 = -1000.0f + j * w;
-            auto y0 = 0.0f;
-            auto x1 = x0 + w;
-            auto y1 = random_float(1.0f, 101.0f);
-            auto z1 = z0 + w;
+            auto box_width = 100.0f;
+            auto min_x     = -1000.0f + i * box_width;
+            auto min_z     = -1000.0f + j * box_width;
+            auto min_y     = 0.0f;
+            auto max_x     = min_x + box_width;
+            auto max_y     = random_float(1.0f, 101.0f);
+            auto max_z     = min_z + box_width;
 
-            boxes1.add(rt::box(rt::point3f(x0, y0, z0), rt::point3f(x1, y1, z1), ground));
+            ground_boxes.add(rt::box(rt::point3f(min_x, min_y, min_z),
+                                     rt::point3f(max_x, max_y, max_z), ground_material));
         }
     }
 
     rt::hittable_list world;
 
-    world.add(make_shared<rt::bvh_node>(boxes1));
+    world.add(make_shared<rt::bvh_node>(ground_boxes));
 
     // top light
     auto light = make_shared<rt::diffuse_light>(rt::color(7, 7, 7));
@@ -372,23 +376,23 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth)
         make_shared<rt::sphere>(rt::point3f(0, 0, 0), 5000.0f, make_shared<rt::dielectrics>(1.5f));
     world.add(make_shared<rt::constant_medium>(boundary, 0.0001f, rt::color(1, 1, 1)));
 
-    auto emat =
+    auto earth_material =
         make_shared<rt::lambertian>(make_shared<rt::image_texture>("texture/earth2048.bmp"));
-    world.add(make_shared<rt::sphere>(rt::point3f(400, 200, 400), 100.0f, emat));
-    auto pertext = make_shared<rt::noise_texture>(0.2f);
+    world.add(make_shared<rt::sphere>(rt::point3f(400, 200, 400), 100.0f, earth_material));
+    auto marble_texture = make_shared<rt::noise_texture>(0.2f);
     world.add(make_shared<rt::sphere>(rt::point3f(220, 280, 300), 80.0f,
-                                      make_shared<rt::lambertian>(pertext)));
+                                      make_shared<rt::lambertian>(marble_texture)));
 
-    rt::hittable_list boxes2;
-    auto white = make_shared<rt::lambertian>(rt::color(0.73, 0.73, 0.73));
-    int ns     = 1000;
-    for (int j = 0; j < ns; j++)
+    rt::hittable_list sphere_cluster;
+    auto white       = make_shared<rt::lambertian>(rt::color(0.73, 0.73, 0.73));
+    int sphere_count = 1000;
+    for (int j = 0; j < sphere_count; j++)
     {
-        boxes2.add(make_shared<rt::sphere>(rt::point3f::random(0, 165), 10.0f, white));
+        sphere_cluster.add(make_shared<rt::sphere>(rt::point3f::random(0, 165), 10.0f, white));
     }
 
     world.add(make_shared<rt::translate>(
-        make_shared<rt::rotate_y>(make_shared<rt::bvh_node>(boxes2), 15.0f),
+        make_shared<rt::rotate_y>(make_shared<rt::bvh_node>(sphere_cluster), 15.0f),
         rt::vec3f(-100, 270, 395)));
 
     // BVH over the top-level objects so rays skip whatever they can't reach
@@ -399,23 +403,23 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth)
     lights.add(make_shared<rt::quad>(rt::point3f(123, 554, 147), rt::vec3f(300, 0, 0),
                                      rt::vec3f(0, 0, 265), shared_ptr<rt::material>()));
 
-    rt::Camera cam;
+    rt::Camera camera;
 
-    cam.aspect_ratio      = 1.0f;
-    cam.image_width       = image_width;
-    cam.samples_per_pixel = samples_per_pixel;
-    cam.max_depth         = max_depth;
-    cam.background        = rt::color(0, 0, 0);
+    camera.aspect_ratio      = 1.0f;
+    camera.image_width       = image_width;
+    camera.samples_per_pixel = samples_per_pixel;
+    camera.max_depth         = max_depth;
+    camera.background        = rt::color(0, 0, 0);
 
-    cam.vfov     = 40;
-    cam.lookfrom = rt::point3f(478, 278, -600);
-    cam.lookat   = rt::point3f(278, 278, 0);
-    cam.vup      = rt::vec3f(0, 1, 0);
+    camera.field_of_view = 40;
+    camera.look_from     = rt::point3f(478, 278, -600);
+    camera.look_at       = rt::point3f(278, 278, 0);
+    camera.view_up       = rt::vec3f(0, 1, 0);
 
-    cam.defocus_angle   = 0;
-    cam.output_filename = "final_scene.png";
+    camera.defocus_angle   = 0;
+    camera.output_filename = "final_scene.png";
 
-    cam.render(world, lights);
+    camera.render(world, lights);
 }
 
 void three_D_model()
@@ -472,18 +476,18 @@ void three_D_model()
 
     /*
      * // Dragon model
-     * auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
-     * auto dragon_obj = rt::load_obj("model/dragon.obj", dragon_mat);
-     * rt::transform_mesh(*dragon_obj, 2.4f, rt::vec3f(278,100,210));
-     * auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0,
-     * dragon_obj->objects.size()); world.add(dragon_bvh);
+     * auto dragon_material = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+     * auto dragon = rt::load_obj("model/dragon.obj", dragon_material);
+     * rt::transform_mesh(*dragon, 2.4f, rt::vec3f(278,100,210));
+     * auto dragon_bvh = make_shared<rt::bvh_node>(dragon->objects, 0,
+     * dragon->objects.size()); world.add(dragon_bvh);
      */
 
     // Tea pot
-    auto tea_mat = make_shared<rt::metal>(rt::color(0, 0, 0.8), 0.0f);
-    auto tea_pot = rt::load_obj("model/teapot.obj", tea_mat);
-    rt::transform_mesh(*tea_pot, 80.0f, rt::vec3f(278, 0, 278));
-    auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
+    auto teapot_material = make_shared<rt::metal>(rt::color(0, 0, 0.8), 0.0f);
+    auto teapot          = rt::load_obj("model/teapot.obj", teapot_material);
+    rt::transform_mesh(*teapot, 80.0f, rt::vec3f(278, 0, 278));
+    auto teapot_bvh = make_shared<rt::bvh_node>(teapot->objects, 0, teapot->objects.size());
     world.add(teapot_bvh);
 
     // BVH over the top-level objects so rays skip whatever they can't reach
@@ -494,19 +498,19 @@ void three_D_model()
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
                                      rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
 
-    rt::Camera cam;
-    cam.aspect_ratio      = 1.0f;
-    cam.image_width       = 1000;
-    cam.samples_per_pixel = 20;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0, 0, 0);
-    cam.vfov              = 40;
-    cam.lookfrom          = rt::point3f(278, 278, -800);
-    cam.lookat            = rt::point3f(278, 278, 0);
-    cam.vup               = rt::vec3f(0, 1, 0);
-    cam.output_filename   = "3d_model.png";
-    cam.defocus_angle     = 0;
-    cam.render(world, lights);
+    rt::Camera camera;
+    camera.aspect_ratio      = 1.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 20;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0, 0, 0);
+    camera.field_of_view     = 40;
+    camera.look_from         = rt::point3f(278, 278, -800);
+    camera.look_at           = rt::point3f(278, 278, 0);
+    camera.view_up           = rt::vec3f(0, 1, 0);
+    camera.output_filename   = "3d_model.png";
+    camera.defocus_angle     = 0;
+    camera.render(world, lights);
 }
 
 void multiple_models()
@@ -533,38 +537,40 @@ void multiple_models()
                                     rt::vec3f(0, 555, 0), white));
 
     // left box
-    shared_ptr<rt::hittable> box1 = box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
-    box1                          = make_shared<rt::rotate_y>(box1, 15.0f);
-    box1                          = make_shared<rt::translate>(box1, rt::vec3f(285, 0, 295));
-    world.add(box1);
+    shared_ptr<rt::hittable> left_box =
+        box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
+    left_box = make_shared<rt::rotate_y>(left_box, 15.0f);
+    left_box = make_shared<rt::translate>(left_box, rt::vec3f(285, 0, 295));
+    world.add(left_box);
 
     // right box
-    shared_ptr<rt::hittable> box2 = box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
-    box2                          = make_shared<rt::rotate_y>(box2, -18.0f);
-    box2                          = make_shared<rt::translate>(box2, rt::vec3f(130, 0, 65));
-    world.add(box2);
+    shared_ptr<rt::hittable> right_box =
+        box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
+    right_box = make_shared<rt::rotate_y>(right_box, -18.0f);
+    right_box = make_shared<rt::translate>(right_box, rt::vec3f(130, 0, 65));
+    world.add(right_box);
 
     // Suzanne model
-    auto dragon_mat = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
-    auto dragon_obj = rt::load_obj("model/suzanne.obj", dragon_mat);
-    rt::transform_mesh(*dragon_obj, 80.0f, rt::vec3f(110, 165, -450));
-    auto dragon_bvh = make_shared<rt::bvh_node>(dragon_obj->objects, 0, dragon_obj->objects.size());
-    auto rotated    = make_shared<rt::rotate_y>(dragon_bvh, 200);
-    auto suzanne_final = make_shared<rt::translate>(rotated, rt::vec3f(278, 0, 278));
+    auto suzanne_material = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    auto suzanne          = rt::load_obj("model/suzanne.obj", suzanne_material);
+    rt::transform_mesh(*suzanne, 80.0f, rt::vec3f(110, 165, -450));
+    auto suzanne_bvh     = make_shared<rt::bvh_node>(suzanne->objects, 0, suzanne->objects.size());
+    auto suzanne_rotated = make_shared<rt::rotate_y>(suzanne_bvh, 200);
+    auto suzanne_final   = make_shared<rt::translate>(suzanne_rotated, rt::vec3f(278, 0, 278));
     world.add(suzanne_final);
 
     // Tea pot
-    auto tea_mat = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
-    auto tea_pot = rt::load_obj("model/teapot.obj", tea_mat);
-    rt::transform_mesh(*tea_pot, 40.0f, rt::vec3f(185, 160, 220));
-    auto teapot_bvh = make_shared<rt::bvh_node>(tea_pot->objects, 0, tea_pot->objects.size());
+    auto teapot_material = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
+    auto teapot          = rt::load_obj("model/teapot.obj", teapot_material);
+    rt::transform_mesh(*teapot, 40.0f, rt::vec3f(185, 160, 220));
+    auto teapot_bvh = make_shared<rt::bvh_node>(teapot->objects, 0, teapot->objects.size());
     world.add(teapot_bvh);
 
     // Spot the cow
-    auto spot_mat = make_shared<rt::lambertian>(rt::color(0, 0.8, 0.9));
-    auto spot_obj = rt::load_obj("model/spot.obj", spot_mat);
-    rt::transform_mesh(*spot_obj, 90.0f, rt::vec3f(420, 60, 80));
-    auto spot_bvh     = make_shared<rt::bvh_node>(spot_obj->objects, 0, spot_obj->objects.size());
+    auto spot_material = make_shared<rt::lambertian>(rt::color(0, 0.8, 0.9));
+    auto spot          = rt::load_obj("model/spot.obj", spot_material);
+    rt::transform_mesh(*spot, 90.0f, rt::vec3f(420, 60, 80));
+    auto spot_bvh     = make_shared<rt::bvh_node>(spot->objects, 0, spot->objects.size());
     auto spot_rotated = make_shared<rt::rotate_y>(spot_bvh, 45.0f);
     auto spot_final   = make_shared<rt::translate>(spot_rotated, rt::vec3f(65, 0, 290));
     world.add(spot_final);
@@ -577,19 +583,19 @@ void multiple_models()
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
                                      rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
 
-    rt::Camera cam;
-    cam.aspect_ratio      = 1.0f;
-    cam.image_width       = 600;
-    cam.samples_per_pixel = 1000;
-    cam.max_depth         = 50;
-    cam.background        = rt::color(0, 0, 0);
-    cam.vfov              = 40;
-    cam.lookfrom          = rt::point3f(278, 278, -800);
-    cam.lookat            = rt::point3f(278, 278, 0);
-    cam.vup               = rt::vec3f(0, 1, 0);
-    cam.output_filename   = "multiple_3d_models.png";
-    cam.defocus_angle     = 0;
-    cam.render(world, lights);
+    rt::Camera camera;
+    camera.aspect_ratio      = 1.0f;
+    camera.image_width       = 600;
+    camera.samples_per_pixel = 1000;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0, 0, 0);
+    camera.field_of_view     = 40;
+    camera.look_from         = rt::point3f(278, 278, -800);
+    camera.look_at           = rt::point3f(278, 278, 0);
+    camera.view_up           = rt::vec3f(0, 1, 0);
+    camera.output_filename   = "multiple_3d_models.png";
+    camera.defocus_angle     = 0;
+    camera.render(world, lights);
 }
 
 int main(int argc, char** argv)

@@ -16,30 +16,30 @@ public:
 
     interval(float min, float max) : min(min), max(max) {}
 
-    interval(const interval& a, const interval& b)
+    interval(const interval& first, const interval& second)
     {
         // Create the interval tightly enclosing the two input intervals.
-        min = a.min <= b.min ? a.min : b.min;
-        max = a.max >= b.max ? a.max : b.max;
+        min = first.min <= second.min ? first.min : second.min;
+        max = first.max >= second.max ? first.max : second.max;
     }
 
     float size() const { return max - min; }
 
-    bool contains(float x) const { return min <= x && x <= max; }
+    bool contains(float value) const { return min <= value && value <= max; }
 
-    bool surrounds(float x) const { return min < x && x < max; }
+    bool surrounds(float value) const { return min < value && value < max; }
 
-    float clamp(float x) const
+    float clamp(float value) const
     {
-        if (x < min)
+        if (value < min)
         {
             return min;
         }
-        if (x > max)
+        if (value > max)
         {
             return max;
         }
-        return x;
+        return value;
     }
 
     interval expand(float delta) const
@@ -54,14 +54,14 @@ public:
 const interval interval::empty    = interval(+INF, -INF);
 const interval interval::universe = interval(-INF, +INF);
 
-interval operator+(const interval& ival, float displacement)
+interval operator+(const interval& range, float displacement)
 {
-    return interval(ival.min + displacement, ival.max + displacement);
+    return interval(range.min + displacement, range.max + displacement);
 }
 
-interval operator+(float displacement, const interval& ival)
+interval operator+(float displacement, const interval& range)
 {
-    return ival + displacement;
+    return range + displacement;
 }
 
 } // namespace rt

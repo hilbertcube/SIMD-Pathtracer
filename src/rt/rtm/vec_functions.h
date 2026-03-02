@@ -13,16 +13,16 @@ namespace rt
 
 // Normalized v; a zero vector maps to (1, 0, ...) instead of NaN
 template <typename T, std::size_t N>
-Vector<T, N> unit_vector(const Vector<T, N>& v)
+Vector<T, N> unit_vector(const Vector<T, N>& vector)
 {
-    T len = v.length();
-    if (len == T(0))
+    T length = vector.length();
+    if (length == T(0))
     {
         Vector<T, N> result;
         result[0] = T(1);
         return result;
     }
-    return v / len;
+    return vector / length;
 }
 
 // Uniformly random direction on the unit sphere (rejection sampling)
@@ -31,11 +31,11 @@ Vector<T, N> random_unit_vector()
 {
     while (true)
     {
-        auto p  = Vector<T, N>::random(-1, 1);
-        T lensq = p.length_squared();
-        if (std::numeric_limits<T>::epsilon() < lensq && lensq <= T(1))
+        auto candidate   = Vector<T, N>::random(-1, 1);
+        T squared_length = candidate.length_squared();
+        if (std::numeric_limits<T>::epsilon() < squared_length && squared_length <= T(1))
         {
-            return p / std::sqrt(lensq);
+            return candidate / std::sqrt(squared_length);
         }
     }
 }
@@ -46,10 +46,10 @@ Vector<T, 2> random_in_unit_disk()
 {
     while (true)
     {
-        auto p = Vector<T, 2>::random(-1, 1);
-        if (p.length_squared() < T(1))
+        auto candidate = Vector<T, 2>::random(-1, 1);
+        if (candidate.length_squared() < T(1))
         {
-            return p;
+            return candidate;
         }
     }
 }
@@ -58,43 +58,43 @@ Vector<T, 2> random_in_unit_disk()
 template <typename T>
 Vector<T, 3> random_cosine_direction()
 {
-    T r1 = random_real<T>();
-    T r2 = random_real<T>();
+    T first_sample  = random_real<T>();
+    T second_sample = random_real<T>();
 
-    T phi = 2 * PI * r1;
-    T x   = std::cos(phi) * std::sqrt(r2);
-    T y   = std::sin(phi) * std::sqrt(r2);
-    T z   = std::sqrt(1 - r2);
+    T phi = 2 * PI * first_sample;
+    T x   = std::cos(phi) * std::sqrt(second_sample);
+    T y   = std::sin(phi) * std::sqrt(second_sample);
+    T z   = std::sqrt(1 - second_sample);
 
     return Vector<T, 3>(x, y, z);
 }
 
 // Mirror v about the surface normal n
 template <typename T, std::size_t N>
-Vector<T, N> reflect(const Vector<T, N>& v, const Vector<T, N>& n)
+Vector<T, N> reflect(const Vector<T, N>& direction, const Vector<T, N>& normal)
 {
-    return v - 2 * dot(v, n) * n;
+    return direction - 2 * dot(direction, normal) * normal;
 }
 
 // Refract unit direction uv through a surface with normal n; eta_ratio = eta_in / eta_out
 template <typename T>
-Vector<T, 3> refract(const Vector<T, 3>& uv, const Vector<T, 3>& n, T eta_ratio)
+Vector<T, 3> refract(const Vector<T, 3>& direction, const Vector<T, 3>& normal, T eta_ratio)
 {
-    T cos_theta                 = std::fmin(dot(-uv, n), T(1));
-    Vector<T, 3> r_out_perp     = eta_ratio * (uv + cos_theta * n);
-    Vector<T, 3> r_out_parallel = -std::sqrt(std::fabs(T(1) - r_out_perp.length_squared())) * n;
-    return r_out_perp + r_out_parallel;
+    T cos_theta                = std::fmin(dot(-direction, normal), T(1));
+    Vector<T, 3> perpendicular = eta_ratio * (direction + cos_theta * normal);
+    Vector<T, 3> parallel = -std::sqrt(std::fabs(T(1) - perpendicular.length_squared())) * normal;
+    return perpendicular + parallel;
 }
 
 template <typename T, std::size_t N>
-std::ostream& operator<<(std::ostream& out, const Vector<T, N>& v)
+std::ostream& operator<<(std::ostream& stream, const Vector<T, N>& vector)
 {
-    out << '(';
+    stream << '(';
     for (std::size_t i = 0; i < N; ++i)
     {
-        out << (i ? ", " : "") << v[i];
+        stream << (i ? ", " : "") << vector[i];
     }
-    return out << ')';
+    return stream << ')';
 }
 
 } // namespace rt

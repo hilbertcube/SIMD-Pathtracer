@@ -18,7 +18,7 @@ class rtw_image
 public:
     rtw_image() {}
 
-    rtw_image(const char* image_filename, std::string image_dir = "images/")
+    rtw_image(const char* image_filename, std::string image_directory = "images/")
     {
         /*
          * Loads image data from the specified file. If the RTW_IMAGES environment variable is
@@ -29,11 +29,12 @@ public:
          * width() and height() will return 0.
          */
 
-        auto filename = std::string(image_filename);
-        auto imagedir = getenv("RTW_IMAGES");
+        auto filename              = std::string(image_filename);
+        auto environment_directory = getenv("RTW_IMAGES");
 
         // Hunt for the image file in some likely locations.
-        if (imagedir && load(std::string(imagedir) + "/" + image_filename))
+        if (environment_directory &&
+            load(std::string(environment_directory) + "/" + image_filename))
         {
             return;
         }
@@ -42,37 +43,37 @@ public:
         {
             return;
         }
-        std::string back_dir = "../";
+        std::string parent_directory = "../";
 
         if (load(filename))
         {
             return;
         }
-        if (load(image_dir + filename))
+        if (load(image_directory + filename))
         {
             return;
         }
-        if (load("../" + image_dir + filename))
+        if (load("../" + image_directory + filename))
         {
             return;
         }
-        if (load("../../" + image_dir + filename))
+        if (load("../../" + image_directory + filename))
         {
             return;
         }
-        if (load("../../../" + image_dir + filename))
+        if (load("../../../" + image_directory + filename))
         {
             return;
         }
-        if (load("../../../../" + image_dir + filename))
+        if (load("../../../../" + image_directory + filename))
         {
             return;
         }
-        if (load("../../../../../" + image_dir + filename))
+        if (load("../../../../../" + image_directory + filename))
         {
             return;
         }
-        if (load("../../../../../../" + image_dir + filename))
+        if (load("../../../../../../" + image_directory + filename))
         {
             return;
         }
@@ -82,8 +83,8 @@ public:
 
     ~rtw_image()
     {
-        delete[] bdata;
-        STBI_FREE(fdata);
+        delete[] byte_data;
+        STBI_FREE(float_data);
     }
 
     bool load(const std::string& filename)
@@ -96,9 +97,11 @@ public:
          * below, for the full height of the image.
          */
 
-        auto n = bytes_per_pixel; // Dummy out parameter: original components per pixel
-        fdata  = stbi_loadf(filename.c_str(), &image_width, &image_height, &n, bytes_per_pixel);
-        if (fdata == nullptr)
+        auto original_components =
+            bytes_per_pixel; // Dummy out parameter: original components per pixel
+        float_data = stbi_loadf(filename.c_str(), &image_width, &image_height, &original_components,
+                                bytes_per_pixel);
+        if (float_data == nullptr)
         {
             return false;
         }
@@ -108,16 +111,16 @@ public:
         return true;
     }
 
-    int width() const { return (fdata == nullptr) ? 0 : image_width; }
+    int width() const { return (float_data == nullptr) ? 0 : image_width; }
 
-    int height() const { return (fdata == nullptr) ? 0 : image_height; }
+    int height() const { return (float_data == nullptr) ? 0 : image_height; }
 
     const unsigned char* pixel_data(int x, int y) const
     {
         // Return the address of the three RGB bytes of the pixel at x,y. If there is no image
         // data, returns magenta.
         static unsigned char magenta[] = {255, 0, 255};
-        if (bdata == nullptr)
+        if (byte_data == nullptr)
         {
             return magenta;
         }
@@ -125,13 +128,13 @@ public:
         x = clamp(x, 0, image_width);
         y = clamp(y, 0, image_height);
 
-        return bdata + y * bytes_per_scanline + x * bytes_per_pixel;
+        return byte_data + y * bytes_per_scanline + x * bytes_per_pixel;
     }
 
 private:
     const int bytes_per_pixel = 3;
-    float* fdata              = nullptr; // Linear floating point pixel data
-    unsigned char* bdata      = nullptr; // Linear 8-bit pixel data
+    float* float_data         = nullptr; // Linear floating point pixel data
+    unsigned char* byte_data  = nullptr; // Linear 8-bit pixel data
     int image_width           = 0;       // Loaded image width
     int image_height          = 0;       // Loaded image height
     int bytes_per_scanline    = 0;
@@ -166,19 +169,19 @@ private:
     void convert_to_bytes()
     {
         // Convert the linear floating point pixel data to bytes, storing the resulting byte
-        // data in the `bdata` member.
+        // data in the `byte_data` member.
 
         int total_bytes = image_width * image_height * bytes_per_pixel;
-        bdata           = new unsigned char[total_bytes];
+        byte_data       = new unsigned char[total_bytes];
 
         // Iterate through all pixel components, converting from [0.0, 1.0] float values to
         // unsigned [0, 255] byte values.
 
-        auto* bptr = bdata;
-        auto* fptr = fdata;
-        for (auto i = 0; i < total_bytes; i++, fptr++, bptr++)
+        auto* destination = byte_data;
+        auto* source      = float_data;
+        for (auto i = 0; i < total_bytes; i++, source++, destination++)
         {
-            *bptr = float_to_byte(*fptr);
+            *destination = float_to_byte(*source);
         }
     }
 };

@@ -21,21 +21,21 @@ inline float sanitize(float x)
     return (x != x) ? 0.0f : x;
 }
 
-inline void write_color_ppm(std::ostream& out, const color& pixel_color)
+inline void write_color_ppm(std::ostream& stream, const color& pixel_color)
 {
     // Apply a linear to gamma transform for gamma 2
-    auto r = linear_to_gamma(sanitize(pixel_color.r()));
-    auto g = linear_to_gamma(sanitize(pixel_color.g()));
-    auto b = linear_to_gamma(sanitize(pixel_color.b()));
+    auto red   = linear_to_gamma(sanitize(pixel_color.r()));
+    auto green = linear_to_gamma(sanitize(pixel_color.g()));
+    auto blue  = linear_to_gamma(sanitize(pixel_color.b()));
 
     // Translate the [0, 1] component values to the byte range [0, 255]
     static const interval intensity(0.000f, 0.999f);
-    int rbyte = static_cast<int>(256 * intensity.clamp(r));
-    int gbyte = static_cast<int>(256 * intensity.clamp(g));
-    int bbyte = static_cast<int>(256 * intensity.clamp(b));
+    int red_byte   = static_cast<int>(256 * intensity.clamp(red));
+    int green_byte = static_cast<int>(256 * intensity.clamp(green));
+    int blue_byte  = static_cast<int>(256 * intensity.clamp(blue));
 
-    // Write out pixel components
-    out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
+    // Write stream pixel components
+    stream << red_byte << ' ' << green_byte << ' ' << blue_byte << '\n';
 }
 
 // format extractor with edge cases handle (although not needed)
@@ -44,7 +44,7 @@ inline std::string extract_file_format(const std::string& filename)
     // transform to lowercase
     std::string lower = filename;
     std::transform(lower.begin(), lower.end(), lower.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+                   [](unsigned char character) { return std::tolower(character); });
 
     for (int i = static_cast<int>(lower.size()) - 1; i >= 0; --i)
     {
@@ -69,11 +69,11 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
     // not recommended, very slow and produces very large files
     if (format == "ppm")
     {
-        std::ofstream out(filename);
-        out << "P3\n" << width << " " << height << "\n255\n";
-        for (const color& c : framebuffer)
+        std::ofstream file(filename);
+        file << "P3\n" << width << " " << height << "\n255\n";
+        for (const color& pixel : framebuffer)
         {
-            write_color_ppm(out, c);
+            write_color_ppm(file, pixel);
         }
         return;
     }
@@ -88,18 +88,18 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
         {
             const color& pixel_color = framebuffer[j * width + i];
 
-            auto r = linear_to_gamma(sanitize(pixel_color.r()));
-            auto g = linear_to_gamma(sanitize(pixel_color.g()));
-            auto b = linear_to_gamma(sanitize(pixel_color.b()));
+            auto red   = linear_to_gamma(sanitize(pixel_color.r()));
+            auto green = linear_to_gamma(sanitize(pixel_color.g()));
+            auto blue  = linear_to_gamma(sanitize(pixel_color.b()));
 
-            int rbyte = static_cast<int>(256 * intensity.clamp(r));
-            int gbyte = static_cast<int>(256 * intensity.clamp(g));
-            int bbyte = static_cast<int>(256 * intensity.clamp(b));
+            int red_byte   = static_cast<int>(256 * intensity.clamp(red));
+            int green_byte = static_cast<int>(256 * intensity.clamp(green));
+            int blue_byte  = static_cast<int>(256 * intensity.clamp(blue));
 
-            int idx               = (j * width + i) * 3;
-            image_buffer[idx + 0] = static_cast<unsigned char>(rbyte);
-            image_buffer[idx + 1] = static_cast<unsigned char>(gbyte);
-            image_buffer[idx + 2] = static_cast<unsigned char>(bbyte);
+            int index               = (j * width + i) * 3;
+            image_buffer[index + 0] = static_cast<unsigned char>(red_byte);
+            image_buffer[index + 1] = static_cast<unsigned char>(green_byte);
+            image_buffer[index + 2] = static_cast<unsigned char>(blue_byte);
         }
     }
 

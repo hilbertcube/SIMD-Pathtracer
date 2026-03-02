@@ -36,18 +36,18 @@ class cosine_pdf : public pdf
 public:
     cosine_pdf() = default;
 
-    explicit cosine_pdf(const vec3f& w) : uvw(w) {}
+    explicit cosine_pdf(const vec3f& normal) : basis(normal) {}
 
     float value(const vec3f& direction) const override
     {
-        float cosine_theta = dot(unit_vector(direction), uvw.w());
+        float cosine_theta = dot(unit_vector(direction), basis.normal());
         return std::fmax(0.0f, cosine_theta / PI);
     }
 
-    vec3f generate() const override { return uvw.transform(random_cosine_direction<float>()); }
+    vec3f generate() const override { return basis.transform(random_cosine_direction<float>()); }
 
 private:
-    ONB uvw;
+    ONB basis;
 };
 
 } // namespace rt

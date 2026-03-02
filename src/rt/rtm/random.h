@@ -35,9 +35,9 @@ inline const std::thread::id main_thread_id = std::this_thread::get_id();
 // Different for every thread and every run; never 0 (XorShift would get stuck at 0)
 inline uint32_t clock_seed()
 {
-    auto t = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    auto ticks = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     return static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()) ^
-                                 static_cast<uint32_t>(t)) |
+                                 static_cast<uint32_t>(ticks)) |
            1u;
 }
 
@@ -96,8 +96,8 @@ FORCE_INLINE T random_int(T min, T max)
 {
     static_assert(std::is_integral<T>::value, "T must be integral");
 #ifdef USE_XORSHIFT32
-    uint32_t r = tls_rng.next_u32();
-    return static_cast<T>(min + (r % (max - min + 1)));
+    uint32_t bits = tls_rng.next_u32();
+    return static_cast<T>(min + (bits % (max - min + 1)));
 #else
     std::uniform_int_distribution<T> dist(min, max);
     return dist(tls_rng);
@@ -123,9 +123,9 @@ FORCE_INLINE float random_float()
     return random_real<float>();
 }
 
-FORCE_INLINE float random_float(float a, float b)
+FORCE_INLINE float random_float(float min, float max)
 {
-    return random_real<float>(a, b);
+    return random_real<float>(min, max);
 }
 
 FORCE_INLINE double random_double()
@@ -133,7 +133,7 @@ FORCE_INLINE double random_double()
     return random_real<double>();
 }
 
-FORCE_INLINE double random_double(double a, double b)
+FORCE_INLINE double random_double(double min, double max)
 {
-    return random_real<double>(a, b);
+    return random_real<double>(min, max);
 }

@@ -11,96 +11,99 @@ public:
     {
         for (int i = 0; i < point_count; i++)
         {
-            rand_float[i] = unit_vector(vec3f::random(-1, 1));
+            random_gradients[i] = unit_vector(vec3f::random(-1, 1));
         }
-        perlin_generate_perm(perm_x);
-        perlin_generate_perm(perm_y);
-        perlin_generate_perm(perm_z);
+        generate_permutation(permutation_x);
+        generate_permutation(permutation_y);
+        generate_permutation(permutation_z);
     }
 
     ~perlin() {}
 
     // linearly interpolate to smooth out texture
-    float noise_smooth(const point3f& p) const
+    float noise_smooth(const point3f& point) const
     {
-        auto u = p.x() - std::floor(p.x());
-        auto v = p.y() - std::floor(p.y());
-        auto w = p.z() - std::floor(p.z());
+        auto fraction_x = point.x() - std::floor(point.x());
+        auto fraction_y = point.y() - std::floor(point.y());
+        auto fraction_z = point.z() - std::floor(point.z());
 
-        auto i = int(std::floor(p.x()));
-        auto j = int(std::floor(p.y()));
-        auto k = int(std::floor(p.z()));
-        vec3f c[2][2][2];
+        auto cell_x = int(std::floor(point.x()));
+        auto cell_y = int(std::floor(point.y()));
+        auto cell_z = int(std::floor(point.z()));
+        vec3f corners[2][2][2];
 
-        for (int di = 0; di < 2; di++)
+        for (int offset_x = 0; offset_x < 2; offset_x++)
         {
-            for (int dj = 0; dj < 2; dj++)
+            for (int offset_y = 0; offset_y < 2; offset_y++)
             {
-                for (int dk = 0; dk < 2; dk++)
+                for (int offset_z = 0; offset_z < 2; offset_z++)
                 {
-                    c[di][dj][dk] = rand_float[perm_x[(i + di) & 255] ^ perm_y[(j + dj) & 255] ^
-                                               perm_z[(k + dk) & 255]];
+                    corners[offset_x][offset_y][offset_z] =
+                        random_gradients[permutation_x[(cell_x + offset_x) & 255] ^
+                                         permutation_y[(cell_y + offset_y) & 255] ^
+                                         permutation_z[(cell_z + offset_z) & 255]];
                 }
             }
         }
 
-        return perlin_interp(c, u, v, w);
+        return interpolate(corners, fraction_x, fraction_y, fraction_z);
     }
 
     // Very often, a composite noise that has multiple summed frequencies is used.
     // This is usually called turbulence, and is a sum of repeated calls to noise
-    float turbulence(const point3f& p, int depth) const
+    float turbulence(const point3f& point, int depth) const
     {
-        float accum    = 0.0f;
-        float weight   = 1.0f;
-        point3f temp_p = p;
+        float sum            = 0.0f;
+        float weight         = 1.0f;
+        point3f sample_point = point;
 
         for (int i = 0; i < depth; i++)
         {
-            accum += weight * noise_smooth(temp_p);
+            sum += weight * noise_smooth(sample_point);
             weight *= 0.5f;
-            temp_p *= 2;
+            sample_point *= 2;
         }
 
-        return std::fabs(accum);
+        return std::fabs(sum);
     }
 
 private:
     static const int point_count = 256;
-    vec3f rand_float[point_count];
-    int perm_x[point_count];
-    int perm_y[point_count];
-    int perm_z[point_count];
+    vec3f random_gradients[point_count];
+    int permutation_x[point_count];
+    int permutation_y[point_count];
+    int permutation_z[point_count];
 
-    static void perlin_generate_perm(int* p)
+    static void generate_permutation(int* permutation)
     {
         for (int i = 0; i < point_count; i++)
         {
-            p[i] = i;
+            permutation[i] = i;
         }
 
-        permute(p, point_count);
+        permute(permutation, point_count);
     }
 
-    static void permute(int* p, int n)
+    static void permute(int* permutation, int count)
     {
-        for (int i = n - 1; i > 0; i--)
+        for (int i = count - 1; i > 0; i--)
         {
-            int target = random_int(0, i);
-            int tmp    = p[i];
-            p[i]       = p[target];
-            p[target]  = tmp;
+            int target          = random_int(0, i);
+            int temporary       = permutation[i];
+            permutation[i]      = permutation[target];
+            permutation[target] = temporary;
         }
     }
 
     static FORCE_INLINE float fade(float t) { return t * t * (3 - 2 * t); }
 
-    static float perlin_interp(const vec3f c[2][2][2], float u, float v, float w)
+    static float interpolate(const vec3f corners[2][2][2], float fraction_x, float fraction_y,
+                             float fraction_z)
     {
-        auto uu    = fade(u);
-        auto vv    = fade(v);
-        auto ww    = fade(w);
-        auto accum = 0.0;
+        auto smooth_x = fade(fraction_x);
+        auto smooth_y = fade(fraction_y);
+        auto smooth_z = fade(fraction_z);
+        auto sum      = 0.0;
 
         for (int i = 0; i < 2; i++)
         {
@@ -108,14 +111,16 @@ private:
             {
                 for (int k = 0; k < 2; k++)
                 {
-                    vec3f weight_v(u - i, v - j, w - k);
-                    accum += (i * uu + (1 - i) * (1 - uu)) * (j * vv + (1 - j) * (1 - vv)) *
-                             (k * ww + (1 - k) * (1 - ww)) * dot(c[i][j][k], weight_v);
+                    vec3f offset(fraction_x - i, fraction_y - j, fraction_z - k);
+                    sum += (i * smooth_x + (1 - i) * (1 - smooth_x)) *
+                           (j * smooth_y + (1 - j) * (1 - smooth_y)) *
+                           (k * smooth_z + (1 - k) * (1 - smooth_z)) *
+                           dot(corners[i][j][k], offset);
                 }
             }
         }
 
-        return accum;
+        return sum;
     }
 };
 

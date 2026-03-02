@@ -7,3 +7,6 @@
 
 # Stricter formatting and block comments
 d0de02c87b4fe29f048313b15cd100d40292d89a
+
+# Require braces around every if/else/loop body
+d5a824afed67203bd2fc7dfb135632464fe2dbaf

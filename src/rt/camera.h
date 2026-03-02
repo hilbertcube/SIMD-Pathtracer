@@ -34,13 +34,13 @@ public:
     int max_depth = 10; // Max number of ray bounces into scene for the recursive ray_color function
     color background;   // Scene background color
 
-    float vfov       = 90.0f;             // Vertical view angle (field of view)
-    point3f lookfrom = point3f(0, 0, 0);  // Point camera is looking from
-    point3f lookat   = point3f(0, 0, -1); // Point camera is looking at
-    vec3f vup        = vec3f(0, 1, 0);    // Camera-relative "up" direction
+    float field_of_view = 90.0f;             // Vertical view angle (field of view)
+    point3f look_from   = point3f(0, 0, 0);  // Point camera is looking from
+    point3f look_at     = point3f(0, 0, -1); // Point camera is looking at
+    vec3f view_up       = vec3f(0, 1, 0);    // Camera-relative "up" direction
 
-    float defocus_angle = 0.0f;  // Variational angle of rays through each pixel
-    float focus_dist    = 10.0f; // Distance from camera lookfrom point to plane of perfect focus
+    float defocus_angle  = 0.0f;  // Variational angle of rays through each pixel
+    float focus_distance = 10.0f; // Distance from camera look_from point to plane of perfect focus
     std::string output_filename = "output.png";
 
     /*
@@ -59,20 +59,20 @@ public:
     void render(const hittable& world, const hittable& lights) { render_impl(world, &lights); }
 
 private:
-    static constexpr int RR_MIN_BOUNCES = 3; // Bounces before Russian roulette kicks in
-    static constexpr float RR_MAX_SURVIVAL =
+    static constexpr int ROULETTE_MIN_BOUNCES = 3; // Bounces before Russian roulette kicks in
+    static constexpr float ROULETTE_MAX_SURVIVAL =
         0.95f; // Cap so bright paths still terminate eventually
 
     int image_height;          // Rendered image height
-    int spp;                   // Samples per pixel actually taken (at least 1)
-    int sqrt_spp;              // Side of the stratified sample grid
-    float pixel_samples_scale; // Color scale factor (1 / spp)
-    float recip_sqrt_spp;      // 1 / sqrt_spp
+    int sample_count;          // Samples per pixel actually taken (at least 1)
+    int strata_per_side;       // Side of the stratified sample grid
+    float pixel_samples_scale; // Color scale factor (1 / sample_count)
+    float stratum_size;        // 1 / strata_per_side
     point3f camera_center;     // Camera center
-    point3f pixel00_loc;       // Location of pixel (0, 0)
+    point3f pixel00_location;  // Location of pixel (0, 0)
     vec3f pixel_delta_u;       // Offset to pixel to the right
     vec3f pixel_delta_v;       // Offset to pixel below
-    vec3f u, v, w;             // Camera frame basis vector
+    vec3f right, up, backward; // Camera frame basis vector
     vec3f defocus_disk_u;      // Defocus disk horizontal radius
     vec3f defocus_disk_v;      // Defocus disk vertical radius
     std::vector<color> framebuffer;
@@ -118,33 +118,33 @@ private:
         // initialize framebuffer (sized, so pixels can be written by index)
         framebuffer.assign(static_cast<size_t>(image_width) * image_height, color(0, 0, 0));
 
-        // Stratified sampling uses a sqrt_spp x sqrt_spp grid; any remaining samples
+        // Stratified sampling uses a strata_per_side x strata_per_side grid; any remaining samples
         // (when samples_per_pixel is not a perfect square) are taken uniformly at random.
-        spp      = std::max(1, samples_per_pixel);
-        sqrt_spp = static_cast<int>(std::sqrt(static_cast<float>(spp)));
-        while ((sqrt_spp + 1) * (sqrt_spp + 1) <= spp)
+        sample_count    = std::max(1, samples_per_pixel);
+        strata_per_side = static_cast<int>(std::sqrt(static_cast<float>(sample_count)));
+        while ((strata_per_side + 1) * (strata_per_side + 1) <= sample_count)
         {
-            ++sqrt_spp; // guard float rounding
+            ++strata_per_side; // guard float rounding
         }
-        pixel_samples_scale = 1.0f / spp;
-        recip_sqrt_spp      = 1.0f / sqrt_spp;
+        pixel_samples_scale = 1.0f / sample_count;
+        stratum_size        = 1.0f / strata_per_side;
 
-        camera_center = lookfrom;
+        camera_center = look_from;
 
         // Determine viewport dimensions
-        auto theta           = degrees_to_radians(vfov);
-        auto h               = std::tan(theta / 2);
-        auto viewport_height = 2.0f * h * focus_dist;
+        auto theta           = degrees_to_radians(field_of_view);
+        auto half_height     = std::tan(theta / 2);
+        auto viewport_height = 2.0f * half_height * focus_distance;
         auto viewport_width  = viewport_height * (static_cast<float>(image_width) / image_height);
 
-        // Calculate the u, v, w unit basis vectors for the camera coordinate frame.
-        w = unit_vector(lookfrom - lookat);
-        u = unit_vector(cross(vup, w));
-        v = cross(w, u);
+        // Calculate the right, up, backward unit basis vectors for the camera coordinate frame.
+        backward = unit_vector(look_from - look_at);
+        right    = unit_vector(cross(view_up, backward));
+        up       = cross(backward, right);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges
-        vec3f viewport_u = viewport_width * u;
-        vec3f viewport_v = viewport_height * (-v);
+        vec3f viewport_u = viewport_width * right;
+        vec3f viewport_v = viewport_height * (-up);
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
         pixel_delta_u = viewport_u / image_width;
@@ -152,28 +152,29 @@ private:
 
         // Calculate the location of the upper left pixel.
         auto viewport_upper_left =
-            camera_center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
-        pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
+            camera_center - (focus_distance * backward) - viewport_u / 2 - viewport_v / 2;
+        pixel00_location = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
 
         // Calculate the camera defocus disk basis vectors
-        auto defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
-        defocus_disk_u      = u * defocus_radius;
-        defocus_disk_v      = v * defocus_radius;
+        auto defocus_radius = focus_distance * std::tan(degrees_to_radians(defocus_angle / 2));
+        defocus_disk_u      = right * defocus_radius;
+        defocus_disk_v      = up * defocus_radius;
     }
 
     // Average of all samples for pixel (i, j)
     color sample_pixel(int i, int j, const hittable& world, const hittable* lights) const
     {
         color pixel_color(0, 0, 0);
-        for (int s_j = 0; s_j < sqrt_spp; ++s_j)
+        for (int stratum_j = 0; stratum_j < strata_per_side; ++stratum_j)
         {
-            for (int s_i = 0; s_i < sqrt_spp; ++s_i)
+            for (int stratum_i = 0; stratum_i < strata_per_side; ++stratum_i)
             {
-                pixel_color += ray_color(get_ray(i, j, s_i, s_j), max_depth, world, lights);
+                pixel_color +=
+                    ray_color(get_ray(i, j, stratum_i, stratum_j), max_depth, world, lights);
             }
         }
 
-        for (int s = sqrt_spp * sqrt_spp; s < spp; ++s)
+        for (int sample = strata_per_side * strata_per_side; sample < sample_count; ++sample)
         {
             pixel_color += ray_color(get_ray(i, j), max_depth, world, lights);
         }
@@ -184,10 +185,10 @@ private:
     // Camera ray through a uniformly random point in pixel (i, j)
     ray get_ray(int i, int j) const { return make_ray(i, j, sample_squared()); }
 
-    // Camera ray through a random point in sub-pixel cell (s_i, s_j) of pixel (i, j)
-    ray get_ray(int i, int j, int s_i, int s_j) const
+    // Camera ray through a random point in sub-pixel cell (stratum_i, stratum_j) of pixel (i, j)
+    ray get_ray(int i, int j, int stratum_i, int stratum_j) const
     {
-        return make_ray(i, j, sample_square_stratified(s_i, s_j));
+        return make_ray(i, j, sample_square_stratified(stratum_i, stratum_j));
     }
 
     // Construct a camera ray originating from the defocus disk and directed at
@@ -195,7 +196,7 @@ private:
     ray make_ray(int i, int j, const vec3f& offset) const
     {
         auto pixel_sample =
-            pixel00_loc + (i + offset.x()) * pixel_delta_u + (j + offset.y()) * pixel_delta_v;
+            pixel00_location + (i + offset.x()) * pixel_delta_u + (j + offset.y()) * pixel_delta_v;
         auto ray_origin    = (defocus_angle <= 0) ? camera_center : defocus_disk_sample();
         auto ray_direction = pixel_sample - ray_origin;
         auto ray_time      = random_float();
@@ -208,23 +209,26 @@ private:
         return vec3f(random_float() - 0.5f, random_float() - 0.5f, 0.0f);
     }
 
-    vec3f sample_square_stratified(int s_i, int s_j) const
+    vec3f sample_square_stratified(int stratum_i, int stratum_j) const
     {
-        // Random point in sub-cell (s_i, s_j) of the unit square [-.5, .5] x [-.5, .5]
-        float px = ((s_i + random_float()) * recip_sqrt_spp) - 0.5f;
-        float py = ((s_j + random_float()) * recip_sqrt_spp) - 0.5f;
-        return vec3f(px, py, 0.0f);
+        // Random point in sub-cell (stratum_i, stratum_j) of the unit square [-.5, .5] x [-.5, .5]
+        float offset_x = ((stratum_i + random_float()) * stratum_size) - 0.5f;
+        float offset_y = ((stratum_j + random_float()) * stratum_size) - 0.5f;
+        return vec3f(offset_x, offset_y, 0.0f);
     }
 
     point3f defocus_disk_sample() const
     {
-        auto p = random_in_unit_disk<float>();
-        return camera_center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
+        auto disk_point = random_in_unit_disk<float>();
+        return camera_center + (disk_point[0] * defocus_disk_u) + (disk_point[1] * defocus_disk_v);
     }
 
     // Power heuristic: how much of a sample to credit to the strategy with density `a`
     // when another strategy could have produced the same direction with density `b`.
-    static float mis_weight(float a, float b) { return a * a / (a * a + b * b); }
+    static float mis_weight(float density, float other_density)
+    {
+        return density * density / (density * density + other_density * other_density);
+    }
 
     /**
      * Radiance arriving along r.
@@ -238,7 +242,7 @@ private:
      *      material's pdf. Emission found at the next hit is scaled by `emission_weight`,
      *      that direction's MIS weight, so lights aren't counted twice.
      */
-    color ray_color(const ray& r, int depth, const hittable& world, const hittable* lights,
+    color ray_color(const ray& incoming, int depth, const hittable& world, const hittable* lights,
                     float emission_weight = 1.0f) const
     {
         // If we've exceeded the ray bounce limit, no more light is gathered
@@ -247,89 +251,98 @@ private:
             return color(0, 0, 0);
         }
 
-        hit_record rec;
-        if (!world.hit(r, interval(0.001f, INF), rec))
+        hit_record record;
+        if (!world.hit(incoming, interval(0.001f, INF), record))
         {
             return background;
         }
 
-        scatter_record srec;
-        color emission = emission_weight * rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
-        if (!rec.mat->scatter(r, rec, srec))
+        scatter_record scattering;
+        color emission = emission_weight * record.surface_material->emitted(
+                                               incoming, record, record.u, record.v, record.point);
+        if (!record.surface_material->scatter(incoming, record, scattering))
         {
             return emission;
         }
 
         // Specular materials (metal, glass) pick their own ray: nothing to importance-sample
-        if (srec.skip_pdf)
+        if (scattering.is_specular)
         {
-            if (!russian_roulette(depth, srec.attenuation))
+            if (!russian_roulette(depth, scattering.attenuation))
             {
                 return emission;
             }
-            return emission +
-                   srec.attenuation * ray_color(srec.skip_pdf_ray, depth - 1, world, lights);
+            return emission + scattering.attenuation *
+                                  ray_color(scattering.specular_ray, depth - 1, world, lights);
         }
 
-        const pdf& material_pdf = *srec.pdf_ptr;
-        color direct(0, 0, 0);
+        const pdf& material_pdf = *scattering.direction_pdf;
+        color direct_light(0, 0, 0);
 
         // 1. Light sampling with a shadow ray
         if (lights)
         {
-            ray to_light(rec.p, lights->random(rec.p), r.time());
-            float light_pdf = lights->pdf_value(rec.p, to_light.direction());
-            float f         = light_pdf > 0.0f ? rec.mat->scattering_pdf(r, rec, to_light) : 0.0f;
+            ray to_light(record.point, lights->random(record.point), incoming.time());
+            float light_density = lights->pdf_value(record.point, to_light.direction());
+            float scattering_density =
+                light_density > 0.0f
+                    ? record.surface_material->scattering_pdf(incoming, record, to_light)
+                    : 0.0f;
 
-            hit_record light_rec;
-            if (f > 0.0f && world.hit(to_light, interval(0.001f, INF), light_rec))
+            hit_record light_record;
+            if (scattering_density > 0.0f &&
+                world.hit(to_light, interval(0.001f, INF), light_record))
             {
-                color Le = light_rec.mat->emitted(to_light, light_rec, light_rec.u, light_rec.v,
-                                                  light_rec.p);
-                float w  = mis_weight(light_pdf, material_pdf.value(to_light.direction()));
-                direct   = srec.attenuation * Le * (f * w / light_pdf);
+                color light_emission = light_record.surface_material->emitted(
+                    to_light, light_record, light_record.u, light_record.v, light_record.point);
+                float weight = mis_weight(light_density, material_pdf.value(to_light.direction()));
+                direct_light = scattering.attenuation * light_emission *
+                               (scattering_density * weight / light_density);
             }
         }
 
         // 2. Material sampling, continuing the path
-        if (!russian_roulette(depth, srec.attenuation))
+        if (!russian_roulette(depth, scattering.attenuation))
         {
-            return emission + direct;
+            return emission + direct_light;
         }
 
-        ray scattered(rec.p, material_pdf.generate(), r.time());
-        float pdf_value = material_pdf.value(scattered.direction());
+        ray scattered(record.point, material_pdf.generate(), incoming.time());
+        float sample_density = material_pdf.value(scattered.direction());
 
         // A zero (or NaN) density carries no usable energy; dividing would give inf/NaN
-        if (!(pdf_value > 0.0f))
+        if (!(sample_density > 0.0f))
         {
-            return emission + direct;
+            return emission + direct_light;
         }
 
-        float f = rec.mat->scattering_pdf(r, rec, scattered);
-        float w =
-            lights ? mis_weight(pdf_value, lights->pdf_value(rec.p, scattered.direction())) : 1.0f;
+        float scattering_density =
+            record.surface_material->scattering_pdf(incoming, record, scattered);
+        float weight = lights ? mis_weight(sample_density,
+                                           lights->pdf_value(record.point, scattered.direction()))
+                              : 1.0f;
 
-        color incoming = ray_color(scattered, depth - 1, world, lights, w);
-        return emission + direct + srec.attenuation * incoming * (f / pdf_value);
+        color indirect_light = ray_color(scattered, depth - 1, world, lights, weight);
+        return emission + direct_light +
+               scattering.attenuation * indirect_light * (scattering_density / sample_density);
     }
 
     // Russian roulette: after a few bounces, end the path with probability 1 - p and boost
     // survivors by 1/p. Unbiased, and dark surfaces stop wasting bounces early.
     bool russian_roulette(int depth, color& attenuation) const
     {
-        if (max_depth - depth < RR_MIN_BOUNCES)
+        if (max_depth - depth < ROULETTE_MIN_BOUNCES)
         {
             return true;
         }
-        float p =
-            std::fmin(RR_MAX_SURVIVAL,
+        float survival_probability =
+            std::fmin(ROULETTE_MAX_SURVIVAL,
                       std::fmax(attenuation.r(), std::fmax(attenuation.g(), attenuation.b())));
-        if (random_float() >= p)
+        if (random_float() >= survival_probability)
         {
             return false;
         }
-        attenuation /= p;
+        attenuation /= survival_probability;
         return true;
     }
 };

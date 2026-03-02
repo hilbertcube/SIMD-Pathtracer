@@ -14,7 +14,7 @@ public:
     ray() {}
 
     ray(const point3f& origin, const vec3f& direction, float time)
-        : orig(origin), dir(direction), tm(time)
+        : origin_(origin), direction_(direction), time_(time)
     {
     }
 
@@ -23,31 +23,31 @@ public:
     [[nodiscard]]
     const point3f& origin() const
     {
-        return orig;
+        return origin_;
     }
 
     [[nodiscard]]
     const point3f& direction() const
     {
-        return dir;
+        return direction_;
     }
 
     [[nodiscard]]
     point3f at(float t) const
     {
-        return orig + t * dir;
+        return origin_ + t * direction_;
     }
 
     [[nodiscard]]
     float time() const
     {
-        return tm;
+        return time_;
     }
 
 private:
-    point3f orig;
-    vec3f dir;
-    float tm;
+    point3f origin_;
+    vec3f direction_;
+    float time_;
 };
 
 } // namespace rt

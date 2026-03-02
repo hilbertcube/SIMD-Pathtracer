@@ -14,79 +14,84 @@ namespace rt
 class mesh_triangle : public hittable
 {
 public:
-    point3f v0, v1, v2;
-    shared_ptr<material> mat;
+    point3f vertex0, vertex1, vertex2;
+    shared_ptr<material> surface_material;
 
     mesh_triangle() {}
 
-    mesh_triangle(const point3f& a, const point3f& b, const point3f& c, shared_ptr<material> m)
-        : v0(a), v1(b), v2(c), mat(m)
+    mesh_triangle(const point3f& vertex_a, const point3f& vertex_b, const point3f& vertex_c,
+                  shared_ptr<material> triangle_material)
+        : vertex0(vertex_a), vertex1(vertex_b), vertex2(vertex_c),
+          surface_material(triangle_material)
     {
     }
 
     // Möller–Trumbore intersection
     // ref: https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override
+    bool hit(const ray& incoming, interval t_range, hit_record& record) const override
     {
         const float epsilon = std::numeric_limits<float>::epsilon();
-        vec3f edge1         = v1 - v0;
-        vec3f edge2         = v2 - v0;
+        vec3f edge1         = vertex1 - vertex0;
+        vec3f edge2         = vertex2 - vertex0;
 
-        vec3f h = cross(r.direction(), edge2);
-        float a = dot(edge1, h);
-        if (fabs(a) < epsilon)
+        vec3f direction_cross_edge2 = cross(incoming.direction(), edge2);
+        float determinant           = dot(edge1, direction_cross_edge2);
+        if (fabs(determinant) < epsilon)
         {
             return false; // ray parallel
         }
 
-        float f = 1.0f / a;
-        vec3f s = r.origin() - v0;
-        float u = f * dot(s, h);
-        if (u < 0.0f || u > 1.0f)
+        float inverse_determinant = 1.0f / determinant;
+        vec3f origin_offset       = incoming.origin() - vertex0;
+        float barycentric_u       = inverse_determinant * dot(origin_offset, direction_cross_edge2);
+        if (barycentric_u < 0.0f || barycentric_u > 1.0f)
         {
             return false;
         }
 
-        vec3f q = cross(s, edge1);
-        float v = f * dot(r.direction(), q);
-        if (v < 0.0f || u + v > 1.0f)
+        vec3f offset_cross_edge1 = cross(origin_offset, edge1);
+        float barycentric_v = inverse_determinant * dot(incoming.direction(), offset_cross_edge1);
+        if (barycentric_v < 0.0f || barycentric_u + barycentric_v > 1.0f)
         {
             return false;
         }
 
-        float t = f * dot(edge2, q);
-        if (!ray_t.surrounds(t))
+        float t = inverse_determinant * dot(edge2, offset_cross_edge1);
+        if (!t_range.surrounds(t))
         {
             return false;
         }
 
-        rec.t = t;
-        rec.p = r.at(t);
-        rec.set_face_normal(r, unit_vector(cross(edge1, edge2)));
-        rec.mat = mat.get();
+        record.t     = t;
+        record.point = incoming.at(t);
+        record.set_face_normal(incoming, unit_vector(cross(edge1, edge2)));
+        record.surface_material = surface_material.get();
         return true;
     }
 
     AABB bounding_box() const override
     {
-        point3f min_pt(fmin(v0.x(), fmin(v1.x(), v2.x())), fmin(v0.y(), fmin(v1.y(), v2.y())),
-                       fmin(v0.z(), fmin(v1.z(), v2.z())));
-        point3f max_pt(fmax(v0.x(), fmax(v1.x(), v2.x())), fmax(v0.y(), fmax(v1.y(), v2.y())),
-                       fmax(v0.z(), fmax(v1.z(), v2.z())));
-        return AABB(min_pt, max_pt);
+        point3f min_point(fmin(vertex0.x(), fmin(vertex1.x(), vertex2.x())),
+                          fmin(vertex0.y(), fmin(vertex1.y(), vertex2.y())),
+                          fmin(vertex0.z(), fmin(vertex1.z(), vertex2.z())));
+        point3f max_point(fmax(vertex0.x(), fmax(vertex1.x(), vertex2.x())),
+                          fmax(vertex0.y(), fmax(vertex1.y(), vertex2.y())),
+                          fmax(vertex0.z(), fmax(vertex1.z(), vertex2.z())));
+        return AABB(min_point, max_point);
     }
 };
 
-shared_ptr<hittable_list> load_obj(const std::string& filename, shared_ptr<material> default_mat)
+shared_ptr<hittable_list> load_obj(const std::string& filename,
+                                   shared_ptr<material> default_material)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
-    std::string warn, err;
+    std::string warning, error;
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str()))
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warning, &error, filename.c_str()))
     {
-        throw std::runtime_error(warn + err);
+        throw std::runtime_error(warning + error);
     }
 
     auto mesh = make_shared<hittable_list>();
@@ -94,23 +99,24 @@ shared_ptr<hittable_list> load_obj(const std::string& filename, shared_ptr<mater
     for (const auto& shape : shapes)
     {
         size_t index_offset = 0;
-        for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
+        for (size_t face = 0; face < shape.mesh.num_face_vertices.size(); face++)
         {
-            int fv = shape.mesh.num_face_vertices[f]; // should be 3 for triangles
-            assert(fv == 3);
+            int face_vertex_count = shape.mesh.num_face_vertices[face]; // should be 3 for triangles
+            assert(face_vertex_count == 3);
 
-            std::array<point3f, 3> verts;
-            for (int v = 0; v < fv; v++)
+            std::array<point3f, 3> vertices;
+            for (int vertex = 0; vertex < face_vertex_count; vertex++)
             {
-                tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
-                float vx             = attrib.vertices[3 * idx.vertex_index + 0];
-                float vy             = attrib.vertices[3 * idx.vertex_index + 1];
-                float vz             = attrib.vertices[3 * idx.vertex_index + 2];
-                verts[v]             = point3f(vx, vy, vz);
+                tinyobj::index_t index = shape.mesh.indices[index_offset + vertex];
+                float x                = attrib.vertices[3 * index.vertex_index + 0];
+                float y                = attrib.vertices[3 * index.vertex_index + 1];
+                float z                = attrib.vertices[3 * index.vertex_index + 2];
+                vertices[vertex]       = point3f(x, y, z);
             }
-            index_offset += fv;
+            index_offset += face_vertex_count;
 
-            mesh->add(make_shared<mesh_triangle>(verts[0], verts[1], verts[2], default_mat));
+            mesh->add(make_shared<mesh_triangle>(vertices[0], vertices[1], vertices[2],
+                                                 default_material));
         }
     }
 
@@ -118,31 +124,31 @@ shared_ptr<hittable_list> load_obj(const std::string& filename, shared_ptr<mater
 }
 
 // allow shear
-inline void transform_mesh(hittable_list& mesh, float scale, const vec3f& translate)
+inline void transform_mesh(hittable_list& mesh, float scale, const vec3f& offset)
 {
-    for (auto& obj : mesh.objects)
+    for (auto& object : mesh.objects)
     {
-        auto tri = std::dynamic_pointer_cast<mesh_triangle>(obj);
-        if (tri)
+        auto face = std::dynamic_pointer_cast<mesh_triangle>(object);
+        if (face)
         {
-            tri->v0 = scale * tri->v0 + translate;
-            tri->v1 = scale * tri->v1 + translate;
-            tri->v2 = scale * tri->v2 + translate;
+            face->vertex0 = scale * face->vertex0 + offset;
+            face->vertex1 = scale * face->vertex1 + offset;
+            face->vertex2 = scale * face->vertex2 + offset;
         }
     }
 }
 
 // only scale size
-inline void transform_mesh(hittable_list& mesh, const vec3f& scale, const vec3f& translate)
+inline void transform_mesh(hittable_list& mesh, const vec3f& scale, const vec3f& offset)
 {
-    for (auto& obj : mesh.objects)
+    for (auto& object : mesh.objects)
     {
-        auto tri = std::dynamic_pointer_cast<mesh_triangle>(obj);
-        if (tri)
+        auto face = std::dynamic_pointer_cast<mesh_triangle>(object);
+        if (face)
         {
-            tri->v0 = scale * tri->v0 + translate;
-            tri->v1 = scale * tri->v1 + translate;
-            tri->v2 = scale * tri->v2 + translate;
+            face->vertex0 = scale * face->vertex0 + offset;
+            face->vertex1 = scale * face->vertex1 + offset;
+            face->vertex2 = scale * face->vertex2 + offset;
         }
     }
 }

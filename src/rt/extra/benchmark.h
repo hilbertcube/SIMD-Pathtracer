@@ -74,45 +74,45 @@ public:
     ~Timer()
     {
         auto end_time = std::chrono::steady_clock::now();
-        auto ns =
+        auto nanoseconds =
             std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count();
 
         out << process_name << " took ";
 
-        bool first = true;
-        auto sep   = [&](std::string s)
+        bool first       = true;
+        auto append_unit = [&](std::string text)
         {
             if (!first)
             {
                 out << ", ";
             }
-            out << s;
+            out << text;
             first = false;
         };
 
         if (enableNano)
         {
-            sep(std::to_string(ns) + " ns");
+            append_unit(std::to_string(nanoseconds) + " ns");
         }
         if (enableMicro)
         {
-            sep(std::to_string(ns / 1'000.0) + " us");
+            append_unit(std::to_string(nanoseconds / 1'000.0) + " us");
         }
         if (enableMilli)
         {
-            sep(std::to_string(ns / 1'000'000.0) + " ms");
+            append_unit(std::to_string(nanoseconds / 1'000'000.0) + " ms");
         }
         if (enableSeconds)
         {
-            sep(std::to_string(ns / 1e9) + " s");
+            append_unit(std::to_string(nanoseconds / 1e9) + " s");
         }
         if (enableMinutes)
         {
-            sep(std::to_string(ns / (60.0 * 1e9)) + " min");
+            append_unit(std::to_string(nanoseconds / (60.0 * 1e9)) + " min");
         }
         if (enableHours)
         {
-            sep(std::to_string(ns / (3600.0 * 1e9)) + " h");
+            append_unit(std::to_string(nanoseconds / (3600.0 * 1e9)) + " h");
         }
 
         out << std::endl;

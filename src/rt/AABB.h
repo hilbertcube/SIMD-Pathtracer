@@ -19,75 +19,78 @@ public:
         pad_to_minimums();
     }
 
-    AABB(const point3f& a, const point3f& b)
+    AABB(const point3f& corner_a, const point3f& corner_b)
     {
-        // Treat the two points a and b as extrema for the bounding box, so we don't require a
-        // particular minimum/maximum coordinate order.
+        // Treat the two points corner_a and corner_b as extrema for the bounding box, so we don't
+        // require corner_a particular minimum/maximum coordinate order.
 
-        x = (a[0] <= b[0]) ? interval(a[0], b[0]) : interval(b[0], a[0]);
-        y = (a[1] <= b[1]) ? interval(a[1], b[1]) : interval(b[1], a[1]);
-        z = (a[2] <= b[2]) ? interval(a[2], b[2]) : interval(b[2], a[2]);
+        x = (corner_a[0] <= corner_b[0]) ? interval(corner_a[0], corner_b[0])
+                                         : interval(corner_b[0], corner_a[0]);
+        y = (corner_a[1] <= corner_b[1]) ? interval(corner_a[1], corner_b[1])
+                                         : interval(corner_b[1], corner_a[1]);
+        z = (corner_a[2] <= corner_b[2]) ? interval(corner_a[2], corner_b[2])
+                                         : interval(corner_b[2], corner_a[2]);
 
         pad_to_minimums();
     }
 
-    AABB(const AABB& box0, const AABB& box1)
+    AABB(const AABB& first, const AABB& second)
     {
-        x = interval(box0.x, box1.x);
-        y = interval(box0.y, box1.y);
-        z = interval(box0.z, box1.z);
+        x = interval(first.x, second.x);
+        y = interval(first.y, second.y);
+        z = interval(first.z, second.z);
     }
 
-    const interval& axis_interval(int n) const
+    const interval& axis_interval(int axis) const
     {
-        if (n == 1)
+        if (axis == 1)
         {
             return y;
         }
-        if (n == 2)
+        if (axis == 2)
         {
             return z;
         }
         return x;
     }
 
-    bool hit(const ray& r, interval ray_t) const
+    bool hit(const ray& incoming, interval t_range) const
     {
-        const point3f& ray_orig = r.origin();
-        const vec3f& ray_dir    = r.direction();
+        const point3f& origin  = incoming.origin();
+        const vec3f& direction = incoming.direction();
 
         for (int axis = 0; axis < 3; axis++)
         {
-            const interval& ax = axis_interval(axis);
-            const float adinv  = 1.0f / ray_dir[axis];
+            const interval& slab          = axis_interval(axis);
+            const float inverse_direction = 1.0f / direction[axis];
 
-            auto t0 = (ax.min - ray_orig[axis]) * adinv;
-            auto t1 = (ax.max - ray_orig[axis]) * adinv;
+            auto t_min_side = (slab.min - origin[axis]) * inverse_direction;
+            auto t_max_side = (slab.max - origin[axis]) * inverse_direction;
 
-            if (t0 < t1)
+            if (t_min_side < t_max_side)
             {
-                if (t0 > ray_t.min)
+                if (t_min_side > t_range.min)
                 {
-                    ray_t.min = t0;
+                    t_range.min = t_min_side;
                 }
-                if (t1 < ray_t.max)
+                if (t_max_side < t_range.max)
                 {
-                    ray_t.max = t1;
+                    t_range.max = t_max_side;
                 }
             }
             else
             {
-                if (t1 > ray_t.min)
+                if (t_max_side > t_range.min)
                 {
-                    ray_t.min = t1;
+                    t_range.min = t_max_side;
                 }
-                if (t0 < ray_t.max)
+                if (t_min_side < t_range.max)
                 {
-                    ray_t.max = t0;
+                    t_range.max = t_min_side;
                 }
             }
 
-            if (ray_t.max <= ray_t.min)
+            if (t_range.max <= t_range.min)
             {
                 return false;
             }
@@ -134,14 +137,14 @@ private:
 const AABB AABB::empty    = AABB(interval::empty, interval::empty, interval::empty);
 const AABB AABB::universe = AABB(interval::universe, interval::universe, interval::universe);
 
-AABB operator+(const AABB& bbox, const vec3f& offset)
+AABB operator+(const AABB& bounds, const vec3f& offset)
 {
-    return AABB(bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z());
+    return AABB(bounds.x + offset.x(), bounds.y + offset.y(), bounds.z + offset.z());
 }
 
-AABB operator+(const vec3f& offset, const AABB& bbox)
+AABB operator+(const vec3f& offset, const AABB& bounds)
 {
-    return bbox + offset;
+    return bounds + offset;
 }
 
 } // namespace rt

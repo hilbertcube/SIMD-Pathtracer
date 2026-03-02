@@ -32,31 +32,32 @@ public:
         build();
     }
 
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override
+    bool hit(const ray& incoming, interval t_range, hit_record& record) const override
     {
         if (nodes.empty())
         {
             return false;
         }
 
-        const point3f& o   = r.origin();
-        const float inv[3] = {1.0f / r.direction().x(), 1.0f / r.direction().y(),
-                              1.0f / r.direction().z()};
+        const point3f& origin            = incoming.origin();
+        const float inverse_direction[3] = {1.0f / incoming.direction().x(),
+                                            1.0f / incoming.direction().y(),
+                                            1.0f / incoming.direction().z()};
 
         float t_enter;
-        if (!nodes[0].hit(o, inv, ray_t.min, ray_t.max, t_enter))
+        if (!nodes[0].hit(origin, inverse_direction, t_range.min, t_range.max, t_enter))
         {
             return false;
         }
 
-        struct Entry
+        struct StackEntry
         {
             uint32_t node;
             float t_enter;
         };
 
-        Entry stack[128]; // SAH trees stay far shallower than this
-        int sp            = 0;
+        StackEntry stack[128]; // SAH trees stay far shallower than this
+        int stack_size    = 0;
         uint32_t current  = 0;
         bool hit_anything = false;
 
@@ -68,40 +69,42 @@ public:
             {
                 for (uint32_t i = node.first; i < node.first + node.count; ++i)
                 {
-                    if (prims[i]->hit(r, ray_t, rec))
+                    if (primitives[i]->hit(incoming, t_range, record))
                     {
                         hit_anything = true;
-                        ray_t.max    = rec.t;
+                        t_range.max  = record.t;
                     }
                 }
             }
             else
             {
                 // Visit the nearer child first; push the farther one if it is hit at all.
-                uint32_t a = node.first, b = node.first + 1;
-                float ta, tb;
-                bool hit_a = nodes[a].hit(o, inv, ray_t.min, ray_t.max, ta);
-                bool hit_b = nodes[b].hit(o, inv, ray_t.min, ray_t.max, tb);
+                uint32_t first_child = node.first, second_child = node.first + 1;
+                float first_t, second_t;
+                bool hits_first  = nodes[first_child].hit(origin, inverse_direction, t_range.min,
+                                                          t_range.max, first_t);
+                bool hits_second = nodes[second_child].hit(origin, inverse_direction, t_range.min,
+                                                           t_range.max, second_t);
 
-                if (hit_a && hit_b)
+                if (hits_first && hits_second)
                 {
-                    if (tb < ta)
+                    if (second_t < first_t)
                     {
-                        std::swap(a, b);
-                        std::swap(ta, tb);
+                        std::swap(first_child, second_child);
+                        std::swap(first_t, second_t);
                     }
-                    stack[sp++] = {b, tb};
-                    current     = a;
+                    stack[stack_size++] = {second_child, second_t};
+                    current             = first_child;
                     continue;
                 }
-                if (hit_a)
+                if (hits_first)
                 {
-                    current = a;
+                    current = first_child;
                     continue;
                 }
-                if (hit_b)
+                if (hits_second)
                 {
-                    current = b;
+                    current = second_child;
                     continue;
                 }
             }
@@ -109,39 +112,39 @@ public:
             // Pop the next node that still starts in front of the closest hit so far.
             do
             {
-                if (sp == 0)
+                if (stack_size == 0)
                 {
                     return hit_anything;
                 }
-                --sp;
-            } while (stack[sp].t_enter > ray_t.max);
-            current = stack[sp].node;
+                --stack_size;
+            } while (stack[stack_size].t_enter > t_range.max);
+            current = stack[stack_size].node;
         }
     }
 
-    AABB bounding_box() const override { return bbox; }
+    AABB bounding_box() const override { return bounds; }
 
 private:
     struct Node
     {
-        float bmin[3], bmax[3];
+        float min_corner[3], max_corner[3];
         uint32_t first; // interior: index of left child; leaf: index of first primitive
         uint32_t count; // 0 for interior nodes
 
         // Slab test against [t_min, t_max]; on a hit, t_enter is where the ray enters the box
-        bool hit(const point3f& o, const float inv[3], float t_min, float t_max,
+        bool hit(const point3f& origin, const float inverse_direction[3], float t_min, float t_max,
                  float& t_enter) const
         {
             for (int axis = 0; axis < 3; ++axis)
             {
-                float t0 = (bmin[axis] - o[axis]) * inv[axis];
-                float t1 = (bmax[axis] - o[axis]) * inv[axis];
-                if (inv[axis] < 0.0f)
+                float t_near = (min_corner[axis] - origin[axis]) * inverse_direction[axis];
+                float t_far  = (max_corner[axis] - origin[axis]) * inverse_direction[axis];
+                if (inverse_direction[axis] < 0.0f)
                 {
-                    std::swap(t0, t1);
+                    std::swap(t_near, t_far);
                 }
-                t_min = t0 > t_min ? t0 : t_min;
-                t_max = t1 < t_max ? t1 : t_max;
+                t_min = t_near > t_min ? t_near : t_min;
+                t_max = t_far < t_max ? t_far : t_max;
                 if (t_max <= t_min)
                 {
                     return false;
@@ -154,43 +157,44 @@ private:
 
     struct Bounds
     {
-        float bmin[3] = {INF, INF, INF};
-        float bmax[3] = {-INF, -INF, -INF};
+        float min_corner[3] = {INF, INF, INF};
+        float max_corner[3] = {-INF, -INF, -INF};
 
-        void grow(const float lo[3], const float hi[3])
+        void grow(const float low[3], const float high[3])
         {
-            for (int a = 0; a < 3; ++a)
+            for (int axis = 0; axis < 3; ++axis)
             {
-                bmin[a] = std::min(bmin[a], lo[a]);
-                bmax[a] = std::max(bmax[a], hi[a]);
+                min_corner[axis] = std::min(min_corner[axis], low[axis]);
+                max_corner[axis] = std::max(max_corner[axis], high[axis]);
             }
         }
 
-        void grow(const float p[3]) { grow(p, p); }
+        void grow(const float point[3]) { grow(point, point); }
 
         float area() const
         {
-            float dx = bmax[0] - bmin[0], dy = bmax[1] - bmin[1], dz = bmax[2] - bmin[2];
-            if (dx < 0 || dy < 0 || dz < 0)
+            float size_x = max_corner[0] - min_corner[0], size_y = max_corner[1] - min_corner[1],
+                  size_z = max_corner[2] - min_corner[2];
+            if (size_x < 0 || size_y < 0 || size_z < 0)
             {
                 return 0.0f; // empty
             }
-            return 2.0f * (dx * dy + dy * dz + dz * dx);
+            return 2.0f * (size_x * size_y + size_y * size_z + size_z * size_x);
         }
     };
 
-    struct BuildPrim
+    struct BuildPrimitive
     {
-        float bmin[3], bmax[3], centroid[3];
+        float min_corner[3], max_corner[3], centroid[3];
     };
 
-    static constexpr int BINS          = 12;
-    static constexpr uint32_t MAX_LEAF = 4;
+    static constexpr int BIN_COUNT          = 12;
+    static constexpr uint32_t MAX_LEAF_SIZE = 4;
 
     std::vector<shared_ptr<hittable>> owned; // keeps the primitives alive, in leaf order
-    std::vector<const hittable*> prims;      // raw pointers for traversal, same order
+    std::vector<const hittable*> primitives; // raw pointers for traversal, same order
     std::vector<Node> nodes;
-    AABB bbox;
+    AABB bounds;
 
     void build()
     {
@@ -199,18 +203,18 @@ private:
             return;
         }
 
-        std::vector<BuildPrim> info(owned.size());
+        std::vector<BuildPrimitive> primitive_info(owned.size());
         for (size_t i = 0; i < owned.size(); ++i)
         {
-            AABB b                  = owned[i]->bounding_box();
-            const interval* axes[3] = {&b.x, &b.y, &b.z};
-            for (int a = 0; a < 3; ++a)
+            AABB object_bounds      = owned[i]->bounding_box();
+            const interval* axes[3] = {&object_bounds.x, &object_bounds.y, &object_bounds.z};
+            for (int axis = 0; axis < 3; ++axis)
             {
-                info[i].bmin[a]     = axes[a]->min;
-                info[i].bmax[a]     = axes[a]->max;
-                info[i].centroid[a] = 0.5f * (axes[a]->min + axes[a]->max);
+                primitive_info[i].min_corner[axis] = axes[axis]->min;
+                primitive_info[i].max_corner[axis] = axes[axis]->max;
+                primitive_info[i].centroid[axis]   = 0.5f * (axes[axis]->min + axes[axis]->max);
             }
-            bbox = AABB(bbox, b);
+            bounds = AABB(bounds, object_bounds);
         }
 
         std::vector<uint32_t> order(owned.size());
@@ -221,34 +225,35 @@ private:
 
         nodes.reserve(2 * owned.size());
         nodes.push_back({});
-        subdivide(0, 0, static_cast<uint32_t>(order.size()), info, order);
+        subdivide(0, 0, static_cast<uint32_t>(order.size()), primitive_info, order);
 
         // Reorder primitives to match the leaves
         std::vector<shared_ptr<hittable>> sorted(owned.size());
-        prims.resize(owned.size());
+        primitives.resize(owned.size());
         for (size_t i = 0; i < order.size(); ++i)
         {
-            sorted[i] = owned[order[i]];
-            prims[i]  = sorted[i].get();
+            sorted[i]     = owned[order[i]];
+            primitives[i] = sorted[i].get();
         }
         owned = std::move(sorted);
     }
 
     void subdivide(uint32_t node_index, uint32_t first, uint32_t count,
-                   const std::vector<BuildPrim>& info, std::vector<uint32_t>& order)
+                   const std::vector<BuildPrimitive>& primitive_info, std::vector<uint32_t>& order)
     {
-        Bounds bounds, centroids;
+        Bounds node_bounds, centroids;
         for (uint32_t i = first; i < first + count; ++i)
         {
-            bounds.grow(info[order[i]].bmin, info[order[i]].bmax);
-            centroids.grow(info[order[i]].centroid);
+            node_bounds.grow(primitive_info[order[i]].min_corner,
+                             primitive_info[order[i]].max_corner);
+            centroids.grow(primitive_info[order[i]].centroid);
         }
 
         Node& node = nodes[node_index];
-        for (int a = 0; a < 3; ++a)
+        for (int axis = 0; axis < 3; ++axis)
         {
-            node.bmin[a] = bounds.bmin[a];
-            node.bmax[a] = bounds.bmax[a];
+            node.min_corner[axis] = node_bounds.min_corner[axis];
+            node.max_corner[axis] = node_bounds.max_corner[axis];
         }
         node.first = first;
         node.count = count;
@@ -264,42 +269,44 @@ private:
 
         for (int axis = 0; axis < 3; ++axis)
         {
-            float lo = centroids.bmin[axis], hi = centroids.bmax[axis];
-            if (hi - lo <= 0.0f)
+            float low = centroids.min_corner[axis], high = centroids.max_corner[axis];
+            if (high - low <= 0.0f)
             {
                 continue; // all centroids coincide on this axis
             }
-            float scale = BINS / (hi - lo);
+            float scale = BIN_COUNT / (high - low);
 
-            Bounds bin_bounds[BINS];
-            uint32_t bin_count[BINS] = {};
+            Bounds bin_bounds[BIN_COUNT];
+            uint32_t bin_count[BIN_COUNT] = {};
             for (uint32_t i = first; i < first + count; ++i)
             {
-                const BuildPrim& p = info[order[i]];
-                int b = std::min(BINS - 1, static_cast<int>((p.centroid[axis] - lo) * scale));
-                bin_count[b]++;
-                bin_bounds[b].grow(p.bmin, p.bmax);
+                const BuildPrimitive& primitive = primitive_info[order[i]];
+                int bin                         = std::min(BIN_COUNT - 1,
+                                                           static_cast<int>((primitive.centroid[axis] - low) * scale));
+                bin_count[bin]++;
+                bin_bounds[bin].grow(primitive.min_corner, primitive.max_corner);
             }
 
             // Sweep from both sides to get the area/count left and right of each plane
-            float left_area[BINS - 1], right_area[BINS - 1];
-            uint32_t left_count[BINS - 1], right_count[BINS - 1];
+            float left_area[BIN_COUNT - 1], right_area[BIN_COUNT - 1];
+            uint32_t left_count[BIN_COUNT - 1], right_count[BIN_COUNT - 1];
             Bounds left, right;
             uint32_t left_sum = 0, right_sum = 0;
-            for (int i = 0; i < BINS - 1; ++i)
+            for (int i = 0; i < BIN_COUNT - 1; ++i)
             {
                 left_sum += bin_count[i];
-                left.grow(bin_bounds[i].bmin, bin_bounds[i].bmax);
+                left.grow(bin_bounds[i].min_corner, bin_bounds[i].max_corner);
                 left_count[i] = left_sum;
                 left_area[i]  = left.area();
 
-                right_sum += bin_count[BINS - 1 - i];
-                right.grow(bin_bounds[BINS - 1 - i].bmin, bin_bounds[BINS - 1 - i].bmax);
-                right_count[BINS - 2 - i] = right_sum;
-                right_area[BINS - 2 - i]  = right.area();
+                right_sum += bin_count[BIN_COUNT - 1 - i];
+                right.grow(bin_bounds[BIN_COUNT - 1 - i].min_corner,
+                           bin_bounds[BIN_COUNT - 1 - i].max_corner);
+                right_count[BIN_COUNT - 2 - i] = right_sum;
+                right_area[BIN_COUNT - 2 - i]  = right.area();
             }
 
-            for (int i = 0; i < BINS - 1; ++i)
+            for (int i = 0; i < BIN_COUNT - 1; ++i)
             {
                 if (left_count[i] == 0 || right_count[i] == 0)
                 {
@@ -310,7 +317,7 @@ private:
                 {
                     best_cost  = cost;
                     best_axis  = axis;
-                    best_split = lo + (i + 1) / scale;
+                    best_split = low + (i + 1) / scale;
                 }
             }
         }
@@ -318,35 +325,36 @@ private:
         if (best_axis < 0)
         {
             // All centroids coincide: no plane separates them, so just halve big lists
-            if (count > MAX_LEAF)
+            if (count > MAX_LEAF_SIZE)
             {
-                split_children(node_index, first, count, count / 2, info, order);
+                split_children(node_index, first, count, count / 2, primitive_info, order);
             }
             return;
         }
 
         // Small enough and splitting doesn't pay off (traversal cost ~ one intersection): leaf
-        float leaf_cost  = count * bounds.area();
-        float split_cost = bounds.area() + best_cost;
-        if (count <= MAX_LEAF && split_cost >= leaf_cost)
+        float leaf_cost  = count * node_bounds.area();
+        float split_cost = node_bounds.area() + best_cost;
+        if (count <= MAX_LEAF_SIZE && split_cost >= leaf_cost)
         {
             return;
         }
 
-        auto mid_it =
-            std::partition(order.begin() + first, order.begin() + first + count,
-                           [&](uint32_t i) { return info[i].centroid[best_axis] < best_split; });
-        uint32_t left_count = static_cast<uint32_t>(mid_it - (order.begin() + first));
+        auto middle =
+            std::partition(order.begin() + first, order.begin() + first + count, [&](uint32_t i)
+                           { return primitive_info[i].centroid[best_axis] < best_split; });
+        uint32_t left_count = static_cast<uint32_t>(middle - (order.begin() + first));
         if (left_count == 0 || left_count == count)
         {
             left_count = count / 2; // float edge case
         }
 
-        split_children(node_index, first, count, left_count, info, order);
+        split_children(node_index, first, count, left_count, primitive_info, order);
     }
 
     void split_children(uint32_t node_index, uint32_t first, uint32_t count, uint32_t left_count,
-                        const std::vector<BuildPrim>& info, std::vector<uint32_t>& order)
+                        const std::vector<BuildPrimitive>& primitive_info,
+                        std::vector<uint32_t>& order)
     {
         uint32_t left_index = static_cast<uint32_t>(nodes.size());
         nodes.push_back({});
@@ -355,8 +363,8 @@ private:
             left_index; // nodes may have reallocated: index, don't hold a reference
         nodes[node_index].count = 0;
 
-        subdivide(left_index, first, left_count, info, order);
-        subdivide(left_index + 1, first + left_count, count - left_count, info, order);
+        subdivide(left_index, first, left_count, primitive_info, order);
+        subdivide(left_index + 1, first + left_count, count - left_count, primitive_info, order);
     }
 };
 
