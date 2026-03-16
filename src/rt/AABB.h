@@ -22,7 +22,7 @@ public:
     AABB(const point3f& corner_a, const point3f& corner_b)
     {
         // Treat the two points corner_a and corner_b as extrema for the bounding box, so we don't
-        // require corner_a particular minimum/maximum coordinate order.
+        // require a particular minimum/maximum coordinate order.
 
         x = (corner_a[0] <= corner_b[0]) ? interval(corner_a[0], corner_b[0])
                                          : interval(corner_b[0], corner_a[0]);

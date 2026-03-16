@@ -34,7 +34,7 @@ inline void write_color_ppm(std::ostream& stream, const color& pixel_color)
     int green_byte = static_cast<int>(256 * intensity.clamp(green));
     int blue_byte  = static_cast<int>(256 * intensity.clamp(blue));
 
-    // Write stream pixel components
+    // Write out pixel components
     stream << red_byte << ' ' << green_byte << ' ' << blue_byte << '\n';
 }
 

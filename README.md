@@ -20,7 +20,8 @@ Some features added:
 - Generic vector class: a small `Vector<T, N>` template (`vec3f`, `point3f` and `color` are `Vector<float, 3>`).
 - Image Writer: Instead of relying on a PPM writer, which is very slow and produces very large files, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.
 - Multithreading: Initially, I implemented a custom thread pool, but later transitioned to OpenMP for simplicity and better performance (skill issue on my part).
-- No hand-written SIMD: an SSE `vec3` was tried and benchmarked, but with `-O3 -march=native` it was within ±15% of the plain version (faster on some scenes, slower on others), so it was removed to keep the code simple.
+- 4-wide BVH: the tree is built with the surface area heuristic (binned SAH), then collapsed so every node holds four children, and a ray is tested against all four boxes at once with SSE. This is 1.1–1.4x faster than the binary BVH, depending on the scene.
+- SIMD only where it pays off: an SSE `vec3` was also tried, but with `-O3 -march=native` it was within ±15% of the plain version (faster on some scenes, slower on others), so `Vector` stays plain C++. The BVH is the one place with hand-written SSE, which means the project builds for x86-64 only.
 
 ## Building with CMake
 ### External (header-only) dependencies
