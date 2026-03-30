@@ -12,12 +12,21 @@ class ONB
 public:
     ONB() = default;
 
+    /*
+     * Branchless construction from Duff et al., "Building an Orthonormal Basis, Revisited"
+     * (JCGT 2017). Once the direction is normalized the two other axes follow without
+     * another square root.
+     */
     explicit ONB(const vec3f& direction)
     {
-        axis[2]      = unit_vector(direction);
-        vec3f helper = (std::fabs(axis[2].x()) > 0.9f) ? vec3f(0, 1, 0) : vec3f(1, 0, 0);
-        axis[1]      = unit_vector(cross(axis[2], helper));
-        axis[0]      = cross(axis[2], axis[1]);
+        axis[2]             = unit_vector(direction);
+        const vec3f& normal = axis[2];
+        float sign          = std::copysign(1.0f, normal.z());
+        float scale         = -1.0f / (sign + normal.z());
+        float shared_term   = normal.x() * normal.y() * scale;
+        axis[0] = vec3f(1.0f + sign * normal.x() * normal.x() * scale, sign * shared_term,
+                        -sign * normal.x());
+        axis[1] = vec3f(shared_term, sign + normal.y() * normal.y() * scale, -normal.y());
     }
 
     const vec3f& tangent() const { return axis[0]; }

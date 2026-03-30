@@ -40,8 +40,13 @@ public:
 
     float value(const vec3f& direction) const override
     {
-        float cosine_theta = dot(unit_vector(direction), basis.normal());
-        return std::fmax(0.0f, cosine_theta / PI);
+        // cos(theta) without building the normalized vector
+        float projection = dot(direction, basis.normal());
+        if (projection <= 0.0f)
+        {
+            return 0.0f;
+        }
+        return projection / (direction.length() * PI);
     }
 
     vec3f generate() const override { return basis.transform(random_cosine_direction<float>()); }

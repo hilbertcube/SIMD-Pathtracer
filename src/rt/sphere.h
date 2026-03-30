@@ -20,13 +20,15 @@ private:
     ray center;
     float radius;
     shared_ptr<material> surface_material;
+    bool needs_uv; // only image textures read (u, v); acos and atan2 are costly
     AABB bounds;
 
 public:
     // Stationary Sphere
     sphere(const point3f& static_center, float radius, shared_ptr<material> surface_material)
         : center(static_center, vec3f(0, 0, 0)), radius(std::fmax(0, radius)),
-          surface_material(surface_material)
+          surface_material(surface_material),
+          needs_uv(surface_material && surface_material->needs_uv())
     {
         auto radius_vector = vec3f(radius, radius, radius);
         bounds             = AABB(static_center - radius_vector, static_center + radius_vector);
@@ -36,7 +38,8 @@ public:
     sphere(const point3f& center1, const point3f& center2, float radius,
            shared_ptr<material> surface_material)
         : center(center1, center2 - center1), radius(std::fmax(0, radius)),
-          surface_material(surface_material)
+          surface_material(surface_material),
+          needs_uv(surface_material && surface_material->needs_uv())
     {
         auto radius_vector = vec3f(radius, radius, radius);
         AABB start_bounds(center.at(0) - radius_vector, center.at(0) + radius_vector);
@@ -74,7 +77,14 @@ public:
         record.point         = incoming.at(record.t);
         vec3f outward_normal = (record.point - current_center) / radius;
         record.set_face_normal(incoming, outward_normal);
-        get_sphere_uv(outward_normal, record.u, record.v);
+        if (needs_uv)
+        {
+            get_sphere_uv(outward_normal, record.u, record.v);
+        }
+        else
+        {
+            record.u = record.v = 0.0f;
+        }
         record.surface_material = surface_material.get();
 
         return true;

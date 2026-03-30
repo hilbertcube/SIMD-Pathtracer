@@ -22,8 +22,17 @@ public:
         auto plane_normal = cross(edge_u, edge_v);
         normal            = unit_vector(plane_normal);
         plane_offset      = dot(normal, corner);
-        plane_basis       = plane_normal / dot(plane_normal, plane_normal);
         area              = plane_normal.length();
+
+        /*
+         * The hit point's plane coordinates are alpha = w . (p x v) and beta = w . (u x p),
+         * where p runs from the corner to the hit point and w = n / (n . n). By the scalar
+         * triple product these equal p . (v x w) and p . (w x u), so the two cross products
+         * are computed here once instead of on every hit.
+         */
+        vec3f plane_basis = plane_normal / dot(plane_normal, plane_normal);
+        alpha_axis        = cross(edge_v, plane_basis);
+        beta_axis         = cross(plane_basis, edge_u);
         set_bounding_box();
     }
 
@@ -56,8 +65,8 @@ public:
 
         point3f intersection = incoming.at(t);
         vec3f corner_to_hit  = intersection - corner;
-        auto alpha           = dot(plane_basis, cross(corner_to_hit, edge_v));
-        auto beta            = dot(plane_basis, cross(edge_u, corner_to_hit));
+        float alpha          = dot(corner_to_hit, alpha_axis);
+        float beta           = dot(corner_to_hit, beta_axis);
 
         if (!is_interior(alpha, beta, record))
         {
@@ -116,7 +125,8 @@ public:
 
 private:
     point3f corner;
-    vec3f edge_u, edge_v, plane_basis;
+    vec3f edge_u, edge_v;
+    vec3f alpha_axis, beta_axis; // project a corner-relative point onto plane coordinates
     shared_ptr<material> surface_material;
     AABB bounds;
     vec3f normal;

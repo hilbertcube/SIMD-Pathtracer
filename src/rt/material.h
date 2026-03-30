@@ -66,6 +66,10 @@ public:
         return color(0, 0, 0);
     }
 
+    /// @brief Whether scatter() or emitted() read the hit's (u, v) texture coordinates.
+    /// Objects can skip computing them when not; the default is the safe answer.
+    virtual bool needs_uv() const { return true; }
+
     /// @brief The material's true scattering density for `scattered` (BRDF * cosine).
     virtual float scattering_pdf(const ray& incoming, const hit_record& record,
                                  const ray& scattered) const
@@ -100,9 +104,16 @@ public:
     float scattering_pdf(const ray& incoming, const hit_record& record,
                          const ray& scattered) const override
     {
-        float cosine = dot(record.normal, unit_vector(scattered.direction()));
-        return cosine < 0 ? 0.0f : cosine / PI;
+        // cos(theta) without building the normalized vector
+        float projection = dot(record.normal, scattered.direction());
+        if (projection <= 0.0f)
+        {
+            return 0.0f;
+        }
+        return projection / (scattered.direction().length() * PI);
     }
+
+    bool needs_uv() const override { return albedo_texture->needs_uv(); }
 };
 
 class metal : public material
@@ -128,6 +139,8 @@ public:
         // Absorb fuzzed reflections that end up below the surface
         return dot(reflected, record.normal) > 0;
     }
+
+    bool needs_uv() const override { return false; }
 };
 
 class dielectrics : public material
@@ -168,6 +181,8 @@ public:
         scattering.specular_ray = ray(record.point, direction, incoming.time());
         return true;
     }
+
+    bool needs_uv() const override { return false; }
 };
 
 class diffuse_light : public material
@@ -187,6 +202,8 @@ public:
         }
         return emission_texture->value(u, v, point);
     }
+
+    bool needs_uv() const override { return emission_texture->needs_uv(); }
 
 private:
     shared_ptr<texture> emission_texture;
@@ -213,6 +230,8 @@ public:
     {
         return 1.0f / (4.0f * PI);
     }
+
+    bool needs_uv() const override { return albedo_texture->needs_uv(); }
 
 private:
     shared_ptr<texture> albedo_texture;

@@ -13,6 +13,10 @@ public:
     virtual ~texture() = default;
 
     virtual color value(float u, float v, const point3f& point) const = 0;
+
+    /// Whether value() reads the (u, v) texture coordinates. Hits on surfaces whose
+    /// textures don't can skip computing them; the default is the safe answer.
+    virtual bool needs_uv() const { return true; }
 };
 
 class solid_color : public texture
@@ -23,6 +27,8 @@ public:
     solid_color(float red, float green, float blue) : solid_color(color(red, green, blue)) {}
 
     color value(float u, float v, const point3f& point) const override { return albedo; }
+
+    bool needs_uv() const override { return false; }
 
 private:
     color albedo;
@@ -52,6 +58,8 @@ public:
 
         return is_even ? even->value(u, v, point) : odd->value(u, v, point);
     }
+
+    bool needs_uv() const override { return even->needs_uv() || odd->needs_uv(); }
 
 private:
     float inverse_scale;
@@ -93,8 +101,10 @@ public:
     color value(float u, float v, const point3f& point) const override
     {
         return color(0.5f, 0.5f, 0.5f) *
-               (1.0f + sin(scale * point.z() + 10.0f * noise.turbulence(point, 7)));
+               (1.0f + std::sin(scale * point.z() + 10.0f * noise.turbulence(point, 7)));
     }
+
+    bool needs_uv() const override { return false; }
 
 private:
     perlin noise;

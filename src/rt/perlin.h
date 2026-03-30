@@ -103,7 +103,7 @@ private:
         auto smooth_x = fade(fraction_x);
         auto smooth_y = fade(fraction_y);
         auto smooth_z = fade(fraction_z);
-        auto sum      = 0.0;
+        float sum     = 0.0f;
 
         for (int i = 0; i < 2; i++)
         {
