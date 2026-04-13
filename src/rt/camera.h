@@ -41,7 +41,8 @@ public:
 
     float defocus_angle  = 0.0f;  // Variational angle of rays through each pixel
     float focus_distance = 10.0f; // Distance from camera look_from point to plane of perfect focus
-    std::string output_filename = "output.png";
+    std::string output_filename            = "output.png";
+    std::filesystem::path output_directory = "."; // created if it doesn't exist
 
     /*
      * Renders the image in parallel (OpenMP, one row per task) and saves it.
@@ -105,9 +106,10 @@ private:
     {
         std::clog << "\rDone. \n";
         // Write to file
-        save_framebuffer(framebuffer, image_width, image_height, output_filename);
-        std::clog << "Image saved to " << std::filesystem::current_path() / output_filename
-                  << std::endl;
+        std::filesystem::create_directories(output_directory);
+        std::filesystem::path output_path = output_directory / output_filename;
+        save_framebuffer(framebuffer, image_width, image_height, output_path.string());
+        std::clog << "Image saved to " << std::filesystem::absolute(output_path) << std::endl;
     }
 
     void initialize()

@@ -52,11 +52,15 @@ cmake --build .
 
 ### Running
 
-After building, you’ll find the executable inside the build/ directory:
+Run from the repository root, since scenes load `model/` and `texture/` from there:
 ```bash
-./main 7    # render scene 7 (the Cornell box)
+./build/main [scene] [output_directory]
+./build/main 7             # render scene 7 (the Cornell box) to images/cornell_box.png
+./build/main 7 renders     # same, but write to renders/cornell_box.png
 ```
-The number picks a case of the `switch` in `main()` in [src/main.cpp](src/main.cpp): 1 spheres, 2 checkered spheres, 3 earth, 4 Perlin spheres, 5 quads, 6 simple light, 7 Cornell box, 8 Book 2 final scene, 9 teapot model (the default), 10 multiple models; any other number renders a quick preview of the final scene. Each scene sets its own `output_filename` (`output.png` if it doesn't); the file is written to the current directory, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
+The number picks a case of the `switch` in `main()` in [src/main.cpp](src/main.cpp): 1 spheres, 2 checkered spheres, 3 earth, 4 Perlin spheres, 5 quads, 6 simple light, 7 Cornell box, 8 Book 2 final scene, 9 teapot model (the default), 10 multiple models, 11 dragon (a 250k-triangle model); any other number renders a quick preview of the final scene.
+
+Images go to `images/` unless another directory is given (it is created if missing). Rendering a scene there replaces the existing image of the same name. Each scene sets its own `output_filename`, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
 
 ## Future plans
 - CUDA acceleration

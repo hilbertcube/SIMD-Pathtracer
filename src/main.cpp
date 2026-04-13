@@ -1,9 +1,10 @@
 #include <cstdlib>
+#include <filesystem>
 
 #include "rt/ray_tracer.h"
 #include "rt/mesh.h"
 
-void spheres_scene()
+void spheres_scene(const std::filesystem::path& output_directory)
 {
     // World
     rt::hittable_list world;
@@ -75,16 +76,18 @@ void spheres_scene()
     camera.max_depth         = 50;
     camera.background        = rt::color(0.70f, 0.80f, 1.00f);
 
-    camera.field_of_view  = 20;
-    camera.look_from      = rt::point3f(13, 2, 3);
-    camera.look_at        = rt::point3f(0, 0, 0);
-    camera.view_up        = rt::vec3f(0, 1, 0);
-    camera.defocus_angle  = 0.6f;
-    camera.focus_distance = 10.0f;
+    camera.field_of_view    = 20;
+    camera.look_from        = rt::point3f(13, 2, 3);
+    camera.look_at          = rt::point3f(0, 0, 0);
+    camera.view_up          = rt::vec3f(0, 1, 0);
+    camera.defocus_angle    = 0.6f;
+    camera.focus_distance   = 10.0f;
+    camera.output_filename  = "spheres.png";
+    camera.output_directory = output_directory;
     camera.render(world);
 }
 
-void checkered_spheres()
+void checkered_spheres(const std::filesystem::path& output_directory)
 {
     // World
     rt::hittable_list world;
@@ -104,17 +107,18 @@ void checkered_spheres()
     camera.max_depth         = 50;
     camera.background        = rt::color(0.70f, 0.80f, 1.00f);
 
-    camera.field_of_view   = 20;
-    camera.look_from       = rt::point3f(13, 2, 3);
-    camera.look_at         = rt::point3f(0, 0, 0);
-    camera.view_up         = rt::vec3f(0, 1, 0);
-    camera.defocus_angle   = 0;
-    camera.output_filename = "checked_spheres.png";
+    camera.field_of_view    = 20;
+    camera.look_from        = rt::point3f(13, 2, 3);
+    camera.look_at          = rt::point3f(0, 0, 0);
+    camera.view_up          = rt::vec3f(0, 1, 0);
+    camera.defocus_angle    = 0;
+    camera.output_filename  = "checked_spheres.png";
+    camera.output_directory = output_directory;
 
     camera.render(world);
 }
 
-void earth()
+void earth(const std::filesystem::path& output_directory)
 {
     auto earth_texture = make_shared<rt::image_texture>("texture/earth2048.bmp");
     auto earth_surface = make_shared<rt::lambertian>(earth_texture);
@@ -134,10 +138,12 @@ void earth()
     camera.view_up       = rt::vec3f(0, 1, 0);
     camera.defocus_angle = 0.0f;
 
+    camera.output_filename  = "earth.png";
+    camera.output_directory = output_directory;
     camera.render(rt::hittable_list(globe));
 }
 
-void perlin_spheres()
+void perlin_spheres(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
 
@@ -160,11 +166,12 @@ void perlin_spheres()
     camera.view_up           = rt::vec3f(0, 1, 0);
     camera.defocus_angle     = 0.0f;
     camera.output_filename   = "perlin_spheres.png";
+    camera.output_directory  = output_directory;
 
     camera.render(world);
 }
 
-void quads()
+void quads(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
 
@@ -202,10 +209,12 @@ void quads()
 
     camera.defocus_angle = 0;
 
+    camera.output_filename  = "quads.png";
+    camera.output_directory = output_directory;
     camera.render(world);
 }
 
-void simple_light()
+void simple_light(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
 
@@ -243,10 +252,12 @@ void simple_light()
     camera.view_up       = rt::vec3f(0, 1, 0);
     camera.defocus_angle = 0;
 
+    camera.output_filename  = "simple_light.png";
+    camera.output_directory = output_directory;
     camera.render(world, lights);
 }
 
-void cornell_box()
+void cornell_box(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
 
@@ -311,18 +322,20 @@ void cornell_box()
     camera.max_depth         = 50;
     camera.background        = rt::color(0, 0, 0);
 
-    camera.field_of_view   = 40;
-    camera.look_from       = rt::point3f(278, 278, -800);
-    camera.look_at         = rt::point3f(278, 278, 0);
-    camera.view_up         = rt::vec3f(0, 1, 0);
-    camera.output_filename = "cornell_box.png";
+    camera.field_of_view    = 40;
+    camera.look_from        = rt::point3f(278, 278, -800);
+    camera.look_at          = rt::point3f(278, 278, 0);
+    camera.view_up          = rt::vec3f(0, 1, 0);
+    camera.output_filename  = "cornell_box.png";
+    camera.output_directory = output_directory;
 
     camera.defocus_angle = 0;
 
     camera.render(world, lights);
 }
 
-void final_scene(int image_width, int samples_per_pixel, int max_depth)
+void final_scene(int image_width, int samples_per_pixel, int max_depth,
+                 const std::filesystem::path& output_directory)
 {
     rt::hittable_list ground_boxes;
     auto ground_material = make_shared<rt::lambertian>(rt::color(0.48, 0.83, 0.53));
@@ -416,13 +429,14 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth)
     camera.look_at       = rt::point3f(278, 278, 0);
     camera.view_up       = rt::vec3f(0, 1, 0);
 
-    camera.defocus_angle   = 0;
-    camera.output_filename = "final_scene.png";
+    camera.defocus_angle    = 0;
+    camera.output_filename  = "final_scene.png";
+    camera.output_directory = output_directory;
 
     camera.render(world, lights);
 }
 
-void three_D_model()
+void three_D_model(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
 
@@ -446,42 +460,6 @@ void three_D_model()
                                     rt::vec3f(0, 0, -555), white));
     world.add(make_shared<rt::quad>(rt::point3f(0, 0, 555), rt::vec3f(555, 0, 0),
                                     rt::vec3f(0, 555, 0), blue));
-
-    // // Mirror
-    // auto mirror = make_shared<rt::metal>(rt::color(0.95, 0.95, 0.95), 0.0f);
-
-    /*
-     * // Right wall mirror (x = 555)
-     * {
-     *     rt::point3f origin(555 - 0.01f, 50, 50);
-     *     rt::vec3f height(0, 455, 0);
-     *     rt::vec3f width(0, 0, 455);
-     *     world.add(make_shared<rt::quad>(origin, height, width, mirror));
-     * }
-     * // Left wall mirror (x = 0)
-     * {
-     *     rt::point3f origin(0 + 0.01f, 50, 50);   // tiny offset into +x to avoid z-fighting
-     *     rt::vec3f height(0, 455, 0);
-     *     rt::vec3f width(0, 0, 455);
-     *     world.add(make_shared<rt::quad>(origin, height, width, mirror));
-     * }
-     * // Back wall mirror (z = 555)
-     * {
-     *     rt::point3f origin(50, 50, 555 - 0.01f);
-     *     rt::vec3f height(455, 0, 0);
-     *     rt::vec3f width(0, 455, 0);
-     *     world.add(make_shared<rt::quad>(origin, height, width, mirror));
-     * }
-     */
-
-    /*
-     * // Dragon model
-     * auto dragon_material = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
-     * auto dragon = rt::load_obj("model/dragon.obj", dragon_material);
-     * rt::transform_mesh(*dragon, 2.4f, rt::vec3f(278,100,210));
-     * auto dragon_bvh = make_shared<rt::bvh_node>(dragon->objects, 0,
-     * dragon->objects.size()); world.add(dragon_bvh);
-     */
 
     // Tea pot
     auto teapot_material = make_shared<rt::metal>(rt::color(0, 0, 0.8), 0.0f);
@@ -509,11 +487,76 @@ void three_D_model()
     camera.look_at           = rt::point3f(278, 278, 0);
     camera.view_up           = rt::vec3f(0, 1, 0);
     camera.output_filename   = "3d_model.png";
+    camera.output_directory  = output_directory;
     camera.defocus_angle     = 0;
     camera.render(world, lights);
 }
 
-void multiple_models()
+// Dragon model in the Cornell box, with mirrors on the side and back walls
+void dragon(const std::filesystem::path& output_directory)
+{
+    rt::hittable_list world;
+
+    // Cornell box
+    auto red   = make_shared<rt::lambertian>(rt::color(.65, .05, .05));
+    auto white = make_shared<rt::lambertian>(rt::color(.73, .73, .73));
+    auto green = make_shared<rt::lambertian>(rt::color(.12, .45, .15));
+    auto blue  = make_shared<rt::lambertian>(rt::color(0.4, 0.6, 0.9));
+    auto light = make_shared<rt::diffuse_light>(rt::color(15, 15, 15));
+
+    world.add(make_shared<rt::quad>(rt::point3f(555, 0, 0), rt::vec3f(0, 555, 0),
+                                    rt::vec3f(0, 0, 555), green));
+    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 0), rt::vec3f(0, 555, 0),
+                                    rt::vec3f(0, 0, 555), red));
+    world.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
+                                    rt::vec3f(0, 0, -105), light));
+    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 0), rt::vec3f(555, 0, 0),
+                                    rt::vec3f(0, 0, 555), white));
+    world.add(make_shared<rt::quad>(rt::point3f(555, 555, 555), rt::vec3f(-555, 0, 0),
+                                    rt::vec3f(0, 0, -555), white));
+    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 555), rt::vec3f(555, 0, 0),
+                                    rt::vec3f(0, 555, 0), blue));
+
+    // Mirrors, set slightly in front of the walls to avoid z-fighting
+    auto mirror = make_shared<rt::metal>(rt::color(0.95, 0.95, 0.95), 0.0f);
+    world.add(make_shared<rt::quad>(rt::point3f(555 - 0.01f, 50, 50), rt::vec3f(0, 455, 0),
+                                    rt::vec3f(0, 0, 455), mirror)); // green wall (x = 555)
+    world.add(make_shared<rt::quad>(rt::point3f(0 + 0.01f, 50, 50), rt::vec3f(0, 455, 0),
+                                    rt::vec3f(0, 0, 455), mirror)); // red wall (x = 0)
+    world.add(make_shared<rt::quad>(rt::point3f(50, 50, 555 - 0.01f), rt::vec3f(455, 0, 0),
+                                    rt::vec3f(0, 455, 0), mirror)); // back wall (z = 555)
+
+    // Dragon model
+    auto dragon_material = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    auto dragon_mesh     = rt::load_obj("model/dragon.obj", dragon_material);
+    rt::transform_mesh(*dragon_mesh, 2.4f, rt::vec3f(278, 100, 210));
+    world.add(make_shared<rt::bvh_node>(dragon_mesh->objects, 0, dragon_mesh->objects.size()));
+
+    // BVH over the top-level objects so rays skip whatever they can't reach
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
+
+    // Lights to importance-sample (geometry only; material is ignored)
+    rt::hittable_list lights;
+    lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
+                                     rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
+
+    rt::Camera camera;
+    camera.aspect_ratio      = 1.0f;
+    camera.image_width       = 1000;
+    camera.samples_per_pixel = 3000; // light bouncing off the mirrors is slow to converge
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0, 0, 0);
+    camera.field_of_view     = 40;
+    camera.look_from         = rt::point3f(278, 278, -800);
+    camera.look_at           = rt::point3f(278, 278, 0);
+    camera.view_up           = rt::vec3f(0, 1, 0);
+    camera.output_filename   = "dragon.png";
+    camera.output_directory  = output_directory;
+    camera.defocus_angle     = 0;
+    camera.render(world, lights);
+}
+
+void multiple_models(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
 
@@ -594,51 +637,60 @@ void multiple_models()
     camera.look_at           = rt::point3f(278, 278, 0);
     camera.view_up           = rt::vec3f(0, 1, 0);
     camera.output_filename   = "multiple_3d_models.png";
+    camera.output_directory  = output_directory;
     camera.defocus_angle     = 0;
     camera.render(world, lights);
 }
 
 int main(int argc, char** argv)
 {
-    // Scene number from the command line, e.g. ./main 7 (defaults to 9)
-    int scene = argc > 1 ? std::atoi(argv[1]) : 9;
+    /*
+     * Usage: ./main [scene] [output_directory]
+     *   scene             which scene to render, e.g. 7 (defaults to 9)
+     *   output_directory  where the image is written (defaults to images/, created if missing)
+     */
+    int scene                              = argc > 1 ? std::atoi(argv[1]) : 9;
+    std::filesystem::path output_directory = argc > 2 ? argv[2] : "images";
 
     rt::benchmark::Timer timer("Rendering process");
     timer.showMilli().showSeconds().showMinutes();
     switch (scene)
     {
         case 1:
-            spheres_scene();
+            spheres_scene(output_directory);
             break;
         case 2:
-            checkered_spheres();
+            checkered_spheres(output_directory);
             break;
         case 3:
-            earth();
+            earth(output_directory);
             break;
         case 4:
-            perlin_spheres();
+            perlin_spheres(output_directory);
             break;
         case 5:
-            quads();
+            quads(output_directory);
             break;
         case 6:
-            simple_light();
+            simple_light(output_directory);
             break;
         case 7:
-            cornell_box();
+            cornell_box(output_directory);
             break;
         case 8:
-            final_scene(1000, 2000, 40);
+            final_scene(1000, 2000, 40, output_directory);
             break;
         case 9:
-            three_D_model();
+            three_D_model(output_directory);
             break;
         case 10:
-            multiple_models();
+            multiple_models(output_directory);
+            break;
+        case 11:
+            dragon(output_directory);
             break;
         default:
-            final_scene(400, 250, 4);
+            final_scene(400, 250, 4, output_directory);
             break;
     }
     return 0;
