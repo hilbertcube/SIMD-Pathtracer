@@ -652,8 +652,7 @@ int main(int argc, char** argv)
     int scene                              = argc > 1 ? std::atoi(argv[1]) : 9;
     std::filesystem::path output_directory = argc > 2 ? argv[2] : "images";
 
-    rt::benchmark::Timer timer("Rendering process");
-    timer.showMilli().showSeconds().showMinutes();
+    rt::ScopedTimer timer("Rendering");
     switch (scene)
     {
         case 1:

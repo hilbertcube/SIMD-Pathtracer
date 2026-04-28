@@ -90,7 +90,8 @@ public:
                 }
             }
 
-            if (t_range.max <= t_range.min)
+            // Inclusive, so flat (padded) boxes hit head-on aren't lost to float rounding
+            if (t_range.max < t_range.min)
             {
                 return false;
             }

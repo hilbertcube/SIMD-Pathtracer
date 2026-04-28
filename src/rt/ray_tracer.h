@@ -9,7 +9,7 @@
 
 // Common headers
 #include "extra/def.h"
-#include "extra/benchmark.h"
+#include "extra/timer.h"
 #include "hittable.h"
 #include "hittable_list.h"
 #include "sphere.h"

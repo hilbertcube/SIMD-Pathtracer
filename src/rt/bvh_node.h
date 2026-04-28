@@ -117,7 +117,24 @@ public:
                 t_enter = _mm_max_ps(t_near, t_enter);
                 t_exit  = _mm_min_ps(t_far, t_exit);
 
-                int hit_mask = _mm_movemask_ps(_mm_cmplt_ps(t_enter, t_exit));
+                /*
+                 * Inclusive on purpose. A flat box (a wall, say) is padded by only 1e-4, which
+                 * at coordinates in the hundreds is below float precision, so a ray meeting it
+                 * head-on gets the same entry and exit distance. Rounding preserves order, so
+                 * entry <= exit always holds for a box the ray really crosses; a strict test
+                 * dropped such walls entirely.
+                 *
+                 * Distances must also be finite. A ray with a zero direction component gets
+                 * entry = exit = +inf for every box off to one side of it, and inf <= inf
+                 * would send it through all of them. Empty slots stay misses too: their
+                 * inverted box gives entry = +inf, exit = -inf.
+                 */
+                const __m128 infinity = _mm_set1_ps(INF);
+                __m128 crosses =
+                    _mm_and_ps(_mm_cmple_ps(t_enter, t_exit), _mm_cmplt_ps(t_enter, infinity));
+                crosses      = _mm_and_ps(crosses,
+                                          _mm_cmpgt_ps(t_exit, _mm_sub_ps(_mm_setzero_ps(), infinity)));
+                int hit_mask = _mm_movemask_ps(crosses);
 
                 if (hit_mask != 0)
                 {
