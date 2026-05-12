@@ -1,12 +1,12 @@
 #pragma once
 
-#include "hittable_list.h"
+#include "rt/geometry/hittable_list.h"
 #include <algorithm>
 
-#include "rtm/vector.h"
+#include "rt/math/vector.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "../external/tiny_obj_loader.h"
+#include "external/tiny_obj_loader.h"
 
 namespace rt
 {
@@ -91,7 +91,12 @@ shared_ptr<hittable_list> load_obj(const std::string& filename,
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warning, &error, filename.c_str()))
     {
-        throw std::runtime_error(warning + error);
+        std::string message = error.empty() ? warning : error;
+        while (!message.empty() && std::isspace(static_cast<unsigned char>(message.back())))
+        {
+            message.pop_back(); // tinyobjloader ends its messages with a newline
+        }
+        throw std::runtime_error("could not load model '" + filename + "': " + message);
     }
 
     auto mesh = make_shared<hittable_list>();

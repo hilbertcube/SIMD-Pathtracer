@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "hittable.h"
-#include "rtm/random.h"
+#include "rt/geometry/hittable.h"
+#include "rt/math/random.h"
 
 namespace rt
 {

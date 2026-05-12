@@ -9,11 +9,11 @@
 #endif
 #include <immintrin.h>
 
-#include "AABB.h"
-#include "hittable.h"
-#include "hittable_list.h"
+#include "rt/geometry/AABB.h"
+#include "rt/geometry/hittable.h"
+#include "rt/geometry/hittable_list.h"
 
-#include "extra/def.h"
+#include "rt/util/def.h"
 
 namespace rt
 {

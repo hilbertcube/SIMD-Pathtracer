@@ -1,8 +1,8 @@
 #pragma once
 
-#include "rtm/vector.h"
-#include "rtm/interval.h"
-#include "rtm/random.h"
+#include "rt/math/vector.h"
+#include "rt/math/interval.h"
+#include "rt/math/random.h"
 
 namespace rt
 {

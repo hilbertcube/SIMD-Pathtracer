@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include "rtm/vector.h"
-#include "quad.h"
-#include "hittable_list.h"
+#include "rt/math/vector.h"
+#include "rt/geometry/quad.h"
+#include "rt/geometry/hittable_list.h"
 
 namespace rt
 {

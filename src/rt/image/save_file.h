@@ -3,14 +3,16 @@
 #include <algorithm>
 #include <fstream>
 #include <cctype>
+#include <stdexcept>
+#include <string>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../external/stb/stb_image_write.h"
+#include "external/stb/stb_image_write.h"
 
-#include "rtm/vector.h"
-#include "rtm/interval.h"
-#include "rtm/random.h"
-#include "color.h"
+#include "rt/math/vector.h"
+#include "rt/math/interval.h"
+#include "rt/math/random.h"
+#include "rt/image/color.h"
 
 namespace rt
 {
@@ -61,6 +63,10 @@ inline std::string extract_file_format(const std::string& filename)
     return ""; // no dot found
 }
 
+/*
+ * Write the framebuffer to `filename`; the extension picks the format (png, jpg/jpeg, bmp,
+ * tga, ppm). Throws std::runtime_error if the format is unknown or the file can't be written.
+ */
 inline void save_framebuffer(const std::vector<color>& framebuffer, const int width,
                              const int height, const std::string& filename)
 {
@@ -74,6 +80,10 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
         for (const color& pixel : framebuffer)
         {
             write_color_ppm(file, pixel);
+        }
+        if (!file)
+        {
+            throw std::runtime_error("could not write '" + filename + "'");
         }
         return;
     }
@@ -103,25 +113,34 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
         }
     }
 
+    int written = 0; // stb returns 0 on failure
     if (format == "png")
     {
-        stbi_write_png(filename.c_str(), width, height, 3, image_buffer.data(), width * 3);
+        written =
+            stbi_write_png(filename.c_str(), width, height, 3, image_buffer.data(), width * 3);
     }
     else if (format == "jpg" || format == "jpeg")
     {
-        stbi_write_jpg(filename.c_str(), width, height, 3, image_buffer.data(), 90); // quality
+        written = stbi_write_jpg(filename.c_str(), width, height, 3, image_buffer.data(),
+                                 90); // quality
     }
     else if (format == "bmp")
     {
-        stbi_write_bmp(filename.c_str(), width, height, 3, image_buffer.data());
+        written = stbi_write_bmp(filename.c_str(), width, height, 3, image_buffer.data());
     }
     else if (format == "tga")
     {
-        stbi_write_tga(filename.c_str(), width, height, 3, image_buffer.data());
+        written = stbi_write_tga(filename.c_str(), width, height, 3, image_buffer.data());
     }
     else
     {
-        throw std::runtime_error("Unsupported format: " + format);
+        throw std::runtime_error("unsupported image format '" + format + "' for '" + filename +
+                                 "' (use png, jpg, bmp, tga or ppm)");
+    }
+
+    if (written == 0)
+    {
+        throw std::runtime_error("could not write '" + filename + "'");
     }
 }
 

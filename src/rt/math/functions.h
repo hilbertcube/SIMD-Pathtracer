@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../extra/def.h"
-#include "constants.h"
+#include "rt/util/def.h"
+#include "rt/math/constants.h"
 
 FORCE_INLINE float degrees_to_radians(float degrees)
 {

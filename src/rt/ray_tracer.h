@@ -7,23 +7,31 @@
 #include <memory>
 #include <stdint.h>
 
-// Common headers
-#include "extra/def.h"
-#include "extra/timer.h"
-#include "hittable.h"
-#include "hittable_list.h"
-#include "sphere.h"
-#include "camera.h"
-#include "material.h"
-#include "pdf.h"
-#include "bvh_node.h"
-#include "texture.h"
-#include "quad.h"
-#include "constant_medium.h"
-#include "triangle.h"
+// Umbrella header: everything a scene needs. Includes are written from src/.
+
+// Utilities
+#include "rt/util/def.h"
+#include "rt/util/timer.h"
 
 // Math
-#include "rtm/ray.h"
-#include "rtm/vector.h"
-#include "rtm/constants.h"
-#include "rtm/interval.h"
+#include "rt/math/constants.h"
+#include "rt/math/interval.h"
+#include "rt/math/ray.h"
+#include "rt/math/vector.h"
+
+// Geometry and acceleration
+#include "rt/geometry/hittable.h"
+#include "rt/geometry/hittable_list.h"
+#include "rt/geometry/sphere.h"
+#include "rt/geometry/quad.h"
+#include "rt/geometry/triangle.h"
+#include "rt/geometry/constant_medium.h"
+#include "rt/acceleration/bvh_node.h"
+
+// Materials
+#include "rt/materials/material.h"
+#include "rt/materials/pdf.h"
+#include "rt/materials/texture.h"
+
+// Rendering
+#include "rt/render/camera.h"

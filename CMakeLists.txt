@@ -45,7 +45,9 @@ file(GLOB CPP_SOURCES "src/*.cpp")
 foreach(SOURCE_FILE ${C_SOURCES} ${CPP_SOURCES})
     get_filename_component(TARGET_NAME ${SOURCE_FILE} NAME_WE)
     add_executable(${TARGET_NAME} ${SOURCE_FILE})
-    target_link_libraries(${TARGET_NAME} PRIVATE 
+    # Includes are written from src/, e.g. #include "rt/math/vector.h"
+    target_include_directories(${TARGET_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/src")
+    target_link_libraries(${TARGET_NAME} PRIVATE
         OpenMP::OpenMP_CXX
     )
 endforeach()

@@ -4,9 +4,9 @@
 #include <limits>
 #include <ostream>
 
-#include "vector.h"
-#include "constants.h"
-#include "random.h"
+#include "rt/math/vector.h"
+#include "rt/math/constants.h"
+#include "rt/math/random.h"
 
 namespace rt
 {

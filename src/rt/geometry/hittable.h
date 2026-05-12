@@ -1,10 +1,10 @@
 #pragma once
 
-#include "rtm/ray.h"
-#include "rtm/random.h"
-#include "rtm/functions.h"
-#include "rtm/vector.h"
-#include "AABB.h"
+#include "rt/math/ray.h"
+#include "rt/math/random.h"
+#include "rt/math/functions.h"
+#include "rt/math/vector.h"
+#include "rt/geometry/AABB.h"
 
 namespace rt
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector.h"
+#include "rt/math/vector.h"
 
 namespace rt
 {

@@ -8,7 +8,7 @@
 #define STBI_FAILURE_USERMSG
 #endif
 
-#include "../external/stb/stb_image.h"
+#include "external/stb/stb_image.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -78,7 +78,8 @@ public:
             return;
         }
 
-        std::cerr << "ERROR: Could not load image file '" << image_filename << "'.\n";
+        std::cerr << "warning: could not load image file '" << image_filename
+                  << "'; using solid cyan instead\n";
     }
 
     ~rtw_image()

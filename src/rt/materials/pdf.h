@@ -1,11 +1,11 @@
 #pragma once
 
 #include <cmath>
-#include "hittable.h"
-#include "rtm/ONB.h"
-#include "rtm/constants.h"
-#include "rtm/random.h"
-#include "rtm/vector.h"
+#include "rt/geometry/hittable.h"
+#include "rt/math/ONB.h"
+#include "rt/math/constants.h"
+#include "rt/math/random.h"
+#include "rt/math/vector.h"
 
 namespace rt
 {

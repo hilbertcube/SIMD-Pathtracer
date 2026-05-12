@@ -1,15 +1,14 @@
 #pragma once
 
 #include <cmath>
-#include "hittable.h"
-#include "material.h"
+#include "rt/geometry/hittable.h"
+#include "rt/materials/material.h"
 
-// #include "rtm/vec3.h"
-#include "rtm/random.h"
-#include "rtm/vector.h"
-#include "rtm/ray.h"
-#include "rtm/constants.h"
-#include "rtm/ONB.h"
+#include "rt/math/random.h"
+#include "rt/math/vector.h"
+#include "rt/math/ray.h"
+#include "rt/math/constants.h"
+#include "rt/math/ONB.h"
 
 namespace rt
 {

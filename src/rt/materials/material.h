@@ -1,9 +1,9 @@
 #pragma once
 
-#include "hittable.h"
-#include "texture.h"
-#include "pdf.h"
-#include "rtm/vector.h"
+#include "rt/geometry/hittable.h"
+#include "rt/materials/texture.h"
+#include "rt/materials/pdf.h"
+#include "rt/math/vector.h"
 
 namespace rt
 {

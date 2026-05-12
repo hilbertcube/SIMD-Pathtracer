@@ -1,8 +1,10 @@
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
+#include <iostream>
 
 #include "rt/ray_tracer.h"
-#include "rt/mesh.h"
+#include "rt/geometry/mesh.h"
 
 void spheres_scene(const std::filesystem::path& output_directory)
 {
@@ -652,45 +654,54 @@ int main(int argc, char** argv)
     int scene                              = argc > 1 ? std::atoi(argv[1]) : 9;
     std::filesystem::path output_directory = argc > 2 ? argv[2] : "images";
 
-    rt::ScopedTimer timer("Rendering");
-    switch (scene)
+    // Scene setup (model loading, BVH builds) and rendering together
+    rt::ScopedTimer timer("Total");
+    try
     {
-        case 1:
-            spheres_scene(output_directory);
-            break;
-        case 2:
-            checkered_spheres(output_directory);
-            break;
-        case 3:
-            earth(output_directory);
-            break;
-        case 4:
-            perlin_spheres(output_directory);
-            break;
-        case 5:
-            quads(output_directory);
-            break;
-        case 6:
-            simple_light(output_directory);
-            break;
-        case 7:
-            cornell_box(output_directory);
-            break;
-        case 8:
-            final_scene(1000, 2000, 40, output_directory);
-            break;
-        case 9:
-            three_D_model(output_directory);
-            break;
-        case 10:
-            multiple_models(output_directory);
-            break;
-        case 11:
-            dragon(output_directory);
-            break;
-        default:
-            final_scene(400, 250, 4, output_directory);
-            break;
+        switch (scene)
+        {
+            case 1:
+                spheres_scene(output_directory);
+                break;
+            case 2:
+                checkered_spheres(output_directory);
+                break;
+            case 3:
+                earth(output_directory);
+                break;
+            case 4:
+                perlin_spheres(output_directory);
+                break;
+            case 5:
+                quads(output_directory);
+                break;
+            case 6:
+                simple_light(output_directory);
+                break;
+            case 7:
+                cornell_box(output_directory);
+                break;
+            case 8:
+                final_scene(1000, 2000, 40, output_directory);
+                break;
+            case 9:
+                three_D_model(output_directory);
+                break;
+            case 10:
+                multiple_models(output_directory);
+                break;
+            case 11:
+                dragon(output_directory);
+                break;
+            default:
+                final_scene(400, 250, 4, output_directory);
+                break;
+        }
+    }
+    catch (const std::exception& error)
+    {
+        std::cerr << "error: " << error.what() << '\n';
+        return 1;
     }
     return 0;
 }

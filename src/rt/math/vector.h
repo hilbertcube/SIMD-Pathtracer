@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <type_traits>
 
-#include "random.h"
+#include "rt/math/random.h"
 
 namespace rt
 {
@@ -215,4 +215,4 @@ using point3f = Vector<float, 3>;
 using color   = Vector<float, 3>;
 } // namespace rt
 
-#include "vec_functions.h"
+#include "rt/math/vec_functions.h"

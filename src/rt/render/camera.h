@@ -13,15 +13,17 @@
 // multithreading
 #include <omp.h>
 
-#include "rtm/constants.h"
-#include "rtm/random.h"
-#include "rtm/vector.h"
+#include "rt/math/constants.h"
+#include "rt/math/random.h"
+#include "rt/math/vector.h"
 
-#include "hittable.h"
-#include "color.h"
-#include "material.h"
-#include "pdf.h"
-#include "save_file.h"
+#include "rt/geometry/hittable.h"
+#include "rt/image/color.h"
+#include "rt/materials/material.h"
+#include "rt/materials/pdf.h"
+#include "rt/image/save_file.h"
+#include "rt/util/progress.h"
+#include "rt/util/timer.h"
 
 namespace rt
 {
@@ -84,7 +86,18 @@ private:
         // The main thread built the scene from the fixed scene seed; its share of the
         // rendering should still get fresh random numbers each run
         seed_rng(clock_seed());
-        int rows_done = 0;
+
+        // Create the output directory first, so a bad path fails now instead of after the render
+        if (!output_directory.empty())
+        {
+            std::filesystem::create_directories(output_directory);
+        }
+        const std::filesystem::path output_path = output_directory / output_filename;
+        std::clog << "Rendering " << output_path.string() << " (" << image_width << 'x'
+                  << image_height << ", " << sample_count << " samples/pixel, max depth "
+                  << max_depth << ", " << omp_get_max_threads() << " threads)\n";
+
+        ProgressBar progress(image_height);
 
 // Rows are handed out dynamically, so faster cores simply take more of them
 #pragma omp parallel for schedule(dynamic)
@@ -94,22 +107,27 @@ private:
             {
                 framebuffer[j * image_width + i] = sample_pixel(i, j, world, lights);
             }
-
-#pragma omp critical
-            std::clog << "\rProgress: " << std::fixed << std::setprecision(1)
-                      << (++rows_done * 100.0f / image_height) << '%' << std::flush;
+            progress.advance();
         }
-        finish();
+
+        progress.finish();
+        report_render_time(progress.elapsed());
+        save(output_path);
     }
 
-    void finish()
+    void report_render_time(std::chrono::nanoseconds elapsed) const
     {
-        std::clog << "\rDone. \n";
-        // Write to file
-        std::filesystem::create_directories(output_directory);
-        std::filesystem::path output_path = output_directory / output_filename;
+        double seconds = std::chrono::duration<double>(elapsed).count();
+        double samples = static_cast<double>(image_width) * image_height * sample_count;
+        char rate[32];
+        std::snprintf(rate, sizeof(rate), "%.1f M", samples / seconds / 1e6);
+        std::clog << "Rendered in " << format_duration(elapsed) << " (" << rate << " samples/s)\n";
+    }
+
+    void save(const std::filesystem::path& output_path) const
+    {
         save_framebuffer(framebuffer, image_width, image_height, output_path.string());
-        std::clog << "Image saved to " << std::filesystem::absolute(output_path) << std::endl;
+        std::clog << "Saved " << output_path.string() << std::endl;
     }
 
     void initialize()

@@ -89,12 +89,32 @@ inline std::string format_duration(std::chrono::nanoseconds duration)
 }
 
 /*
+ * Formats a duration as a clock reading, for progress displays where the width shouldn't
+ * jump around: 0:07, 2:27, 1:02:03. Rounded to whole seconds.
+ */
+inline std::string format_clock(std::chrono::nanoseconds duration)
+{
+    char text[32];
+    long long total_seconds = (duration.count() + 500'000'000) / 1'000'000'000;
+    if (total_seconds < 3600)
+    {
+        std::snprintf(text, sizeof(text), "%lld:%02lld", total_seconds / 60, total_seconds % 60);
+    }
+    else
+    {
+        std::snprintf(text, sizeof(text), "%lld:%02lld:%02lld", total_seconds / 3600,
+                      total_seconds / 60 % 60, total_seconds % 60);
+    }
+    return text;
+}
+
+/*
  * Reports how long its scope took when it ends (RAII):
  *
  *     {
- *         rt::ScopedTimer timer("Rendering");
+ *         rt::ScopedTimer timer("Total");
  *         render();
- *     } // prints "Rendering took 2 min 27.3 s"
+ *     } // prints "Total: 2 min 27.3 s"
  */
 class ScopedTimer
 {
@@ -113,7 +133,7 @@ public:
         // Destructors must not throw; losing one log line is better than terminating
         try
         {
-            output << label << " took " << format_duration(stopwatch.elapsed()) << std::endl;
+            output << label << ": " << format_duration(stopwatch.elapsed()) << std::endl;
         }
         catch (...)
         {

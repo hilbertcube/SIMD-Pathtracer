@@ -1,8 +1,8 @@
 #pragma once
 
-#include "rtm/interval.h"
-#include "rtm/vector.h"
-#include "rtm/ray.h"
+#include "rt/math/interval.h"
+#include "rt/math/vector.h"
+#include "rt/math/ray.h"
 
 namespace rt
 {
