@@ -157,6 +157,26 @@ Combined, against the 4-wide BVH build:
 
 Noise and mean brightness are unchanged in every scene.
 
+## 7. Simpler random number generator setup
+
+`random.h` had two backends (XorShift32 and `std::mt19937`, picked by macros, with `mt19937` never used) and seeded each thread's generator through a function call. A `thread_local` initialized by a function call makes every access check whether the thread's copy has been set up yet: the `__tls_init` that showed up at 1–2% in the profiles.
+
+Now:
+
+- **One backend:** XorShift32 only.
+- **Constant start:** every thread's generator starts at the constant `SCENE_SEED`, so no setup check is needed and scenes generated on the main thread still come out the same every run.
+- **Per-row seeding:** the camera reseeds at the start of each image row from a per-run clock seed mixed with the row number (MurmurHash3 finalizer). A row's random numbers no longer depend on which thread renders it.
+
+The file went from 139 to 97 lines. Scene layouts are unchanged (old against new differs exactly as much as two runs of the same build), and so is the noise level.
+
+| Scene | Before | After | Speedup |
+| --- | --- | --- | --- |
+| 1 spheres | 71 ms | 68 ms | 1.05× |
+| 4 Perlin | 53 ms | 51 ms | 1.04× |
+| 7 Cornell box | 433 ms | 424 ms | 1.02× |
+| 8 final scene | 435 ms | 417 ms | 1.04× |
+| 10 multiple models | 491 ms | 474 ms | 1.03× |
+
 ## Tried and dropped
 
 - **SSE `vec3`:** with `-O3 -march=native` it was within ±15% of plain C++, faster on some scenes and slower on others. A 3-float vector uses only 3 of the 4 SSE lanes, and packing and unpacking it around scalar code costs about as much as it saves. SIMD paid off only in the BVH, where 4 child boxes fill all 4 lanes.
@@ -174,4 +194,4 @@ Rough expectations from other renderers, not measured here:
 - **Profile-guided optimization** (`-fprofile-generate` / `-fprofile-use`): typically 5–15%, with no code change.
 - **Shorter shadow rays for quad lights:** stop at the light instead of searching to infinity. Sphere lights would need `random()` to return a vector that ends on the light first.
 - **A triangle array stored in the BVH** instead of one heap object and virtual call per triangle.
-- **Small leftovers:** the per-thread RNG's hidden setup check (about 1–2%), `std::pow(x, 5)` in the glass reflectance, the record copy in `hittable_list::hit`, and a few `double` literals in float code.
+- **Small leftovers:** `std::pow(x, 5)` in the glass reflectance, the record copy in `hittable_list::hit`, and a few `double` literals in float code.

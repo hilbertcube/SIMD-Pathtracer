@@ -83,9 +83,8 @@ private:
     void render_impl(const hittable& world, const hittable* lights)
     {
         initialize();
-        // The main thread built the scene from the fixed scene seed; its share of the
-        // rendering should still get fresh random numbers each run
-        seed_rng(clock_seed());
+        // Fresh sampling noise each run; each row reseeds from it (see the loop below)
+        const uint32_t run_seed = clock_seed();
 
         // Create the output directory first, so a bad path fails now instead of after the render
         if (!output_directory.empty())
@@ -103,6 +102,9 @@ private:
 #pragma omp parallel for schedule(dynamic)
         for (int j = 0; j < image_height; ++j)
         {
+            // A row's random numbers depend only on the run seed and the row, not on which
+            // thread happens to render it
+            seed_rng(mix_seed(run_seed, static_cast<uint32_t>(j)));
             for (int i = 0; i < image_width; ++i)
             {
                 framebuffer[j * image_width + i] = sample_pixel(i, j, world, lights);

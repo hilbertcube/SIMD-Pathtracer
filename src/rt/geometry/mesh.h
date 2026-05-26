@@ -158,4 +158,67 @@ inline void transform_mesh(hittable_list& mesh, const vec3f& scale, const vec3f&
     }
 }
 
+/*
+ * Rotate every vertex by `degrees` about the coordinate axis `axis` (0 = x, 1 = y, 2 = z),
+ * through the origin. Unlike wrapping the mesh in rotate_y, this costs nothing per ray.
+ */
+inline void rotate_mesh(hittable_list& mesh, int axis, float degrees)
+{
+    float radians = degrees_to_radians(degrees);
+    float sine    = std::sin(radians);
+    float cosine  = std::cos(radians);
+    int first     = (axis + 1) % 3; // the two coordinates that change, in right-handed order
+    int second    = (axis + 2) % 3;
+
+    auto rotate = [&](point3f& point)
+    {
+        float rotated_first  = cosine * point[first] - sine * point[second];
+        float rotated_second = sine * point[first] + cosine * point[second];
+        point[first]         = rotated_first;
+        point[second]        = rotated_second;
+    };
+
+    for (auto& object : mesh.objects)
+    {
+        auto face = std::dynamic_pointer_cast<mesh_triangle>(object);
+        if (face)
+        {
+            rotate(face->vertex0);
+            rotate(face->vertex1);
+            rotate(face->vertex2);
+        }
+    }
+}
+
+/*
+ * Scale the mesh uniformly to `height` along y and move it so the middle of its base (the
+ * bottom of its bounding box) sits at `base_center`. Models come in arbitrary units and
+ * positions; this stands any of them on the floor without hand-tuned offsets.
+ */
+inline void place_mesh(hittable_list& mesh, float height, const point3f& base_center)
+{
+    point3f min_corner(INF, INF, INF);
+    point3f max_corner(-INF, -INF, -INF);
+    for (const auto& object : mesh.objects)
+    {
+        auto face = std::dynamic_pointer_cast<mesh_triangle>(object);
+        if (face)
+        {
+            for (const point3f* vertex : {&face->vertex0, &face->vertex1, &face->vertex2})
+            {
+                for (int axis = 0; axis < 3; ++axis)
+                {
+                    min_corner[axis] = std::fmin(min_corner[axis], (*vertex)[axis]);
+                    max_corner[axis] = std::fmax(max_corner[axis], (*vertex)[axis]);
+                }
+            }
+        }
+    }
+
+    float scale = height / (max_corner.y() - min_corner.y());
+    point3f current_base(0.5f * (min_corner.x() + max_corner.x()), min_corner.y(),
+                         0.5f * (min_corner.z() + max_corner.z()));
+    transform_mesh(mesh, scale, base_center - scale * current_base);
+}
+
 } // namespace rt

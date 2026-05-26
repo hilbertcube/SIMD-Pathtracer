@@ -644,6 +644,211 @@ void multiple_models(const std::filesystem::path& output_directory)
     camera.render(world, lights);
 }
 
+/*
+ * Load a model, stand it `height` tall with the middle of its base at `base_center`, and
+ * return it in its own BVH. `tilt_x` turns about x first (for models stored Z-up), then
+ * `turn_y` turns it about the vertical axis to face the camera.
+ */
+shared_ptr<rt::hittable> load_model(const std::string& filename, shared_ptr<rt::material> material,
+                                    float height, const rt::point3f& base_center,
+                                    float turn_y = 0.0f, float tilt_x = 0.0f)
+{
+    auto mesh = rt::load_obj(filename, material);
+    if (tilt_x != 0.0f)
+    {
+        rt::rotate_mesh(*mesh, 0, tilt_x);
+    }
+    if (turn_y != 0.0f)
+    {
+        rt::rotate_mesh(*mesh, 1, turn_y);
+    }
+    rt::place_mesh(*mesh, height, base_center);
+    return make_shared<rt::bvh_node>(mesh->objects, 0, mesh->objects.size());
+}
+
+// Three statues on marble pedestals under spotlights: stone Lucy, a gold Buddha, a bronze bust
+void sculpture_gallery(const std::filesystem::path& output_directory)
+{
+    rt::hittable_list world;
+
+    auto wall_paint = make_shared<rt::lambertian>(rt::color(0.45, 0.12, 0.10));
+    auto ceiling    = make_shared<rt::lambertian>(rt::color(0.75, 0.75, 0.75));
+    auto floor      = make_shared<rt::lambertian>(rt::color(0.30, 0.29, 0.28)); // polished stone
+    auto marble     = make_shared<rt::lambertian>(rt::color(0.80, 0.78, 0.74));
+    auto spotlight  = make_shared<rt::diffuse_light>(rt::color(18, 16, 13));
+
+    // Room: x 0..900, y 0..500, z 0..600, open toward the camera
+    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 0), rt::vec3f(900, 0, 0),
+                                    rt::vec3f(0, 0, 600), floor));
+    world.add(make_shared<rt::quad>(rt::point3f(0, 500, 0), rt::vec3f(900, 0, 0),
+                                    rt::vec3f(0, 0, 600), ceiling));
+    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 600), rt::vec3f(900, 0, 0),
+                                    rt::vec3f(0, 500, 0), wall_paint));
+    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 0), rt::vec3f(0, 500, 0),
+                                    rt::vec3f(0, 0, 600), wall_paint));
+    world.add(make_shared<rt::quad>(rt::point3f(900, 0, 0), rt::vec3f(0, 500, 0),
+                                    rt::vec3f(0, 0, 600), wall_paint));
+
+    // Pedestals with a statue on each, and a spotlight panel above each
+    const float pedestal_x[3]   = {200, 450, 700};
+    const float pedestal_height = 140;
+    rt::hittable_list lights;
+    for (float x : pedestal_x)
+    {
+        world.add(rt::box(rt::point3f(x - 60, 0, 290), rt::point3f(x + 60, pedestal_height, 410),
+                          marble));
+
+        // Facing down: edge_u x edge_v points to -y
+        rt::point3f corner(x - 45, 499, 305);
+        world.add(
+            make_shared<rt::quad>(corner, rt::vec3f(90, 0, 0), rt::vec3f(0, 0, 90), spotlight));
+        lights.add(make_shared<rt::quad>(corner, rt::vec3f(90, 0, 0), rt::vec3f(0, 0, 90),
+                                         shared_ptr<rt::material>()));
+    }
+
+    auto stone  = make_shared<rt::lambertian>(rt::color(0.85, 0.83, 0.78));
+    auto gold   = make_shared<rt::metal>(rt::color(0.95, 0.72, 0.30), 0.2f);
+    auto bronze = make_shared<rt::metal>(rt::color(0.55, 0.35, 0.20), 0.35f);
+    world.add(load_model("model/lucy.obj", stone, 230, rt::point3f(200, pedestal_height, 350), 0.0f,
+                         -90.0f));
+    world.add(load_model("model/happy.obj", gold, 200, rt::point3f(450, pedestal_height, 350)));
+    world.add(
+        load_model("model/max-planck.obj", bronze, 190, rt::point3f(700, pedestal_height, 350)));
+
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
+
+    rt::Camera camera;
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1280;
+    camera.samples_per_pixel = 1000;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0, 0, 0);
+    camera.field_of_view     = 34;
+    camera.look_from         = rt::point3f(450, 250, -650);
+    camera.look_at           = rt::point3f(450, 220, 350);
+    camera.view_up           = rt::vec3f(0, 1, 0);
+    camera.defocus_angle     = 0;
+    camera.output_filename   = "sculpture_gallery.png";
+    camera.output_directory  = output_directory;
+    camera.render(world, lights);
+}
+
+// A chrome armadillo and a glass bunny lit only by neon tubes, over a glossy black floor
+void neon_stage(const std::filesystem::path& output_directory)
+{
+    rt::hittable_list world;
+    rt::hittable_list lights;
+
+    auto floor   = make_shared<rt::metal>(rt::color(0.08, 0.08, 0.09), 0.03f);
+    auto wall    = make_shared<rt::lambertian>(rt::color(0.05, 0.05, 0.06));
+    auto magenta = make_shared<rt::diffuse_light>(rt::color(9, 0.6, 6));
+    auto cyan    = make_shared<rt::diffuse_light>(rt::color(0.4, 6, 9));
+
+    world.add(make_shared<rt::quad>(rt::point3f(-1000, 0, -1000), rt::vec3f(2000, 0, 0),
+                                    rt::vec3f(0, 0, 1600), floor));
+    world.add(make_shared<rt::quad>(rt::point3f(-1000, 0, 600), rt::vec3f(2000, 0, 0),
+                                    rt::vec3f(0, 800, 0), wall));
+
+    // A neon tube: a thin panel facing the camera (-z); edge_u x edge_v points to -z
+    auto add_tube = [&](const rt::point3f& corner, const rt::vec3f& edge_u, const rt::vec3f& edge_v,
+                        shared_ptr<rt::material> color)
+    {
+        world.add(make_shared<rt::quad>(corner, edge_u, edge_v, color));
+        lights.add(make_shared<rt::quad>(corner, edge_u, edge_v, shared_ptr<rt::material>()));
+    };
+
+    // Vertical tubes on the back wall, alternating colors
+    for (int i = 0; i < 6; ++i)
+    {
+        float x = -375 + 150 * i;
+        add_tube(rt::point3f(x, 40, 590), rt::vec3f(0, 420, 0), rt::vec3f(8, 0, 0),
+                 i % 2 == 0 ? magenta : cyan);
+    }
+
+    // Two panels standing on the floor at the sides, facing inward (edge_u x edge_v toward x = 0)
+    add_tube(rt::point3f(-330, 0, 120), rt::vec3f(0, 300, 0), rt::vec3f(0, 0, 260), cyan);
+    add_tube(rt::point3f(330, 0, 120), rt::vec3f(0, 0, 260), rt::vec3f(0, 300, 0), magenta);
+
+    auto chrome = make_shared<rt::metal>(rt::color(0.92, 0.92, 0.95), 0.03f);
+    auto glass  = make_shared<rt::dielectrics>(1.5f);
+    world.add(load_model("model/armadillo.obj", chrome, 300, rt::point3f(-40, 0, 260), 15.0f));
+    world.add(load_model("model/stanford-bunny.obj", glass, 110, rt::point3f(170, 0, 120), -60.0f));
+
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
+
+    rt::Camera camera;
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1280;
+    camera.samples_per_pixel = 1000;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0, 0, 0);
+    camera.field_of_view     = 38;
+    camera.look_from         = rt::point3f(0, 170, -700);
+    camera.look_at           = rt::point3f(0, 150, 200);
+    camera.view_up           = rt::vec3f(0, 1, 0);
+    camera.defocus_angle     = 0;
+    camera.output_filename   = "neon_stage.png";
+    camera.output_directory  = output_directory;
+    camera.render(world, lights);
+}
+
+// A ring of colorful bunnies around a glowing orb at night, with a horse watching from the dark
+void bunny_campfire(const std::filesystem::path& output_directory)
+{
+    rt::hittable_list world;
+
+    auto ground = make_shared<rt::lambertian>(make_shared<rt::checker_texture>(
+        40.0f, rt::color(0.10, 0.16, 0.07), rt::color(0.05, 0.09, 0.04)));
+    world.add(make_shared<rt::quad>(rt::point3f(-3000, 0, -3000), rt::vec3f(6000, 0, 0),
+                                    rt::vec3f(0, 0, 6000), ground));
+
+    // The fire: a glowing orb with a glass shell
+    rt::point3f fire_center(0, 45, 0);
+    auto fire = make_shared<rt::diffuse_light>(rt::color(34, 14, 3.5));
+    world.add(make_shared<rt::sphere>(fire_center, 18, fire));
+    world.add(make_shared<rt::sphere>(fire_center, 26, make_shared<rt::dielectrics>(1.3f)));
+
+    rt::hittable_list lights;
+    lights.add(make_shared<rt::sphere>(fire_center, 18, shared_ptr<rt::material>()));
+
+    // Bunnies evenly spaced on a circle, each turned to face the fire (the model faces -x)
+    const rt::color colors[7] = {rt::color(0.85, 0.20, 0.20), rt::color(0.95, 0.60, 0.15),
+                                 rt::color(0.90, 0.85, 0.25), rt::color(0.30, 0.75, 0.30),
+                                 rt::color(0.25, 0.55, 0.90), rt::color(0.55, 0.35, 0.85),
+                                 rt::color(0.92, 0.92, 0.92)};
+    const int bunny_count     = 7;
+    const float ring_radius   = 160;
+    for (int i = 0; i < bunny_count; ++i)
+    {
+        float angle = 2.0f * PI * (i + 0.5f) / bunny_count;
+        rt::point3f base(ring_radius * std::sin(angle), 0, ring_radius * std::cos(angle));
+        float facing_degrees = radians_to_degrees(angle) - 90.0f;
+        world.add(load_model("model/stanford-bunny.obj", make_shared<rt::lambertian>(colors[i]), 70,
+                             base, facing_degrees));
+    }
+
+    auto horse_coat = make_shared<rt::lambertian>(rt::color(0.45, 0.30, 0.18));
+    world.add(
+        load_model("model/horse.obj", horse_coat, 190, rt::point3f(-260, 0, 330), -30.0f, -90.0f));
+
+    world = rt::hittable_list(make_shared<rt::bvh_node>(world));
+
+    rt::Camera camera;
+    camera.aspect_ratio      = 16.0f / 9.0f;
+    camera.image_width       = 1280;
+    camera.samples_per_pixel = 1000;
+    camera.max_depth         = 50;
+    camera.background        = rt::color(0.02, 0.025, 0.06); // moonlit night sky
+    camera.field_of_view     = 36;
+    camera.look_from         = rt::point3f(0, 230, -560);
+    camera.look_at           = rt::point3f(0, 40, 40);
+    camera.view_up           = rt::vec3f(0, 1, 0);
+    camera.defocus_angle     = 0;
+    camera.output_filename   = "bunny_campfire.png";
+    camera.output_directory  = output_directory;
+    camera.render(world, lights);
+}
+
 int main(int argc, char** argv)
 {
     /*
@@ -692,6 +897,15 @@ int main(int argc, char** argv)
                 break;
             case 11:
                 dragon(output_directory);
+                break;
+            case 12:
+                sculpture_gallery(output_directory);
+                break;
+            case 13:
+                neon_stage(output_directory);
+                break;
+            case 14:
+                bunny_campfire(output_directory);
                 break;
             default:
                 final_scene(400, 250, 4, output_directory);
