@@ -9,12 +9,7 @@ namespace rt
 class quad : public hittable
 {
 public:
-    /*
-     * corner:           one corner of the parallelogram
-     * edge_u:           vector along the first side, from `corner`
-     * edge_v:           vector along the second side, from `corner`
-     * surface_material: material of the quad
-     */
+    // Parallelogram spanned by edge_u and edge_v starting at `corner`
     quad(const point3f& corner, const vec3f& edge_u, const vec3f& edge_v,
          shared_ptr<material> surface_material)
         : corner(corner), edge_u(edge_u), edge_v(edge_v), surface_material(surface_material)
@@ -38,7 +33,6 @@ public:
 
     void set_bounding_box()
     {
-        // Compute the bounding box of all four vertices.
         auto diagonal_bounds1 = AABB(corner, corner + edge_u + edge_v);
         auto diagonal_bounds2 = AABB(corner + edge_u, corner + edge_v);
         bounds                = AABB(diagonal_bounds1, diagonal_bounds2);
@@ -50,13 +44,11 @@ public:
     {
         float denominator = dot(normal, incoming.direction());
 
-        // No hit if the ray is parallel to the plane.
         if (std::fabs(denominator) < 1e-8f)
         {
             return false;
         }
 
-        // Return false if the hit point parameter t is outside the ray interval.
         float t = (plane_offset - dot(normal, incoming.origin())) / denominator;
         if (!t_range.contains(t))
         {
@@ -73,7 +65,6 @@ public:
             return false;
         }
 
-        // Ray hits the 2D shape; set the rest of the hit record and return true.
         record.t                = t;
         record.point            = intersection;
         record.surface_material = surface_material.get();
@@ -85,8 +76,7 @@ public:
     bool is_interior(float alpha, float beta, hit_record& record) const
     {
         interval unit_interval = interval(0, 1);
-        // Given the hit point in plane coordinates, return false if it is outside the
-        // primitive, otherwise set the hit record UV coordinates and return true.
+        // True if (alpha, beta) lies inside the quad; sets the hit's (u, v) when it does
 
         if (!unit_interval.contains(alpha) || !unit_interval.contains(beta))
         {
@@ -137,11 +127,8 @@ private:
 inline shared_ptr<hittable_list> box(const point3f& corner_a, const point3f& corner_b,
                                      shared_ptr<material> surface_material)
 {
-    // Returns the 3D box (six sides) that contains the two opposite vertices corner_a & corner_b.
-
     auto sides = make_shared<hittable_list>();
 
-    // Construct the two opposite vertices with the minimum and maximum coordinates.
     auto min = point3f(std::fmin(corner_a.x(), corner_b.x()), std::fmin(corner_a.y(), corner_b.y()),
                        std::fmin(corner_a.z(), corner_b.z()));
     auto max = point3f(std::fmax(corner_a.x(), corner_b.x()), std::fmax(corner_a.y(), corner_b.y()),

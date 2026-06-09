@@ -9,7 +9,7 @@
 namespace rt
 {
 
-/// Measures elapsed wall-clock time on a monotonic clock (unaffected by system clock changes).
+/// Measures elapsed time on a monotonic clock.
 class Stopwatch
 {
 public:
@@ -17,7 +17,6 @@ public:
 
     Stopwatch() : start_time(clock::now()) {}
 
-    /// Starts measuring again from now.
     void restart() { start_time = clock::now(); }
 
     /// Time since construction or the last restart().
@@ -38,10 +37,9 @@ private:
 };
 
 /*
- * Formats a duration for people, in the largest unit that keeps the number readable:
- *   850 ns, 12.4 us, 445.21 ms, 2.45 s, 2 min 27.3 s, 1 h 02 min 03 s
- * Values are rounded to the shown precision before the unit is picked, so 999.996 ms reads
- * "1.00 s", not "1000.00 ms".
+ * Formats a duration in the largest unit that keeps the number readable: 850 ns, 12.4 us,
+ * 445.21 ms, 2.45 s, 2 min 27.3 s, 1 h 02 min 03 s. Rounds before choosing the unit, so
+ * 999.996 ms reads "1.00 s", not "1000.00 ms".
  */
 inline std::string format_duration(std::chrono::nanoseconds duration)
 {
@@ -54,7 +52,6 @@ inline std::string format_duration(std::chrono::nanoseconds duration)
         return text;
     }
 
-    // Count of `step`-nanosecond units, rounded to nearest
     auto rounded = [&](long long step)
     {
         return (nanoseconds + step / 2) / step;
@@ -88,10 +85,8 @@ inline std::string format_duration(std::chrono::nanoseconds duration)
     return text;
 }
 
-/*
- * Formats a duration as a clock reading, for progress displays where the width shouldn't
- * jump around: 0:07, 2:27, 1:02:03. Rounded to whole seconds.
- */
+// Formats a duration as m:ss or h:mm:ss (fixed width, for progress displays), rounded to
+// whole seconds.
 inline std::string format_clock(std::chrono::nanoseconds duration)
 {
     char text[32];
@@ -108,14 +103,7 @@ inline std::string format_clock(std::chrono::nanoseconds duration)
     return text;
 }
 
-/*
- * Reports how long its scope took when it ends (RAII):
- *
- *     {
- *         rt::ScopedTimer timer("Total");
- *         render();
- *     } // prints "Total: 2 min 27.3 s"
- */
+// Prints "<label>: <duration>" when it goes out of scope.
 class ScopedTimer
 {
 public:
@@ -140,7 +128,6 @@ public:
         }
     }
 
-    /// Time since the timer was created.
     [[nodiscard]]
     std::chrono::nanoseconds elapsed() const
     {

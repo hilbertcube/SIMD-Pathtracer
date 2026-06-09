@@ -20,8 +20,7 @@ public:
     bool front_face;
     const material* surface_material = nullptr; // Non-owning: objects keep their material alive
 
-    // Sets the hit record normal vector
-    // NOTE: the @param outward_normal is assumed to have a unit length
+    // Orients the normal against the ray (and sets front_face); outward_normal must be unit length
     void set_face_normal(const ray& incoming, const vec3f& outward_normal)
     {
         front_face = (dot(incoming.direction(), outward_normal) < 0);
@@ -29,14 +28,12 @@ public:
     }
 };
 
-// an abstract class of hittable objects
 class hittable
 {
 protected:
     hittable() {}
 
 public:
-    // default destructor
     virtual ~hittable() = default;
 
     virtual bool hit(const ray& incoming, interval t_range, hit_record& record) const = 0;
@@ -64,7 +61,6 @@ public:
         // Move the ray backwards by the offset
         ray offset_ray(incoming.origin() - offset, incoming.direction(), incoming.time());
 
-        // Determine whether an intersection exists along the offset ray (and if so, where)
         if (!object->hit(offset_ray, t_range, record))
         {
             return false;
@@ -145,7 +141,6 @@ public:
 
         ray rotated_ray(origin, direction, incoming.time());
 
-        // Determine whether an intersection exists in object space (and if so, where).
         if (!object->hit(rotated_ray, t_range, record))
         {
             return false;

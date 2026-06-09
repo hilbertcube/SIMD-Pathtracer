@@ -15,7 +15,6 @@ public:
         : vertex_a(vertex_a), vertex_b(vertex_b), vertex_c(vertex_c),
           surface_material(surface_material)
     {
-        // Precompute edges and normal
         edge_ab      = vertex_b - vertex_a;
         edge_ac      = vertex_c - vertex_a;
         normal       = unit_vector(cross(edge_ab, edge_ac));
@@ -83,7 +82,6 @@ inline shared_ptr<hittable_list> pyramid(const point3f& base_min, const point3f&
 {
     auto sides = make_shared<hittable_list>();
 
-    // Base corners
     point3f corner_a(base_min.x(), base_min.y(), base_min.z());
     point3f corner_b(base_max.x(), base_min.y(), base_min.z());
     point3f corner_c(base_max.x(), base_min.y(), base_max.z());

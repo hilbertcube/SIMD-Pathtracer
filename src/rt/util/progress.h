@@ -14,7 +14,6 @@
 namespace rt
 {
 
-/// Whether standard error (where std::clog writes) is an interactive terminal.
 inline bool stderr_is_terminal()
 {
     return isatty(fileno(stderr)) != 0;
@@ -25,12 +24,9 @@ inline bool stderr_is_terminal()
  *
  *     [##################------------]  60.0%  elapsed 0:02  remaining 0:01
  *
- * On a terminal the bar is redrawn in place. When output goes to a file or pipe, carriage
- * returns would only clutter it, so a plain line is written every 10% instead.
- *
- * Reporting must never slow the work down: the count is atomic, the bar is redrawn at most
- * every REDRAW_INTERVAL, and a worker only draws if no other thread is drawing (it never
- * waits on the terminal).
+ * On a terminal the bar is redrawn in place; for a file or pipe it logs a line every 10%
+ * instead. Reporting never slows the work: the count is atomic, redraws are rate-limited,
+ * and a worker skips drawing rather than wait for another thread that is.
  */
 class ProgressBar
 {
@@ -48,7 +44,6 @@ public:
     ProgressBar(const ProgressBar&)            = delete;
     ProgressBar& operator=(const ProgressBar&) = delete;
 
-    /// Marks one more item done. Thread-safe and non-blocking on a terminal.
     void advance()
     {
         const int done = items_done.fetch_add(1, std::memory_order_relaxed) + 1;
@@ -86,7 +81,7 @@ public:
         }
     }
 
-    /// Removes the bar so the next line starts clean. Call once all items are done.
+    /// Erases the bar; call once all items are done.
     void finish()
     {
         std::lock_guard<std::mutex> lock(mutex);
@@ -96,7 +91,6 @@ public:
         }
     }
 
-    /// Time since the bar was created.
     [[nodiscard]]
     std::chrono::nanoseconds elapsed() const
     {

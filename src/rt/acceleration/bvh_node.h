@@ -19,13 +19,10 @@ namespace rt
 {
 
 /**
- * Bounding volume hierarchy over a set of hittables.
- *
- * The tree is built as a binary tree, choosing splits with the surface area heuristic (SAH)
- * over binned centroids, and then collapsed into a 4-wide tree: every node holds up to four
- * children, and one ray is tested against all four boxes at once with SSE. Nodes live in one
- * flat array, leaves index a contiguous run of primitives, and traversal is iterative,
- * visiting the nearest hit child first.
+ * Bounding volume hierarchy over a set of hittables: built as a binary tree with the surface
+ * area heuristic (SAH), then collapsed into a 4-wide tree whose four child boxes are tested
+ * at once with SSE. Nodes live in one flat array, and traversal is iterative, visiting the
+ * nearest hit child first.
  */
 class bvh_node : public hittable
 {
@@ -118,16 +115,12 @@ public:
                 t_exit  = _mm_min_ps(t_far, t_exit);
 
                 /*
-                 * Inclusive on purpose. A flat box (a wall, say) is padded by only 1e-4, which
-                 * at coordinates in the hundreds is below float precision, so a ray meeting it
-                 * head-on gets the same entry and exit distance. Rounding preserves order, so
-                 * entry <= exit always holds for a box the ray really crosses; a strict test
-                 * dropped such walls entirely.
-                 *
-                 * Distances must also be finite. A ray with a zero direction component gets
-                 * entry = exit = +inf for every box off to one side of it, and inf <= inf
-                 * would send it through all of them. Empty slots stay misses too: their
-                 * inverted box gives entry = +inf, exit = -inf.
+                 * Inclusive on purpose: a flat box (a wall) is padded by only 1e-4, below float
+                 * precision at coordinates in the hundreds, so a ray meeting it head-on gets the
+                 * same entry and exit distance, and a strict test dropped such walls entirely.
+                 * Distances must also be finite: a ray with a zero direction component gets entry =
+                 * exit = +inf for every box off to its side, and inf <= inf would send it through
+                 * all of them. Empty slots (inverted box: entry +inf, exit -inf) stay misses.
                  */
                 const __m128 infinity = _mm_set1_ps(INF);
                 __m128 crosses =
@@ -194,9 +187,9 @@ public:
 
 private:
     /*
-     * One node of the 4-wide tree. Each of the four lanes describes one child; the bounds are
-     * stored structure-of-arrays (all four children's min x, then all four min y, ...) so a
-     * single SSE load fetches one slab for every child.
+     * One node of the 4-wide tree: each lane describes one child, and the bounds are stored
+     * structure-of-arrays (all four min x, then all four min y, ...) so one SSE load fetches a
+     * slab for every child.
      */
     struct alignas(64) Node
     {
@@ -225,7 +218,7 @@ private:
     {
         uint32_t index; // node index, or first primitive for a leaf
         uint32_t count; // leaf primitive count; 0 for a node
-        float t_enter;  // where the ray enters its box
+        float t_enter;
     };
 
     struct Bounds

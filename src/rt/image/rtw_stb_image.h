@@ -13,26 +13,21 @@
 #include <cstdlib>
 #include <iostream>
 
+namespace rt
+{
+
 class rtw_image
 {
 public:
     rtw_image() {}
 
+    // Looks in $RTW_IMAGES, then the current directory, then images/ here and in up to six
+    // parent directories. If nothing loads, width() and height() return 0.
     rtw_image(const char* image_filename, std::string image_directory = "images/")
     {
-        /*
-         * Loads image data from the specified file. If the RTW_IMAGES environment variable is
-         * defined, looks only in that directory for the image file. If the image was not found,
-         * searches for the specified image file first from the current directory, then in the
-         * images/ subdirectory, then the _parent's_ images/ subdirectory, and then _that_
-         * parent, on so on, for six levels up. If the image was not loaded successfully,
-         * width() and height() will return 0.
-         */
-
         auto filename              = std::string(image_filename);
         auto environment_directory = getenv("RTW_IMAGES");
 
-        // Hunt for the image file in some likely locations.
         if (environment_directory &&
             load(std::string(environment_directory) + "/" + image_filename))
         {
@@ -88,18 +83,11 @@ public:
         STBI_FREE(float_data);
     }
 
+    // Loads linear (gamma 1) float data and a byte copy for pixel_data(); false on failure.
     bool load(const std::string& filename)
     {
-        /*
-         * Loads the linear (gamma=1) image data from the given file name. Returns true if the
-         * load succeeded. The resulting data buffer contains the three [0.0, 1.0]
-         * floating-point values for the first pixel (red, then green, then blue). Pixels are
-         * contiguous, going left to right for the width of the image, followed by the next row
-         * below, for the full height of the image.
-         */
-
-        auto original_components =
-            bytes_per_pixel; // Dummy out parameter: original components per pixel
+        // stb requires this out-parameter; the value is unused
+        auto original_components = bytes_per_pixel;
         float_data = stbi_loadf(filename.c_str(), &image_width, &image_height, &original_components,
                                 bytes_per_pixel);
         if (float_data == nullptr)
@@ -118,8 +106,7 @@ public:
 
     const unsigned char* pixel_data(int x, int y) const
     {
-        // Return the address of the three RGB bytes of the pixel at x,y. If there is no image
-        // data, returns magenta.
+        // Three RGB bytes at (x, y), or magenta when no image is loaded.
         static unsigned char magenta[] = {255, 0, 255};
         if (byte_data == nullptr)
         {
@@ -136,13 +123,13 @@ private:
     const int bytes_per_pixel = 3;
     float* float_data         = nullptr; // Linear floating point pixel data
     unsigned char* byte_data  = nullptr; // Linear 8-bit pixel data
-    int image_width           = 0;       // Loaded image width
-    int image_height          = 0;       // Loaded image height
+    int image_width           = 0;
+    int image_height          = 0;
     int bytes_per_scanline    = 0;
 
     static int clamp(int x, int low, int high)
     {
-        // Return the value clamped to the range [low, high).
+        // Clamps x to [low, high)
         if (x < low)
         {
             return low;
@@ -169,14 +156,8 @@ private:
 
     void convert_to_bytes()
     {
-        // Convert the linear floating point pixel data to bytes, storing the resulting byte
-        // data in the `byte_data` member.
-
         int total_bytes = image_width * image_height * bytes_per_pixel;
         byte_data       = new unsigned char[total_bytes];
-
-        // Iterate through all pixel components, converting from [0.0, 1.0] float values to
-        // unsigned [0, 255] byte values.
 
         auto* destination = byte_data;
         auto* source      = float_data;
@@ -186,3 +167,5 @@ private:
         }
     }
 };
+
+} // namespace rt

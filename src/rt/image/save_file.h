@@ -25,25 +25,21 @@ inline float sanitize(float x)
 
 inline void write_color_ppm(std::ostream& stream, const color& pixel_color)
 {
-    // Apply a linear to gamma transform for gamma 2
     auto red   = linear_to_gamma(sanitize(pixel_color.r()));
     auto green = linear_to_gamma(sanitize(pixel_color.g()));
     auto blue  = linear_to_gamma(sanitize(pixel_color.b()));
 
-    // Translate the [0, 1] component values to the byte range [0, 255]
     static const interval intensity(0.000f, 0.999f);
     int red_byte   = static_cast<int>(256 * intensity.clamp(red));
     int green_byte = static_cast<int>(256 * intensity.clamp(green));
     int blue_byte  = static_cast<int>(256 * intensity.clamp(blue));
 
-    // Write out pixel components
     stream << red_byte << ' ' << green_byte << ' ' << blue_byte << '\n';
 }
 
-// format extractor with edge cases handle (although not needed)
+// The file extension in lower case, or "" if there is none
 inline std::string extract_file_format(const std::string& filename)
 {
-    // transform to lowercase
     std::string lower = filename;
     std::transform(lower.begin(), lower.end(), lower.begin(),
                    [](unsigned char character) { return std::tolower(character); });
@@ -60,19 +56,19 @@ inline std::string extract_file_format(const std::string& filename)
             return lower.substr(i + 1);
         }
     }
-    return ""; // no dot found
+    return "";
 }
 
 /*
- * Write the framebuffer to `filename`; the extension picks the format (png, jpg/jpeg, bmp,
- * tga, ppm). Throws std::runtime_error if the format is unknown or the file can't be written.
+ * Writes the framebuffer; the extension picks the format (png, jpg/jpeg, bmp, tga, ppm).
+ * Throws std::runtime_error for an unknown format or a failed write.
  */
 inline void save_framebuffer(const std::vector<color>& framebuffer, const int width,
                              const int height, const std::string& filename)
 {
     const std::string format = extract_file_format(filename);
 
-    // not recommended, very slow and produces very large files
+    // Slow and produces very large files
     if (format == "ppm")
     {
         std::ofstream file(filename);
@@ -88,7 +84,6 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
         return;
     }
 
-    // Convert framebuffer -> unsigned char buffer
     std::vector<unsigned char> image_buffer(width * height * 3);
     static const interval intensity(0.000f, 0.999f);
 

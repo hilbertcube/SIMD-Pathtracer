@@ -8,19 +8,15 @@
 namespace rt
 {
 
-/**
- * @brief What a material reports when a ray scatters off it.
- * The pdf lives inside the record (no heap allocation per bounce); direction_pdf points
- * at one of the members, so the record must not be copied.
- */
+// Result of scattering. direction_pdf points at one of the members below (no heap allocation
+// per bounce), so a record must not be copied.
 class scatter_record
 {
 public:
-    color attenuation; // Color reduction factor (albedo)
-    const pdf* direction_pdf =
-        nullptr;              // Distribution of scattered directions (diffuse-like materials)
-    bool is_specular = false; // true for specular materials: use specular_ray directly
-    ray specular_ray;         // The scattered ray when is_specular is true
+    color attenuation;
+    const pdf* direction_pdf = nullptr; // null when is_specular
+    bool is_specular         = false;
+    ray specular_ray; // used when is_specular
 
     // Storage for the pdfs materials can pick from
     cosine_pdf cosine;
@@ -37,13 +33,10 @@ public:
     material()          = default;
     virtual ~material() = default;
 
-    /**
-     * @brief Computes how an incoming ray interacts with the material.
-     * @param incoming Incoming ray.
-     * @param record Surface hit record (point, normal, uv, etc.).
-     * @param scattering Output: attenuation, plus either a pdf to sample the scattered
-     *             direction from, or (is_specular) a fixed specular ray.
-     * @return True if scattered, false if absorbed.
+    /*
+     * Decides how `incoming` scatters at `record`: fills `scattering` with the attenuation and
+     * either a pdf to sample the new direction from or (is_specular) a fixed ray. Returns false
+     * if the ray is absorbed.
      */
     virtual bool scatter(const ray& incoming, const hit_record& record,
                          scatter_record& scattering) const
@@ -51,15 +44,7 @@ public:
         return false;
     }
 
-    /**
-     * @brief Computes emitted light from the material.
-     * @param incoming Incoming ray.
-     * @param record Surface hit record (front_face decides which side emits).
-     * @param u Surface u texture coordinate.
-     * @param v Surface v texture coordinate.
-     * @param point Hit point position in world space.
-     * @return The emitted color (default: black).
-     */
+    // Light the surface emits at the hit point; black by default.
     virtual color emitted(const ray& incoming, const hit_record& record, float u, float v,
                           const point3f& point) const
     {
@@ -81,14 +66,11 @@ public:
 class lambertian : public material
 {
 private:
-    // Albedo refers to how much light a surface reflects
     shared_ptr<texture> albedo_texture;
 
 public:
-    // Construct from a solid color (albedo = base reflectivity)
     lambertian(const color& albedo) : albedo_texture(make_shared<solid_color>(albedo)) {}
 
-    // Construct from an arbitrary texture (e.g. checkerboard, image)
     lambertian(shared_ptr<texture> albedo_texture) : albedo_texture(albedo_texture) {}
 
     bool scatter(const ray& incoming, const hit_record& record,
@@ -150,7 +132,7 @@ private:
 
     static float reflectance(float cosine, float refraction_index)
     {
-        // Use Schlick's approximation for reflectance
+        // Schlick's approximation
         auto normal_reflectance = (1.0f - refraction_index) / (1 + refraction_index);
         normal_reflectance *= normal_reflectance;
         return normal_reflectance + (1.0f - normal_reflectance) * std::pow((1 - cosine), 5);

@@ -13,7 +13,6 @@ public:
 
     AABB() {} // The default AABB is empty, since intervals are empty by default.
 
-    // Box = x * y * z
     AABB(const interval& x, const interval& y, const interval& z) : x(x), y(y), z(z)
     {
         pad_to_minimums();
@@ -101,8 +100,6 @@ public:
 
     int longest_axis() const
     {
-        // Returns the index of the longest axis of the bounding box.
-
         if (x.size() > y.size())
         {
             return x.size() > z.size() ? 0 : 2;
@@ -116,7 +113,7 @@ public:
     static const AABB empty, universe;
 
 private:
-    // Adjust the AABB so that no side is narrower than some delta, padding if necessary.
+    // Pads any side narrower than delta
     void pad_to_minimums()
     {
         float delta = 0.0001f;

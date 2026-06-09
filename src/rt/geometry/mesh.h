@@ -128,7 +128,7 @@ shared_ptr<hittable_list> load_obj(const std::string& filename,
     return mesh;
 }
 
-// allow shear
+// Uniform scale, then translate
 inline void transform_mesh(hittable_list& mesh, float scale, const vec3f& offset)
 {
     for (auto& object : mesh.objects)
@@ -143,7 +143,7 @@ inline void transform_mesh(hittable_list& mesh, float scale, const vec3f& offset
     }
 }
 
-// only scale size
+// Per-axis scale, then translate
 inline void transform_mesh(hittable_list& mesh, const vec3f& scale, const vec3f& offset)
 {
     for (auto& object : mesh.objects)
@@ -191,9 +191,8 @@ inline void rotate_mesh(hittable_list& mesh, int axis, float degrees)
 }
 
 /*
- * Scale the mesh uniformly to `height` along y and move it so the middle of its base (the
- * bottom of its bounding box) sits at `base_center`. Models come in arbitrary units and
- * positions; this stands any of them on the floor without hand-tuned offsets.
+ * Scales the mesh uniformly to `height` along y and moves it so the middle of its base sits at
+ * `base_center`, standing models of any units and position on the floor.
  */
 inline void place_mesh(hittable_list& mesh, float height, const point3f& base_center)
 {

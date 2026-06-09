@@ -6,12 +6,16 @@
 #include "rt/ray_tracer.h"
 #include "rt/geometry/mesh.h"
 
+namespace scenes
+{
+
+using std::make_shared;
+using std::shared_ptr;
+
 void spheres_scene(const std::filesystem::path& output_directory)
 {
-    // World
     rt::hittable_list world;
 
-    // auto ground_texture = make_shared<rt::lambertian>(rt::color(0.5f, 0.5f, 0.5f));
     auto ground_texture =
         make_shared<rt::checker_texture>(0.32f,                        // scale
                                          rt::color(0.5f, 0.5f, 0.5f),  // odd color
@@ -23,10 +27,9 @@ void spheres_scene(const std::filesystem::path& output_directory)
     {
         for (int grid_z = -11; grid_z < 11; grid_z++)
         {
-            // random material
-            float material_choice = random_float(); // (0, 1)
-            rt::point3f center(grid_x + 0.9f * random_float(), 0.2f,
-                               grid_z + 0.9f * random_float());
+            float material_choice = rt::random_float();
+            rt::point3f center(grid_x + 0.9f * rt::random_float(), 0.2f,
+                               grid_z + 0.9f * rt::random_float());
 
             if ((center - rt::point3f(4.0f, 0.2f, 0.0f)).length() > 0.9f)
             {
@@ -37,14 +40,14 @@ void spheres_scene(const std::filesystem::path& output_directory)
                     // diffuse
                     auto albedo     = rt::color::random() * rt::color::random();
                     sphere_material = make_shared<rt::lambertian>(albedo);
-                    auto center2    = center + rt::vec3f(0.0f, random_float(0.0f, 0.5f), 0.0f);
+                    auto center2    = center + rt::vec3f(0.0f, rt::random_float(0.0f, 0.5f), 0.0f);
                     world.add(make_shared<rt::sphere>(center, 0.2f, sphere_material));
                 }
                 else if (material_choice < 0.95f)
                 {
                     // metal
                     auto albedo     = rt::color::random(0.5f, 1.0f);
-                    auto fuzz       = random_float(0.5f, 1.0f);
+                    auto fuzz       = rt::random_float(0.5f, 1.0f);
                     sphere_material = make_shared<rt::metal>(albedo, fuzz);
                     world.add(make_shared<rt::sphere>(center, 0.2f, sphere_material));
                 }
@@ -91,7 +94,6 @@ void spheres_scene(const std::filesystem::path& output_directory)
 
 void checkered_spheres(const std::filesystem::path& output_directory)
 {
-    // World
     rt::hittable_list world;
 
     auto checker = make_shared<rt::checker_texture>(0.32f, rt::color(0.2f, 0.3f, 0.1f),
@@ -177,14 +179,12 @@ void quads(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
 
-    // Materials
     auto left_red     = make_shared<rt::lambertian>(rt::color(1.0, 0.2, 0.2));
     auto back_green   = make_shared<rt::lambertian>(rt::color(0.2, 1.0, 0.2));
     auto right_blue   = make_shared<rt::lambertian>(rt::color(0.2, 0.2, 1.0));
     auto upper_orange = make_shared<rt::lambertian>(rt::color(1.0, 0.5, 0.0));
     auto lower_teal   = make_shared<rt::lambertian>(rt::color(0.2, 0.8, 0.8));
 
-    // Quads
     world.add(make_shared<rt::quad>(rt::point3f(-3, -2, 5), rt::vec3f(0, 0, -4), rt::vec3f(0, 4, 0),
                                     left_red));
     world.add(make_shared<rt::quad>(rt::point3f(-2, -2, 0), rt::vec3f(4, 0, 0), rt::vec3f(0, 4, 0),
@@ -231,10 +231,10 @@ void simple_light(const std::filesystem::path& output_directory)
     world.add(make_shared<rt::quad>(rt::point3f(3, 1, -2), rt::vec3f(2, 0, 0), rt::vec3f(0, 2, 0),
                                     light_material));
 
-    // BVH over the top-level objects so rays skip whatever they can't reach
+    // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    // Lights to importance-sample (geometry only; material is ignored)
+    // Lights to importance-sample
     rt::hittable_list lights;
     lights.add(make_shared<rt::sphere>(rt::point3f(0, 7, 0), 2.0f, shared_ptr<rt::material>()));
     lights.add(make_shared<rt::quad>(rt::point3f(3, 1, -2), rt::vec3f(2, 0, 0), rt::vec3f(0, 2, 0),
@@ -308,10 +308,10 @@ void cornell_box(const std::filesystem::path& output_directory)
     world.add(short_box);
     world.add(pyramid_shape);
 
-    // BVH over the top-level objects so rays skip whatever they can't reach
+    // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    // Lights to importance-sample (geometry only; material is ignored)
+    // Lights to importance-sample
     rt::hittable_list lights;
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
                                      rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
@@ -352,7 +352,7 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth,
             auto min_z     = -1000.0f + j * box_width;
             auto min_y     = 0.0f;
             auto max_x     = min_x + box_width;
-            auto max_y     = random_float(1.0f, 101.0f);
+            auto max_y     = rt::random_float(1.0f, 101.0f);
             auto max_z     = min_z + box_width;
 
             ground_boxes.add(rt::box(rt::point3f(min_x, min_y, min_z),
@@ -410,10 +410,10 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth,
         make_shared<rt::rotate_y>(make_shared<rt::bvh_node>(sphere_cluster), 15.0f),
         rt::vec3f(-100, 270, 395)));
 
-    // BVH over the top-level objects so rays skip whatever they can't reach
+    // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    // Lights to importance-sample (geometry only; material is ignored)
+    // Lights to importance-sample
     rt::hittable_list lights;
     lights.add(make_shared<rt::quad>(rt::point3f(123, 554, 147), rt::vec3f(300, 0, 0),
                                      rt::vec3f(0, 0, 265), shared_ptr<rt::material>()));
@@ -470,10 +470,10 @@ void three_D_model(const std::filesystem::path& output_directory)
     auto teapot_bvh = make_shared<rt::bvh_node>(teapot->objects, 0, teapot->objects.size());
     world.add(teapot_bvh);
 
-    // BVH over the top-level objects so rays skip whatever they can't reach
+    // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    // Lights to importance-sample (geometry only; material is ignored)
+    // Lights to importance-sample
     rt::hittable_list lights;
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
                                      rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
@@ -534,10 +534,10 @@ void dragon(const std::filesystem::path& output_directory)
     rt::transform_mesh(*dragon_mesh, 2.4f, rt::vec3f(278, 100, 210));
     world.add(make_shared<rt::bvh_node>(dragon_mesh->objects, 0, dragon_mesh->objects.size()));
 
-    // BVH over the top-level objects so rays skip whatever they can't reach
+    // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    // Lights to importance-sample (geometry only; material is ignored)
+    // Lights to importance-sample
     rt::hittable_list lights;
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
                                      rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
@@ -620,10 +620,10 @@ void multiple_models(const std::filesystem::path& output_directory)
     auto spot_final   = make_shared<rt::translate>(spot_rotated, rt::vec3f(65, 0, 290));
     world.add(spot_final);
 
-    // BVH over the top-level objects so rays skip whatever they can't reach
+    // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    // Lights to importance-sample (geometry only; material is ignored)
+    // Lights to importance-sample
     rt::hittable_list lights;
     lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
                                      rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
@@ -820,9 +820,9 @@ void bunny_campfire(const std::filesystem::path& output_directory)
     const float ring_radius   = 160;
     for (int i = 0; i < bunny_count; ++i)
     {
-        float angle = 2.0f * PI * (i + 0.5f) / bunny_count;
+        float angle = 2.0f * rt::PI * (i + 0.5f) / bunny_count;
         rt::point3f base(ring_radius * std::sin(angle), 0, ring_radius * std::cos(angle));
-        float facing_degrees = radians_to_degrees(angle) - 90.0f;
+        float facing_degrees = rt::radians_to_degrees(angle) - 90.0f;
         world.add(load_model("model/stanford-bunny.obj", make_shared<rt::lambertian>(colors[i]), 70,
                              base, facing_degrees));
     }
@@ -849,6 +849,8 @@ void bunny_campfire(const std::filesystem::path& output_directory)
     camera.render(world, lights);
 }
 
+} // namespace scenes
+
 int main(int argc, char** argv)
 {
     /*
@@ -866,49 +868,49 @@ int main(int argc, char** argv)
         switch (scene)
         {
             case 1:
-                spheres_scene(output_directory);
+                scenes::spheres_scene(output_directory);
                 break;
             case 2:
-                checkered_spheres(output_directory);
+                scenes::checkered_spheres(output_directory);
                 break;
             case 3:
-                earth(output_directory);
+                scenes::earth(output_directory);
                 break;
             case 4:
-                perlin_spheres(output_directory);
+                scenes::perlin_spheres(output_directory);
                 break;
             case 5:
-                quads(output_directory);
+                scenes::quads(output_directory);
                 break;
             case 6:
-                simple_light(output_directory);
+                scenes::simple_light(output_directory);
                 break;
             case 7:
-                cornell_box(output_directory);
+                scenes::cornell_box(output_directory);
                 break;
             case 8:
-                final_scene(1000, 2000, 40, output_directory);
+                scenes::final_scene(1000, 2000, 40, output_directory);
                 break;
             case 9:
-                three_D_model(output_directory);
+                scenes::three_D_model(output_directory);
                 break;
             case 10:
-                multiple_models(output_directory);
+                scenes::multiple_models(output_directory);
                 break;
             case 11:
-                dragon(output_directory);
+                scenes::dragon(output_directory);
                 break;
             case 12:
-                sculpture_gallery(output_directory);
+                scenes::sculpture_gallery(output_directory);
                 break;
             case 13:
-                neon_stage(output_directory);
+                scenes::neon_stage(output_directory);
                 break;
             case 14:
-                bunny_campfire(output_directory);
+                scenes::bunny_campfire(output_directory);
                 break;
             default:
-                final_scene(400, 250, 4, output_directory);
+                scenes::final_scene(400, 250, 4, output_directory);
                 break;
         }
     }
@@ -919,5 +921,3 @@ int main(int argc, char** argv)
     }
     return 0;
 }
-
-// cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build && ./build/main 7

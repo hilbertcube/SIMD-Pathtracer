@@ -6,13 +6,14 @@
 
 #include "rt/util/def.h"
 
+namespace rt
+{
+
 /*
- * SEEDING
- * Every thread's generator starts from SCENE_SEED. Scenes are built on the main thread before
- * rendering, and some are generated randomly (sphere layouts, box heights, Perlin noise), so
- * they come out the same on every run. The camera then reseeds at the start of each image row
- * from a per-run seed and the row number (see mix_seed), so sampling noise differs between
- * runs but does not depend on which thread renders which row.
+ * Every thread's generator starts from SCENE_SEED, so scenes built on the main thread (some
+ * use random layouts, box heights, Perlin noise) come out the same on every run. The camera
+ * reseeds at the start of each image row from a per-run seed and the row number (see
+ * mix_seed): noise differs between runs, but not with which thread renders which row.
  */
 constexpr uint32_t SCENE_SEED = 88675123u;
 
@@ -41,23 +42,19 @@ struct XorShift32
 // Constant-initialized, so accessing it needs no per-thread "set up yet?" check
 inline thread_local XorShift32 tls_rng{SCENE_SEED};
 
-// Restart the calling thread's generator from `seed`
 inline void seed_rng(uint32_t seed)
 {
     tls_rng = XorShift32(seed);
 }
 
-// A seed that differs between runs
 inline uint32_t clock_seed()
 {
     auto ticks = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     return static_cast<uint32_t>(ticks) ^ static_cast<uint32_t>(ticks >> 32);
 }
 
-/*
- * Derive an independent seed for stream `index` (an image row, say) from `seed`. Neighbouring
- * indices must not give similar states, so the pair is put through the MurmurHash3 finalizer.
- */
+// Derives an independent seed for stream `index` (an image row) from `seed`; the
+// MurmurHash3 finalizer keeps neighboring indices from giving similar states.
 inline uint32_t mix_seed(uint32_t seed, uint32_t index)
 {
     uint32_t x = seed ^ (index * 0x9E3779B9u);
@@ -95,3 +92,5 @@ FORCE_INLINE float random_float(float min, float max)
 {
     return random_real<float>(min, max);
 }
+
+} // namespace rt

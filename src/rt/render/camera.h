@@ -10,7 +10,6 @@
 #include <filesystem>
 #include <algorithm>
 
-// multithreading
 #include <omp.h>
 
 #include "rt/math/constants.h"
@@ -30,32 +29,28 @@ namespace rt
 class Camera
 {
 public:
-    float aspect_ratio    = 1.0f; // Ratio of image width over height
-    int image_width       = 100;  // Rendered image width in px
-    int samples_per_pixel = 10;   // Count of random samples for each pixel
-    int max_depth = 10; // Max number of ray bounces into scene for the recursive ray_color function
-    color background;   // Scene background color
+    float aspect_ratio    = 1.0f; // Width over height
+    int image_width       = 100;
+    int samples_per_pixel = 10;
+    int max_depth         = 10; // Maximum bounces per path
+    color background;
 
-    float field_of_view = 90.0f;             // Vertical view angle (field of view)
-    point3f look_from   = point3f(0, 0, 0);  // Point camera is looking from
-    point3f look_at     = point3f(0, 0, -1); // Point camera is looking at
-    vec3f view_up       = vec3f(0, 1, 0);    // Camera-relative "up" direction
+    float field_of_view = 90.0f; // Vertical, in degrees
+    point3f look_from   = point3f(0, 0, 0);
+    point3f look_at     = point3f(0, 0, -1);
+    vec3f view_up       = vec3f(0, 1, 0); // Camera-relative "up" direction
 
-    float defocus_angle  = 0.0f;  // Variational angle of rays through each pixel
-    float focus_distance = 10.0f; // Distance from camera look_from point to plane of perfect focus
+    float defocus_angle                    = 0.0f;  // In degrees; 0 disables depth of field
+    float focus_distance                   = 10.0f; // Distance to the plane of perfect focus
     std::string output_filename            = "output.png";
     std::filesystem::path output_directory = "."; // created if it doesn't exist
 
     /*
-     * Renders the image in parallel (OpenMP, one row per task) and saves it.
-     *   render(world)          - bounces sample only the material's own pdf.
-     *                            Use for scenes lit by the background / sky.
-     *   render(world, lights)  - also samples `lights` directly with shadow rays,
-     *                            combined with material sampling by MIS (see
-     *                            ray_color). Much less noise for small lights.
-     *                            `lights` holds copies of the emitters' geometry;
-     *                            their material is ignored.
-     * For a single-threaded run, set OMP_NUM_THREADS=1.
+     * Renders in parallel (OpenMP, one row per task) and saves the image. render(world) samples
+     * only the material's own pdf; render(world, lights) also samples `lights` with shadow rays
+     * and combines the two by MIS (see ray_color), which removes most noise from small lights.
+     * `lights` is geometry only; its materials are ignored. Set OMP_NUM_THREADS=1 to render
+     * single-threaded.
      */
     void render(const hittable& world) { render_impl(world, nullptr); }
 
@@ -66,18 +61,18 @@ private:
     static constexpr float ROULETTE_MAX_SURVIVAL =
         0.95f; // Cap so bright paths still terminate eventually
 
-    int image_height;          // Rendered image height
+    int image_height;
     int sample_count;          // Samples per pixel actually taken (at least 1)
     int strata_per_side;       // Side of the stratified sample grid
     float pixel_samples_scale; // Color scale factor (1 / sample_count)
     float stratum_size;        // 1 / strata_per_side
-    point3f camera_center;     // Camera center
-    point3f pixel00_location;  // Location of pixel (0, 0)
-    vec3f pixel_delta_u;       // Offset to pixel to the right
-    vec3f pixel_delta_v;       // Offset to pixel below
-    vec3f right, up, backward; // Camera frame basis vector
-    vec3f defocus_disk_u;      // Defocus disk horizontal radius
-    vec3f defocus_disk_v;      // Defocus disk vertical radius
+    point3f camera_center;
+    point3f pixel00_location;
+    vec3f pixel_delta_u; // Offset to pixel to the right
+    vec3f pixel_delta_v; // Offset to pixel below
+    vec3f right, up, backward;
+    vec3f defocus_disk_u; // Defocus disk horizontal radius
+    vec3f defocus_disk_v; // Defocus disk vertical radius
     std::vector<color> framebuffer;
 
     void render_impl(const hittable& world, const hittable* lights)
@@ -98,12 +93,11 @@ private:
 
         ProgressBar progress(image_height);
 
-// Rows are handed out dynamically, so faster cores simply take more of them
+// Dynamic scheduling: faster cores simply take more rows
 #pragma omp parallel for schedule(dynamic)
         for (int j = 0; j < image_height; ++j)
         {
-            // A row's random numbers depend only on the run seed and the row, not on which
-            // thread happens to render it
+            // Seeded per row, so the result doesn't depend on which thread renders it
             seed_rng(mix_seed(run_seed, static_cast<uint32_t>(j)));
             for (int i = 0; i < image_width; ++i)
             {
@@ -137,7 +131,6 @@ private:
         image_height = static_cast<int>(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
 
-        // initialize framebuffer (sized, so pixels can be written by index)
         framebuffer.assign(static_cast<size_t>(image_width) * image_height, color(0, 0, 0));
 
         // Stratified sampling uses a strata_per_side x strata_per_side grid; any remaining samples
@@ -153,31 +146,25 @@ private:
 
         camera_center = look_from;
 
-        // Determine viewport dimensions
         auto theta           = degrees_to_radians(field_of_view);
         auto half_height     = std::tan(theta / 2);
         auto viewport_height = 2.0f * half_height * focus_distance;
         auto viewport_width  = viewport_height * (static_cast<float>(image_width) / image_height);
 
-        // Calculate the right, up, backward unit basis vectors for the camera coordinate frame.
         backward = unit_vector(look_from - look_at);
         right    = unit_vector(cross(view_up, backward));
         up       = cross(backward, right);
 
-        // Calculate the vectors across the horizontal and down the vertical viewport edges
         vec3f viewport_u = viewport_width * right;
         vec3f viewport_v = viewport_height * (-up);
 
-        // Calculate the horizontal and vertical delta vectors from pixel to pixel.
         pixel_delta_u = viewport_u / image_width;
         pixel_delta_v = viewport_v / image_height;
 
-        // Calculate the location of the upper left pixel.
         auto viewport_upper_left =
             camera_center - (focus_distance * backward) - viewport_u / 2 - viewport_v / 2;
         pixel00_location = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
 
-        // Calculate the camera defocus disk basis vectors
         auto defocus_radius = focus_distance * std::tan(degrees_to_radians(defocus_angle / 2));
         defocus_disk_u      = right * defocus_radius;
         defocus_disk_v      = up * defocus_radius;
@@ -204,17 +191,16 @@ private:
         return pixel_samples_scale * pixel_color;
     }
 
-    // Camera ray through a uniformly random point in pixel (i, j)
+    // Camera ray through a uniformly random point in the pixel
     ray get_ray(int i, int j) const { return make_ray(i, j, sample_squared()); }
 
-    // Camera ray through a random point in sub-pixel cell (stratum_i, stratum_j) of pixel (i, j)
+    // Camera ray through a random point in sub-pixel cell (stratum_i, stratum_j)
     ray get_ray(int i, int j, int stratum_i, int stratum_j) const
     {
         return make_ray(i, j, sample_square_stratified(stratum_i, stratum_j));
     }
 
-    // Construct a camera ray originating from the defocus disk and directed at
-    // pixel (i, j) displaced by `offset` (in pixel units, within [-.5, .5]).
+    // Ray from a point on the defocus disk through pixel (i, j), shifted by `offset` pixels
     ray make_ray(int i, int j, const vec3f& offset) const
     {
         auto pixel_sample =
@@ -227,13 +213,13 @@ private:
 
     vec3f sample_squared() const
     {
-        // Random point in the unit square [-.5, .5] x [-.5, .5]
+        // Random point in [-.5, .5] x [-.5, .5]
         return vec3f(random_float() - 0.5f, random_float() - 0.5f, 0.0f);
     }
 
     vec3f sample_square_stratified(int stratum_i, int stratum_j) const
     {
-        // Random point in sub-cell (stratum_i, stratum_j) of the unit square [-.5, .5] x [-.5, .5]
+        // Random point in sub-cell (stratum_i, stratum_j) of that square
         float offset_x = ((stratum_i + random_float()) * stratum_size) - 0.5f;
         float offset_y = ((stratum_j + random_float()) * stratum_size) - 0.5f;
         return vec3f(offset_x, offset_y, 0.0f);
@@ -253,21 +239,17 @@ private:
     }
 
     /**
-     * Radiance arriving along r.
-     *
-     * At diffuse-like hits, light is gathered two ways and combined with multiple
-     * importance sampling (MIS):
-     *   1. Light sampling: pick a direction toward `lights` and trace a shadow ray. It only
-     *      counts if the first thing it hits emits, so lights hidden behind glass or other
-     *      objects contribute nothing (instead of inflating the other samples).
-     *   2. Material sampling: continue the path along a direction drawn from the
-     *      material's pdf. Emission found at the next hit is scaled by `emission_weight`,
-     *      that direction's MIS weight, so lights aren't counted twice.
+     * Radiance arriving along `incoming`. At diffuse hits, light is gathered two ways and
+     * combined with multiple importance sampling (MIS):
+     *   1. Light sampling: a shadow ray toward `lights`. It counts only if it reaches an
+     *      emitter, so lights hidden behind glass or other objects contribute nothing.
+     *   2. Material sampling: the path continues along a direction from the material's pdf.
+     *      Emission found at the next hit is scaled by `emission_weight` (that direction's
+     *      MIS weight), so lights aren't counted twice.
      */
     color ray_color(const ray& incoming, int depth, const hittable& world, const hittable* lights,
                     float emission_weight = 1.0f) const
     {
-        // If we've exceeded the ray bounce limit, no more light is gathered
         if (depth <= 0)
         {
             return color(0, 0, 0);
