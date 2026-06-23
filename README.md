@@ -4,11 +4,11 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 ### Preview:
 
 ![Final scene](images/final_scene.png)
-![Cornell Box](images/merge_cornell.png)
-![Cornell Box](images/metal_teapot.png)
+![Cornell Box](images/neon_stage.png)
+![Cornell Box](images/sculpture_gallery.png)
 ![Cornell Box](images/dragon.png)
-![Perlin Sphere](images/light.png)
-![Spheres](images/spheres.png)
+![Perlin Sphere](images/bunny_campfire.png)
+
 
 ## Features Added
 

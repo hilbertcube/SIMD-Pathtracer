@@ -12,6 +12,28 @@ namespace scenes
 using std::make_shared;
 using std::shared_ptr;
 
+/*
+ * Load a model, stand it `height` tall with the middle of its base at `base_center`, and
+ * return it in its own BVH. `tilt_x` turns about x first (for models stored Z-up), then
+ * `turn_y` turns it about the vertical axis to face the camera.
+ */
+shared_ptr<rt::hittable> load_model(const std::string& filename, shared_ptr<rt::material> material,
+                                    float height, const rt::point3f& base_center,
+                                    float turn_y = 0.0f, float tilt_x = 0.0f)
+{
+    auto mesh = rt::load_obj(filename, material);
+    if (tilt_x != 0.0f)
+    {
+        rt::rotate_mesh(*mesh, 0, tilt_x);
+    }
+    if (turn_y != 0.0f)
+    {
+        rt::rotate_mesh(*mesh, 1, turn_y);
+    }
+    rt::place_mesh(*mesh, height, base_center);
+    return make_shared<rt::bvh_node>(mesh->objects, 0, mesh->objects.size());
+}
+
 void spheres_scene(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
@@ -529,7 +551,7 @@ void dragon(const std::filesystem::path& output_directory)
                                     rt::vec3f(0, 455, 0), mirror)); // back wall (z = 555)
 
     // Dragon model
-    auto dragon_material = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    auto dragon_material = make_shared<rt::metal>(rt::color(0.95, 0.75, 0.30), 0.1f);
     auto dragon_mesh     = rt::load_obj("model/dragon.obj", dragon_material);
     rt::transform_mesh(*dragon_mesh, 2.4f, rt::vec3f(278, 100, 210));
     world.add(make_shared<rt::bvh_node>(dragon_mesh->objects, 0, dragon_mesh->objects.size()));
@@ -558,6 +580,7 @@ void dragon(const std::filesystem::path& output_directory)
     camera.render(world, lights);
 }
 
+// Cornell box with Suzanne and the teapot on two turned cubes and the cow on the floor
 void multiple_models(const std::filesystem::path& output_directory)
 {
     rt::hittable_list world;
@@ -581,44 +604,29 @@ void multiple_models(const std::filesystem::path& output_directory)
     world.add(make_shared<rt::quad>(rt::point3f(0, 0, 555), rt::vec3f(555, 0, 0),
                                     rt::vec3f(0, 555, 0), white));
 
-    // left box
-    shared_ptr<rt::hittable> left_box =
-        box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
-    left_box = make_shared<rt::rotate_y>(left_box, 15.0f);
-    left_box = make_shared<rt::translate>(left_box, rt::vec3f(285, 0, 295));
-    world.add(left_box);
+    // A cube of the given size standing on the floor and turned by `degrees`; returns the middle
+    // of its top face, where a model can be placed
+    auto add_cube = [&](float center_x, float center_z, float size, float degrees)
+    {
+        const float half = size / 2;
+        shared_ptr<rt::hittable> cube =
+            rt::box(rt::point3f(-half, 0, -half), rt::point3f(half, size, half), white);
+        cube = make_shared<rt::rotate_y>(cube, degrees);
+        cube = make_shared<rt::translate>(cube, rt::vec3f(center_x, 0, center_z));
+        world.add(cube);
+        return rt::point3f(center_x, size, center_z);
+    };
 
-    // right box
-    shared_ptr<rt::hittable> right_box =
-        box(rt::point3f(0, 0, 0), rt::point3f(165, 165, 165), white);
-    right_box = make_shared<rt::rotate_y>(right_box, -18.0f);
-    right_box = make_shared<rt::translate>(right_box, rt::vec3f(130, 0, 65));
-    world.add(right_box);
+    auto yellow      = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
+    auto suzanne_top = add_cube(385, 355, 165, 15.0f);
+    world.add(load_model("model/suzanne.obj", yellow, 95, suzanne_top, 200.0f));
 
-    // Suzanne model
-    auto suzanne_material = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
-    auto suzanne          = rt::load_obj("model/suzanne.obj", suzanne_material);
-    rt::transform_mesh(*suzanne, 80.0f, rt::vec3f(110, 165, -450));
-    auto suzanne_bvh     = make_shared<rt::bvh_node>(suzanne->objects, 0, suzanne->objects.size());
-    auto suzanne_rotated = make_shared<rt::rotate_y>(suzanne_bvh, 200);
-    auto suzanne_final   = make_shared<rt::translate>(suzanne_rotated, rt::vec3f(278, 0, 278));
-    world.add(suzanne_final);
+    auto grey       = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
+    auto teapot_top = add_cube(185, 170, 165, -18.0f);
+    world.add(load_model("model/teapot.obj", grey, 90, teapot_top, 20.0f));
 
-    // Tea pot
-    auto teapot_material = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
-    auto teapot          = rt::load_obj("model/teapot.obj", teapot_material);
-    rt::transform_mesh(*teapot, 40.0f, rt::vec3f(185, 160, 220));
-    auto teapot_bvh = make_shared<rt::bvh_node>(teapot->objects, 0, teapot->objects.size());
-    world.add(teapot_bvh);
-
-    // Spot the cow
-    auto spot_material = make_shared<rt::lambertian>(rt::color(0, 0.8, 0.9));
-    auto spot          = rt::load_obj("model/spot.obj", spot_material);
-    rt::transform_mesh(*spot, 90.0f, rt::vec3f(420, 60, 80));
-    auto spot_bvh     = make_shared<rt::bvh_node>(spot->objects, 0, spot->objects.size());
-    auto spot_rotated = make_shared<rt::rotate_y>(spot_bvh, 45.0f);
-    auto spot_final   = make_shared<rt::translate>(spot_rotated, rt::vec3f(65, 0, 290));
-    world.add(spot_final);
+    auto cyan = make_shared<rt::lambertian>(rt::color(0, 0.8, 0.9));
+    world.add(load_model("model/spot.obj", cyan, 100, rt::point3f(420, 0, 70), -35.0f));
 
     // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
@@ -642,28 +650,6 @@ void multiple_models(const std::filesystem::path& output_directory)
     camera.output_directory  = output_directory;
     camera.defocus_angle     = 0;
     camera.render(world, lights);
-}
-
-/*
- * Load a model, stand it `height` tall with the middle of its base at `base_center`, and
- * return it in its own BVH. `tilt_x` turns about x first (for models stored Z-up), then
- * `turn_y` turns it about the vertical axis to face the camera.
- */
-shared_ptr<rt::hittable> load_model(const std::string& filename, shared_ptr<rt::material> material,
-                                    float height, const rt::point3f& base_center,
-                                    float turn_y = 0.0f, float tilt_x = 0.0f)
-{
-    auto mesh = rt::load_obj(filename, material);
-    if (tilt_x != 0.0f)
-    {
-        rt::rotate_mesh(*mesh, 0, tilt_x);
-    }
-    if (turn_y != 0.0f)
-    {
-        rt::rotate_mesh(*mesh, 1, turn_y);
-    }
-    rt::place_mesh(*mesh, height, base_center);
-    return make_shared<rt::bvh_node>(mesh->objects, 0, mesh->objects.size());
 }
 
 // Three statues on marble pedestals under spotlights: stone Lucy, a gold Buddha, a bronze bust
