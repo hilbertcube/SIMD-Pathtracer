@@ -132,15 +132,15 @@ private:
     }
 };
 
-const AABB AABB::empty    = AABB(interval::empty, interval::empty, interval::empty);
-const AABB AABB::universe = AABB(interval::universe, interval::universe, interval::universe);
+inline const AABB AABB::empty    = AABB(interval::empty, interval::empty, interval::empty);
+inline const AABB AABB::universe = AABB(interval::universe, interval::universe, interval::universe);
 
-AABB operator+(const AABB& bounds, const vec3f& offset)
+inline AABB operator+(const AABB& bounds, const vec3f& offset)
 {
     return AABB(bounds.x + offset.x(), bounds.y + offset.y(), bounds.z + offset.z());
 }
 
-AABB operator+(const vec3f& offset, const AABB& bounds)
+inline AABB operator+(const vec3f& offset, const AABB& bounds)
 {
     return bounds + offset;
 }

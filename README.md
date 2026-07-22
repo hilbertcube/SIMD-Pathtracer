@@ -3,7 +3,7 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 
 ### Preview:
 
-![Final scene](images/final_scene.png)
+![Final scene](images/multiple_3d_models.png)
 ![Cornell Box](images/neon_stage.png)
 ![Cornell Box](images/sculpture_gallery.png)
 ![Cornell Box](images/dragon.png)
@@ -60,7 +60,7 @@ Run from the repository root, since scenes load `model/` and `texture/` from the
 ```
 The number picks a case of the `switch` in `main()` in [src/main.cpp](src/main.cpp): 1 spheres, 2 checkered spheres, 3 earth, 4 Perlin spheres, 5 quads, 6 simple light, 7 Cornell box, 8 Book 2 final scene, 9 teapot model (the default), 10 multiple models, 11 dragon (a 250k-triangle model), 12 sculpture gallery, 13 neon stage, 14 bunny campfire; any other number renders a quick preview of the final scene.
 
-Images go to `images/` unless another directory is given (it is created if missing). Rendering a scene there replaces the existing image of the same name. Each scene sets its own `output_filename`, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
+Images go to `images/` unless another directory is given (it is created if missing). Rendering a scene there replaces the existing image of the same name. The file name of each scene is set in `main()`, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
 
 ## Future plans
 - CUDA acceleration

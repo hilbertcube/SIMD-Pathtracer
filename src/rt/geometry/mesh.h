@@ -5,7 +5,6 @@
 
 #include "rt/math/vector.h"
 
-#define TINYOBJLOADER_IMPLEMENTATION
 #include "external/tiny_obj_loader.h"
 
 namespace rt
@@ -81,8 +80,8 @@ public:
     }
 };
 
-shared_ptr<hittable_list> load_obj(const std::string& filename,
-                                   shared_ptr<material> default_material)
+inline shared_ptr<hittable_list> load_obj(const std::string& filename,
+                                          shared_ptr<material> default_material)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;

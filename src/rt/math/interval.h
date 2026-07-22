@@ -51,15 +51,15 @@ public:
     static const interval empty, universe;
 };
 
-const interval interval::empty    = interval(+INF, -INF);
-const interval interval::universe = interval(-INF, +INF);
+inline const interval interval::empty    = interval(+INF, -INF);
+inline const interval interval::universe = interval(-INF, +INF);
 
-interval operator+(const interval& range, float displacement)
+inline interval operator+(const interval& range, float displacement)
 {
     return interval(range.min + displacement, range.max + displacement);
 }
 
-interval operator+(float displacement, const interval& range)
+inline interval operator+(float displacement, const interval& range)
 {
     return range + displacement;
 }

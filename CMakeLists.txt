@@ -42,9 +42,13 @@ endif()
 file(GLOB C_SOURCES "src/*.c")
 file(GLOB CPP_SOURCES "src/*.cpp")
 
+# Compiled into every executable: the scenes (one file each), and the third-party single-header
+# libraries, which are compiled once in src/rt/external_impl.cpp
+file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS "src/scenes/*.cpp" "src/rt/*.cpp")
+
 foreach(SOURCE_FILE ${C_SOURCES} ${CPP_SOURCES})
     get_filename_component(TARGET_NAME ${SOURCE_FILE} NAME_WE)
-    add_executable(${TARGET_NAME} ${SOURCE_FILE})
+    add_executable(${TARGET_NAME} ${SOURCE_FILE} ${SHARED_SOURCES})
     # Includes are written from src/, e.g. #include "rt/math/vector.h"
     target_include_directories(${TARGET_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/src")
     target_link_libraries(${TARGET_NAME} PRIVATE

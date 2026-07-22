@@ -1,13 +1,5 @@
 #pragma once
 
-#ifndef STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#endif
-
-#ifndef STBI_FAILURE_USERMSG
-#define STBI_FAILURE_USERMSG
-#endif
-
 #include "external/stb/stb_image.h"
 
 #include <cstdlib>
@@ -80,7 +72,7 @@ public:
     ~rtw_image()
     {
         delete[] byte_data;
-        STBI_FREE(float_data);
+        stbi_image_free(float_data);
     }
 
     // Loads linear (gamma 1) float data and a byte copy for pixel_data(); false on failure.

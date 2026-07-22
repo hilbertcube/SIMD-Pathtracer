@@ -40,10 +40,9 @@ public:
     point3f look_at     = point3f(0, 0, -1);
     vec3f view_up       = vec3f(0, 1, 0); // Camera-relative "up" direction
 
-    float defocus_angle                    = 0.0f;  // In degrees; 0 disables depth of field
-    float focus_distance                   = 10.0f; // Distance to the plane of perfect focus
-    std::string output_filename            = "output.png";
-    std::filesystem::path output_directory = "."; // created if it doesn't exist
+    float defocus_angle               = 0.0f;         // In degrees; 0 disables depth of field
+    float focus_distance              = 10.0f;        // Distance to the plane of perfect focus
+    std::filesystem::path output_path = "output.png"; // its directory is created if missing
 
     /*
      * Renders in parallel (OpenMP, one row per task) and saves the image. render(world) samples
@@ -82,11 +81,10 @@ private:
         const uint32_t run_seed = clock_seed();
 
         // Create the output directory first, so a bad path fails now instead of after the render
-        if (!output_directory.empty())
+        if (output_path.has_parent_path())
         {
-            std::filesystem::create_directories(output_directory);
+            std::filesystem::create_directories(output_path.parent_path());
         }
-        const std::filesystem::path output_path = output_directory / output_filename;
         std::clog << "Rendering " << output_path.string() << " (" << image_width << 'x'
                   << image_height << ", " << sample_count << " samples/pixel, max depth "
                   << max_depth << ", " << omp_get_max_threads() << " threads)\n";
@@ -108,7 +106,7 @@ private:
 
         progress.finish();
         report_render_time(progress.elapsed());
-        save(output_path);
+        save();
     }
 
     void report_render_time(std::chrono::nanoseconds elapsed) const
@@ -120,7 +118,7 @@ private:
         std::clog << "Rendered in " << format_duration(elapsed) << " (" << rate << " samples/s)\n";
     }
 
-    void save(const std::filesystem::path& output_path) const
+    void save() const
     {
         save_framebuffer(framebuffer, image_width, image_height, output_path.string());
         std::clog << "Saved " << output_path.string() << std::endl;
