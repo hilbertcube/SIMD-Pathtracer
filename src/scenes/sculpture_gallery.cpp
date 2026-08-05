@@ -61,18 +61,18 @@ void sculpture_gallery(const std::filesystem::path& output_path)
 
     // Front row
     world.add(
-        load_model("model/lucy.obj", stone, 230, add_pedestal(160, 280, 120, 120), 0.0f, -90.0f));
-    world.add(load_model("model/happy.obj", gold, 200, add_pedestal(410, 280, 120, 120)));
-    world.add(load_model("model/max-planck.obj", bronze, 190, add_pedestal(630, 280, 120, 120)));
+        load_model("models/lucy.obj", stone, 230, add_pedestal(160, 280, 120, 120), 0.0f, -90.0f));
+    world.add(load_model("models/happy.obj", gold, 200, add_pedestal(410, 280, 120, 120)));
+    world.add(load_model("models/max-planck.obj", bronze, 190, add_pedestal(630, 280, 120, 120)));
 
     // Back row, offset so each statue stands between two in front. The lion is long, so its
     // pedestal is too.
-    world.add(load_model("model/demosthenes-low-res.obj", terracotta, 190,
+    world.add(load_model("models/demosthenes-low-res.obj", terracotta, 190,
                          add_pedestal(265, 500, 120, 120), 160.0f));
-    world.add(load_model("model/nefertiti.obj", silver, 200, add_pedestal(525, 500, 120, 140),
+    world.add(load_model("models/nefertiti.obj", silver, 200, add_pedestal(525, 500, 120, 140),
                          180.0f, -90.0f));
     world.add(
-        load_model("model/lionstatue.obj", jade, 100, add_pedestal(805, 495, 110, 170), 210.0f));
+        load_model("models/lionstatue.obj", jade, 100, add_pedestal(805, 495, 110, 170), 210.0f));
 
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 

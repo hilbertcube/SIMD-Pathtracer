@@ -36,7 +36,7 @@ void three_D_model(const std::filesystem::path& output_path)
 
     // Tea pot
     auto teapot_material = make_shared<rt::metal>(rt::color(0, 0, 0.8), 0.0f);
-    auto teapot          = rt::load_obj("model/teapot.obj", teapot_material);
+    auto teapot          = rt::load_obj("models/teapot.obj", teapot_material);
     rt::transform_mesh(*teapot, 80.0f, rt::vec3f(278, 0, 278));
     auto teapot_bvh = make_shared<rt::bvh_node>(teapot->objects, 0, teapot->objects.size());
     world.add(teapot_bvh);

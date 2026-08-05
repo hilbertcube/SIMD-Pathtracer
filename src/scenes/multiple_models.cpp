@@ -48,14 +48,14 @@ void multiple_models(const std::filesystem::path& output_path)
 
     auto yellow      = make_shared<rt::lambertian>(rt::color(0.9, 0.8, 0));
     auto suzanne_top = add_cube(385, 355, 165, 15.0f);
-    world.add(load_model("model/suzanne.obj", yellow, 95, suzanne_top, 200.0f));
+    world.add(load_model("models/suzanne.obj", yellow, 95, suzanne_top, 200.0f));
 
     auto grey       = make_shared<rt::lambertian>(rt::color(0.8, 0.8, 0.8));
     auto teapot_top = add_cube(185, 170, 165, -18.0f);
-    world.add(load_model("model/teapot.obj", grey, 90, teapot_top, 20.0f));
+    world.add(load_model("models/teapot.obj", grey, 90, teapot_top, 20.0f));
 
     auto cyan = make_shared<rt::lambertian>(rt::color(0, 0.8, 0.9));
-    world.add(load_model("model/spot.obj", cyan, 100, rt::point3f(420, 0, 70), -35.0f));
+    world.add(load_model("models/spot.obj", cyan, 100, rt::point3f(420, 0, 70), -35.0f));
 
     // Top-level BVH
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));

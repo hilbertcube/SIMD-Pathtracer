@@ -47,8 +47,8 @@ void neon_stage(const std::filesystem::path& output_path)
 
     auto chrome = make_shared<rt::metal>(rt::color(0.92, 0.92, 0.95), 0.03f);
     auto glass  = make_shared<rt::dielectrics>(1.5f);
-    world.add(load_model("model/armadillo.obj", chrome, 300, rt::point3f(-40, 0, 260), 15.0f));
-    world.add(load_model("model/stanford-bunny.obj", glass, 110, rt::point3f(170, 0, 120), -60.0f));
+    world.add(load_model("models/armadillo.obj", chrome, 300, rt::point3f(-40, 0, 260), 15.0f));
+    world.add(load_model("models/stanford-bunny.obj", glass, 110, rt::point3f(170, 0, 120), -60.0f));
 
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
