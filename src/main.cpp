@@ -64,6 +64,12 @@ int main(int argc, char** argv)
             case 14:
                 scenes::bunny_campfire(output_directory / "bunny_campfire.png");
                 break;
+            case 15:
+                scenes::christmas(output_directory / "christmas.png");
+                break;
+            case 16:
+                scenes::material_showcase(output_directory / "material_showcase.png");
+                break;
             default:
                 scenes::final_scene(400, 250, 4, output_directory / "final_scene.png");
                 break;

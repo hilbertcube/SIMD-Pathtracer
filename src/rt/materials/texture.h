@@ -96,12 +96,16 @@ private:
 class noise_texture : public texture
 {
 public:
-    noise_texture(float scale) : scale(scale) {}
+    // `scale` sets the stripes along z. `frequency` scales space for the noise that wobbles
+    // them, so its features are 1 / frequency units across: the default 1 suits objects a few
+    // units across, and a hundred-unit object wants about 0.05.
+    noise_texture(float scale, float frequency = 1.0f) : scale(scale), frequency(frequency) {}
 
     color value(float u, float v, const point3f& point) const override
     {
         return color(0.5f, 0.5f, 0.5f) *
-               (1.0f + std::sin(scale * point.z() + 10.0f * noise.turbulence(point, 7)));
+               (1.0f +
+                std::sin(scale * point.z() + 10.0f * noise.turbulence(frequency * point, 7)));
     }
 
     bool needs_uv() const override { return false; }
@@ -109,6 +113,7 @@ public:
 private:
     perlin noise;
     float scale;
+    float frequency;
 };
 
 } // namespace rt

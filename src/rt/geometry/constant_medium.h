@@ -16,6 +16,13 @@ public:
     {
     }
 
+    // Any material can be the phase function, for example anisotropic or glowing_medium
+    constant_medium(shared_ptr<hittable> boundary, float density,
+                    shared_ptr<material> phase_function)
+        : boundary(boundary), negative_inverse_density(-1 / density), phase_function(phase_function)
+    {
+    }
+
     constant_medium(shared_ptr<hittable> boundary, float density, const color& albedo)
         : boundary(boundary), negative_inverse_density(-1 / density),
           phase_function(make_shared<isotropic>(albedo))

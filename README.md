@@ -3,11 +3,12 @@ An optimized implementation of Peter Shirley’s classic ray tracing (actually p
 
 ### Preview:
 
-![Final scene](images/multiple_3d_models.png)
-![Cornell Box](images/neon_stage.png)
-![Cornell Box](images/sculpture_gallery.png)
-![Cornell Box](images/dragon.png)
-![Perlin Sphere](images/bunny_campfire.png)
+![Teapot Gallery](images/material_showcase.png)
+![Sculpture Gallery](images/sculpture_gallery.png)
+![Final scene](images/christmas.png)
+![Neon Stage](images/neon_stage.png)
+![Golden Dragon](images/dragon.png)
+![Campfire](images/bunny_campfire.png)
 
 
 ## Features Added
@@ -52,13 +53,13 @@ cmake --build .
 
 ### Running
 
-Run from the repository root, since scenes load `model/` and `texture/` from there:
+Run from the repository root, since scenes load `models/` and `texture/` from there:
 ```bash
 ./build/main [scene] [output_directory]
 ./build/main 7             # render scene 7 (the Cornell box) to images/cornell_box.png
 ./build/main 7 renders     # same, but write to renders/cornell_box.png
 ```
-The number picks a case of the `switch` in `main()` in [src/main.cpp](src/main.cpp): 1 spheres, 2 checkered spheres, 3 earth, 4 Perlin spheres, 5 quads, 6 simple light, 7 Cornell box, 8 Book 2 final scene, 9 teapot model (the default), 10 multiple models, 11 dragon (a 250k-triangle model), 12 sculpture gallery, 13 neon stage, 14 bunny campfire; any other number renders a quick preview of the final scene.
+The number picks a case of the `switch` in `main()` in [src/main.cpp](src/main.cpp): 1 spheres, 2 checkered spheres, 3 earth, 4 Perlin spheres, 5 quads, 6 simple light, 7 Cornell box, 8 Book 2 final scene, 9 teapot model (the default), 10 multiple models, 11 dragon (a 250k-triangle model), 12 sculpture gallery, 13 neon stage, 14 bunny campfire, 15 Christmas, 16 material showcase; any other number renders a quick preview of the final scene.
 
 Images go to `images/` unless another directory is given (it is created if missing). Rendering a scene there replaces the existing image of the same name. The file name of each scene is set in `main()`, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
 

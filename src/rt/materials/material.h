@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstddef>
+#include <new>
+#include <utility>
+
 #include "rt/geometry/hittable.h"
 #include "rt/materials/texture.h"
 #include "rt/materials/pdf.h"
@@ -22,9 +26,25 @@ public:
     cosine_pdf cosine;
     sphere_pdf sphere;
 
+    /*
+     * Space for the less common pdfs (rough metals, anisotropic media). It is left uninitialized,
+     * so it costs nothing on the common paths: a material that needs one builds it here with
+     * emplace and points direction_pdf at the result.
+     */
+    template <typename Pdf, typename... Arguments>
+    const Pdf* emplace(Arguments&&... arguments)
+    {
+        static_assert(sizeof(Pdf) <= sizeof(rare_pdf_storage), "grow rare_pdf_storage");
+        static_assert(alignof(Pdf) <= alignof(std::max_align_t), "pdf is over-aligned");
+        return new (rare_pdf_storage) Pdf(std::forward<Arguments>(arguments)...);
+    }
+
     scatter_record()                                 = default;
     scatter_record(const scatter_record&)            = delete;
     scatter_record& operator=(const scatter_record&) = delete;
+
+private:
+    alignas(std::max_align_t) unsigned char rare_pdf_storage[96];
 };
 
 class material

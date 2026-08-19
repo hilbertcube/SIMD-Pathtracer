@@ -54,4 +54,15 @@ void neon_stage(const std::filesystem::path& output_path);
 // A ring of colorful bunnies around a glowing orb at night, with a horse watching
 void bunny_campfire(const std::filesystem::path& output_path);
 
+// A snowy Christmas night: a decorated tree with presents, a snowman, Rudolph, glowing lamp posts
+// and falling snow under the moon, using the CC0 Kenney Holiday Kit models
+void christmas(const std::filesystem::path& output_path);
+
+// Eighteen teapots on a glossy stage, on a staircase, one material each. Front: a checkered matte teapot,
+// fuzzy metal, clear glass, an emissive lamp, coated plastic. Second: tinted glass, rough copper,
+// gold mirror, hammered silver (bump mapping), iridescent pearl. Third: dispersive crystal, velvet,
+// the book's Perlin noise, frosted glass, brushed steel. Top: rough clay, then jade (subsurface
+// scattering) and lava (a glowing medium), which steam.
+void material_showcase(const std::filesystem::path& output_path);
+
 } // namespace scenes
