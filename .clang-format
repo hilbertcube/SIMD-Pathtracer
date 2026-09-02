@@ -1,7 +1,7 @@
 # Formatting rules for the ray tracer. Apply with:
 #   cmake --build build --target format
 # or: clang-format -i <files>
-# Third-party headers in src/external are excluded (see .clang-format-ignore).
+# Third-party headers in third_party/ are excluded (see .clang-format-ignore).
 ---
 Language: Cpp
 BasedOnStyle: LLVM

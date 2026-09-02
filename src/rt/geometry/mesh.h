@@ -8,7 +8,7 @@
 
 #include "rt/math/vector.h"
 
-#include "external/tiny_obj_loader.h"
+#include "tinyobjloader/tiny_obj_loader.h"
 
 namespace rt
 {

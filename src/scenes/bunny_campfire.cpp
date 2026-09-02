@@ -40,8 +40,8 @@ void bunny_campfire(const std::filesystem::path& output_path)
         float angle = 2.0f * rt::PI * (i + 0.5f) / bunny_count;
         rt::point3f base(ring_radius * std::sin(angle), 0, ring_radius * std::cos(angle));
         float facing_degrees = rt::radians_to_degrees(angle) - 90.0f;
-        world.add(load_model("models/stanford-bunny.obj", make_shared<rt::lambertian>(colors[i]), 70,
-                             base, facing_degrees));
+        world.add(load_model("models/stanford-bunny.obj", make_shared<rt::lambertian>(colors[i]),
+                             70, base, facing_degrees));
     }
 
     auto horse_coat = make_shared<rt::lambertian>(rt::color(0.45, 0.30, 0.18));

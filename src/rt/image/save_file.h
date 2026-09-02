@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "external/stb/stb_image_write.h"
+#include "stb/stb_image_write.h"
 
 #include "rt/math/vector.h"
 #include "rt/math/interval.h"
