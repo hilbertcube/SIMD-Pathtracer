@@ -58,11 +58,19 @@ void bunny_campfire(const std::filesystem::path& output_path);
 // and falling snow under the moon, using the CC0 Kenney Holiday Kit models
 void christmas(const std::filesystem::path& output_path);
 
-// Eighteen teapots on a glossy stage, on a staircase, one material each. Front: a checkered matte teapot,
-// fuzzy metal, clear glass, an emissive lamp, coated plastic. Second: tinted glass, rough copper,
-// gold mirror, hammered silver (bump mapping), iridescent pearl. Third: dispersive crystal, velvet,
-// the book's Perlin noise, frosted glass, brushed steel. Top: rough clay, then jade (subsurface
-// scattering) and lava (a glowing medium), which steam.
+// Eighteen teapots on a glossy stage, on a staircase, one material each. Front: a checkered matte
+// teapot, fuzzy metal, clear glass, an emissive lamp, coated plastic. Second: tinted glass, rough
+// copper, gold mirror, hammered silver (bump mapping), iridescent pearl. Third: dispersive crystal,
+// velvet, the book's Perlin noise, frosted glass, brushed steel. Top: rough clay, then jade
+// (subsurface scattering) and lava (a glowing medium), which steam.
 void material_showcase(const std::filesystem::path& output_path);
+
+// A wooden kitchen with a marble island (a 350k-triangle model), lit by a window and the ceiling
+// lamps. Its materials are chosen by the names in the model.
+void kitchen(const std::filesystem::path& output_path);
+
+// A Mustang (a 360k-polygon model) in a dark studio, with Boss 302 stripes on its paint and a
+// material chosen for each part by name
+void mustang(const std::filesystem::path& output_path);
 
 } // namespace scenes
