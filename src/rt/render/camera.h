@@ -21,6 +21,7 @@
 #include "rt/materials/material.h"
 #include "rt/materials/pdf.h"
 #include "rt/image/save_file.h"
+#include "rt/render/render_settings.h"
 #include "rt/util/progress.h"
 #include "rt/util/timer.h"
 
@@ -106,8 +107,18 @@ private:
 
         progress.finish();
         report_render_time(progress.elapsed());
+        if (global_render_settings().denoise)
+        {
+            denoise_framebuffer(world);
+        }
         save();
     }
+
+    // Defined in camera_guides.cpp: clean up the framebuffer with the denoiser, using the
+    // surface colors and normals the camera sees as guides
+    void denoise_framebuffer(const hittable& world);
+    void render_guides(const hittable& world, std::vector<color>& albedo,
+                       std::vector<color>& normal) const;
 
     void report_render_time(std::chrono::nanoseconds elapsed) const
     {
@@ -133,7 +144,8 @@ private:
 
         // Stratified sampling uses a strata_per_side x strata_per_side grid; any remaining samples
         // (when samples_per_pixel is not a perfect square) are taken uniformly at random.
-        sample_count    = std::max(1, samples_per_pixel);
+        const int override_samples = global_render_settings().samples;
+        sample_count    = std::max(1, override_samples > 0 ? override_samples : samples_per_pixel);
         strata_per_side = static_cast<int>(std::sqrt(static_cast<float>(sample_count)));
         while ((strata_per_side + 1) * (strata_per_side + 1) <= sample_count)
         {
