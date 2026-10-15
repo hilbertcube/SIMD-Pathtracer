@@ -2,6 +2,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -100,8 +101,8 @@ int main(int argc, char** argv)
                 scenes::mustang(output_directory / "mustang.png");
                 break;
             default:
-                scenes::final_scene(400, 250, 4, output_directory / "final_scene.png");
-                break;
+                throw std::runtime_error("unknown scene " + std::to_string(scene) +
+                                         " (scenes are numbered 1 to 18)");
         }
     }
     catch (const std::exception& error)

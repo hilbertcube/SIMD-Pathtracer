@@ -1,68 +1,86 @@
-# Ray Tracing in One Weekend, in modern C++
-An optimized implementation of Peter Shirley’s classic ray tracing (actually path tracing) series: [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) [*Ray Tracing: The Next Week*](https://raytracing.github.io/books/RayTracingTheNextWeek.html) and [*Ray Tracing: The Rest of Your Life*](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html). This version is written in C++17 and uses OpenMP multithreading for better performance.
+# Path Tracer in C++
 
-### Preview:
+A CPU path tracer in C++17 with OpenMP. It started from Peter Shirley's [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) series ([book 2](https://raytracing.github.io/books/RayTracingTheNextWeek.html), [book 3](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)) and goes well beyond it.
 
+![Kitchen](images/kitchen.png)
 ![Teapot Gallery](images/material_showcase.png)
 ![Sculpture Gallery](images/sculpture_gallery.png)
-![Final scene](images/christmas.png)
+![Christmas](images/christmas.png)
+![Mustang](images/mustang.png)
 ![Neon Stage](images/neon_stage.png)
 ![Golden Dragon](images/dragon.png)
 ![Campfire](images/bunny_campfire.png)
 
+## Features
 
-## Features Added
+- **Lighting:** direct light sampling with shadow rays, combined with material sampling by multiple importance sampling (MIS), plus Russian roulette and stratified pixel samples
+- **Materials:** diffuse, Oren-Nayar, metal, GGX conductors, brushed metal, glass (smooth, frosted, tinted, dispersive), coated plastic, iridescent, velvet, bump mapping, emissive, and participating media (smoke, mist, glowing, subsurface-like)
+- **Models:** OBJ loading with textures, normals, smooth shading and per-part materials, with scenes of up to 700k triangles
+- **Speed:** a 4-wide SSE BVH built with the surface area heuristic, and OpenMP across all cores
+- **Denoising:** optional [Intel Open Image Denoise](https://www.openimagedenoise.org/), so a 64-sample render looks close to a 1000-sample one
+- **Output:** PNG, JPEG, BMP, TGA or PPM
 
-Peter Shirley’s originals were intentionally C-style. This project reimagines them with modern C++ practices and performance optimizations.
+## Build
 
-Some features added:
-- Importance sampling (book 3, extended): cosine-weighted diffuse bounces plus direct light sampling with shadow rays, combined with multiple importance sampling (power heuristic), and stratified pixel samples. Book 3's 50/50 mixture pdf has no shadow ray, so lights hidden behind glass or other objects caused fireflies; MIS removes them. Pass the scene's lights with `camera.render(world, lights)`.
-- A 3D model importer.
-- Generic vector class: a small `Vector<T, N>` template (`vec3f`, `point3f` and `color` are `Vector<float, 3>`).
-- Image Writer: Instead of relying on a PPM writer, which is very slow and produces very large files, I implemented an image writer using stb_image_write. It supports multiple output formats, including PPM, PNG, JPEG, BMP, and TGA.
-- Multithreading: Initially, I implemented a custom thread pool, but later transitioned to OpenMP for simplicity and better performance (skill issue on my part).
-- 4-wide BVH: the tree is built with the surface area heuristic (binned SAH), then collapsed so every node holds four children, and a ray is tested against all four boxes at once with SSE. This is 1.1–1.4x faster than the binary BVH, depending on the scene.
-- SIMD only where it pays off: an SSE `vec3` was also tried, but with `-O3 -march=native` it was within ±15% of the plain version (faster on some scenes, slower on others), so `Vector` stays plain C++. The BVH is the one place with hand-written SSE, which means the project builds for x86-64 only.
+You need a C++17 compiler (GCC 9+ or Clang 10+), [CMake](https://cmake.org/) 3.18+ and OpenMP. The BVH uses SSE, so it builds for x86-64 only.
 
-## Building with CMake
-### External (header-only) dependencies
-- [stb_image_write.h](https://github.com/nothings/stb/blob/master/stb_image_write.h)
-- [stb_image.h](https://github.com/nothings/stb/blob/master/stb_image.h)
-- [tiny_obj_loader.h](https://github.com/tinyobjloader/tinyobjloader)
-
-### Requirements
-- C++17 (GCC >= 9 or Clang >= 10)
-- [CMake](https://cmake.org/)
-- OpenMP support
-
-### Build Instructions
 ```bash
-# Clone the repository
 git clone https://github.com/hilbertcube/SIMD-Pathtracer.git
 cd SIMD-Pathtracer
 
-# Create a build directory
-mkdir build && cd build
-
-# Configure the project
-cmake .. -DCMAKE_BUILD_TYPE=Release
-
-# Build the project
-cmake --build .
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
 ```
 
-### Running
+**Always build in Release.** A Debug build renders about 10 times slower. To check an existing build folder:
 
-Run from the repository root, since scenes load `models/` and `texture/` from there:
 ```bash
-./build/main [scene] [output_directory]
-./build/main 7             # render scene 7 (the Cornell box) to images/cornell_box.png
-./build/main 7 renders     # same, but write to renders/cornell_box.png
+grep CMAKE_BUILD_TYPE build/CMakeCache.txt     # should say Release
 ```
-The number picks a case of the `switch` in `main()` in [src/main.cpp](src/main.cpp): 1 spheres, 2 checkered spheres, 3 earth, 4 Perlin spheres, 5 quads, 6 simple light, 7 Cornell box, 8 Book 2 final scene, 9 teapot model (the default), 10 multiple models, 11 dragon (a 250k-triangle model), 12 sculpture gallery, 13 neon stage, 14 bunny campfire, 15 Christmas, 16 material showcase; any other number renders a quick preview of the final scene.
 
-Images go to `images/` unless another directory is given (it is created if missing). Rendering a scene there replaces the existing image of the same name. The file name of each scene is set in `main()`, and the extension picks the format (`.png`, `.jpg`, `.bmp`, `.tga` or `.ppm`).
+If it says Debug, run the configure command above again. (The VS Code CMake Tools extension configures Debug by default: pick the Release variant, or set `"cmake.buildType": "Release"` in `.vscode/settings.json`.)
+
+### Optional: denoiser
+
+Download the Linux tarball from the [Open Image Denoise releases](https://github.com/RenderKit/oidn/releases), unpack it into `third_party/oidn/`, and run the configure step again. Without it everything works except `--denoise`.
+
+## Run
+
+Run from the repository root, since the scenes load `models/` and `texture/` from there.
+
+```bash
+./build/main [scene] [output_directory] [--spp N] [--denoise]
+```
+
+```bash
+./build/main 18                        # render scene 18 (the Mustang) to images/mustang.png
+./build/main 18 renders                # same, but into renders/
+./build/main 18 --spp 64 --denoise     # a quick, clean preview
+```
+
+- `scene`: the scene number from the table below (default 9)
+- `output_directory`: where the image goes (default `images/`, created if missing; an existing image of the same name is replaced)
+- `--spp N`: samples per pixel, instead of the scene's own (more is cleaner and slower)
+- `--denoise`: clean the image with the denoiser
+
+### Scenes
+
+| # | Scene | # | Scene |
+| --- | --- | --- | --- |
+| 1 | Spheres | 10 | Multiple models |
+| 2 | Checkered spheres | 11 | Dragon (250k triangles) |
+| 3 | Earth | 12 | Sculpture gallery |
+| 4 | Perlin spheres | 13 | Neon stage |
+| 5 | Quads | 14 | Bunny campfire |
+| 6 | Simple light | 15 | Christmas |
+| 7 | Cornell box | 16 | Material showcase |
+| 8 | Book 2 final scene | 17 | Kitchen |
+| 9 | Teapot (default) | 18 | Mustang |
+
+## Credits
+
+[stb](https://github.com/nothings/stb) (image loading and writing) and [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) are included in `third_party/`. The Christmas models are from [Kenney](https://kenney.nl/) (CC0), and several others come from the [common 3D test models](https://github.com/alecjacobson/common-3d-test-models) collection.
 
 ## Future plans
-- CUDA acceleration
-- Command line arguments
+
+- GPU rendering

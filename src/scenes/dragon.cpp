@@ -1,7 +1,8 @@
 #include "scenes/scenes.h"
 
+#include "rt/materials/advanced_materials.h"
 #include "rt/ray_tracer.h"
-#include "rt/geometry/mesh.h"
+#include "scenes/load_model.h"
 
 namespace scenes
 {
@@ -9,66 +10,67 @@ namespace scenes
 using std::make_shared;
 using std::shared_ptr;
 
-// Dragon model in the Cornell box, with mirrors on the side and back walls
+// A gold dragon (a 250k-triangle model) on a stone pedestal, with its reflection in a mirror
+// floor, in front of a red wall
 void dragon(const std::filesystem::path& output_path)
 {
     rt::hittable_list world;
+    rt::hittable_list lights; // what the shadow rays aim at: geometry only, materials are ignored
 
-    // Cornell box
-    auto red   = make_shared<rt::lambertian>(rt::color(.65, .05, .05));
-    auto white = make_shared<rt::lambertian>(rt::color(.73, .73, .73));
-    auto green = make_shared<rt::lambertian>(rt::color(.12, .45, .15));
-    auto blue  = make_shared<rt::lambertian>(rt::color(0.4, 0.6, 0.9));
-    auto light = make_shared<rt::diffuse_light>(rt::color(15, 15, 15));
+    // A dark mirror floor, so the dragon is reflected below itself
+    world.add(make_shared<rt::quad>(rt::point3f(-2000, 0, -1400), rt::vec3f(4000, 0, 0),
+                                    rt::vec3f(0, 0, 2800),
+                                    make_shared<rt::metal>(rt::color(0.55, 0.55, 0.60), 0.0f)));
 
-    world.add(make_shared<rt::quad>(rt::point3f(555, 0, 0), rt::vec3f(0, 555, 0),
-                                    rt::vec3f(0, 0, 555), green));
-    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 0), rt::vec3f(0, 555, 0),
-                                    rt::vec3f(0, 0, 555), red));
-    world.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
-                                    rt::vec3f(0, 0, -105), light));
-    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 0), rt::vec3f(555, 0, 0),
-                                    rt::vec3f(0, 0, 555), white));
-    world.add(make_shared<rt::quad>(rt::point3f(555, 555, 555), rt::vec3f(-555, 0, 0),
-                                    rt::vec3f(0, 0, -555), white));
-    world.add(make_shared<rt::quad>(rt::point3f(0, 0, 555), rt::vec3f(555, 0, 0),
-                                    rt::vec3f(0, 555, 0), blue));
+    // A backdrop in the Cornell box's red
+    auto wall = make_shared<rt::lambertian>(rt::color(0.65, 0.05, 0.05));
+    world.add(make_shared<rt::quad>(rt::point3f(-2000, 0, 700), rt::vec3f(4000, 0, 0),
+                                    rt::vec3f(0, 1000, 0), wall));
 
-    // Mirrors, set slightly in front of the walls to avoid z-fighting
-    auto mirror = make_shared<rt::metal>(rt::color(0.95, 0.95, 0.95), 0.0f);
-    world.add(make_shared<rt::quad>(rt::point3f(555 - 0.01f, 50, 50), rt::vec3f(0, 455, 0),
-                                    rt::vec3f(0, 0, 455), mirror)); // green wall (x = 555)
-    world.add(make_shared<rt::quad>(rt::point3f(0 + 0.01f, 50, 50), rt::vec3f(0, 455, 0),
-                                    rt::vec3f(0, 0, 455), mirror)); // red wall (x = 0)
-    world.add(make_shared<rt::quad>(rt::point3f(50, 50, 555 - 0.01f), rt::vec3f(455, 0, 0),
-                                    rt::vec3f(0, 455, 0), mirror)); // back wall (z = 555)
+    // Lights: a big softbox overhead, strips at the sides for long reflections on the gold (out of
+    // the picture), and a dim fill behind the camera. Each is also a target for the shadow rays.
+    auto add_light = [&](const rt::point3f& corner, const rt::vec3f& edge_u,
+                         const rt::vec3f& edge_v, const rt::color& emission, int weight)
+    {
+        world.add(make_shared<rt::quad>(corner, edge_u, edge_v,
+                                        make_shared<rt::diffuse_light>(emission)));
+        for (int i = 0; i < weight; ++i)
+        {
+            lights.add(make_shared<rt::quad>(corner, edge_u, edge_v, shared_ptr<rt::material>()));
+        }
+    };
+    add_light(rt::point3f(-600, 700, -300), rt::vec3f(1200, 0, 0), rt::vec3f(0, 0, 600),
+              rt::color(1.9f, 1.9f, 1.9f), 3);
+    add_light(rt::point3f(-820, 20, -250), rt::vec3f(0, 420, 0), rt::vec3f(0, 0, 400),
+              rt::color(0.8f, 0.8f, 0.9f), 1);
+    add_light(rt::point3f(820, 20, -250), rt::vec3f(0, 0, 400), rt::vec3f(0, 420, 0),
+              rt::color(0.8f, 0.8f, 0.9f), 1);
+    add_light(rt::point3f(-600, 100, -1150), rt::vec3f(1200, 0, 0), rt::vec3f(0, 400, 0),
+              rt::color(0.5f, 0.5f, 0.5f), 1);
 
-    // Dragon model
-    auto dragon_material = make_shared<rt::metal>(rt::color(0.95, 0.75, 0.30), 0.1f);
-    auto dragon_mesh     = rt::load_obj("models/dragon.obj", dragon_material);
-    rt::transform_mesh(*dragon_mesh, 2.4f, rt::vec3f(278, 100, 210));
-    world.add(make_shared<rt::bvh_node>(dragon_mesh->objects, 0, dragon_mesh->objects.size()));
+    // The dragon, turned a little toward the camera, on a pedestal
+    const float pedestal_height = 50;
+    world.add(rt::box(rt::point3f(-320, 0, -190), rt::point3f(320, pedestal_height, 190),
+                      make_shared<rt::coated>(rt::color(0.55, 0.55, 0.58))));
 
-    // Top-level BVH
+    auto gold = make_shared<rt::conductor>(rt::color(1.0, 0.78, 0.34), 0.25f);
+    world.add(
+        load_model("models/dragon.obj", gold, 280, rt::point3f(0, pedestal_height, 0), 25.0f));
+
     world = rt::hittable_list(make_shared<rt::bvh_node>(world));
 
-    // Lights to importance-sample
-    rt::hittable_list lights;
-    lights.add(make_shared<rt::quad>(rt::point3f(343, 554, 332), rt::vec3f(-130, 0, 0),
-                                     rt::vec3f(0, 0, -105), shared_ptr<rt::material>()));
-
     rt::Camera camera;
-    camera.aspect_ratio      = 1.0f;
+    camera.aspect_ratio      = 4.0f / 3.0f;
     camera.image_width       = 1280;
-    camera.samples_per_pixel = 1000; // light bouncing off the mirrors is slow to converge
+    camera.samples_per_pixel = 1000;
     camera.max_depth         = 50;
-    camera.background        = rt::color(0, 0, 0);
-    camera.field_of_view     = 40;
-    camera.look_from         = rt::point3f(278, 278, -800);
-    camera.look_at           = rt::point3f(278, 278, 0);
+    camera.background        = rt::color(0.02, 0.02, 0.03);
+    camera.field_of_view     = 38;
+    camera.look_from         = rt::point3f(0, 260, -1100);
+    camera.look_at           = rt::point3f(0, 5, 0);
     camera.view_up           = rt::vec3f(0, 1, 0);
-    camera.output_path       = output_path;
     camera.defocus_angle     = 0;
+    camera.output_path       = output_path;
     camera.render(world, lights);
 }
 
