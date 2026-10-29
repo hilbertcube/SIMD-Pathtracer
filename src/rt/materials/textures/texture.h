@@ -1,7 +1,7 @@
 #pragma once
 #include "rt/util/def.h"
 #include "rt/image/rtw_stb_image.h"
-#include "rt/materials/perlin.h"
+#include "rt/materials/textures/perlin.h"
 
 namespace rt
 {

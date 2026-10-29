@@ -4,7 +4,7 @@
 #include <string>
 
 #include "rt/geometry/mesh.h"
-#include "rt/materials/advanced_materials.h"
+#include "rt/materials/materials.h"
 #include "rt/ray_tracer.h"
 #include "scenes/load_obj_by_material.h"
 

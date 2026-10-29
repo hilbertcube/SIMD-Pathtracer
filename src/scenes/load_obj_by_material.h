@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "rt/geometry/mesh.h"
-#include "rt/materials/material.h"
+#include "rt/materials/materials.h"
 
 namespace scenes
 {

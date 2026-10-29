@@ -1,6 +1,6 @@
 #include "scenes/scenes.h"
 
-#include "rt/materials/advanced_materials.h"
+#include "rt/materials/materials.h"
 #include "rt/ray_tracer.h"
 #include "scenes/load_model.h"
 

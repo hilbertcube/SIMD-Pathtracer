@@ -19,7 +19,7 @@
 #include "rt/geometry/hittable.h"
 #include "rt/image/color.h"
 #include "rt/materials/material.h"
-#include "rt/materials/pdf.h"
+#include "rt/materials/common/pdf.h"
 #include "rt/image/save_file.h"
 #include "rt/render/render_settings.h"
 #include "rt/util/progress.h"

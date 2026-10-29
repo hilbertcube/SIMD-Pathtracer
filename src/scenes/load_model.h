@@ -4,7 +4,7 @@
 
 #include "rt/acceleration/bvh_node.h"
 #include "rt/geometry/mesh.h"
-#include "rt/materials/material.h"
+#include "rt/materials/materials.h"
 
 namespace scenes
 {

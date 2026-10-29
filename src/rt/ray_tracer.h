@@ -29,9 +29,9 @@
 #include "rt/acceleration/bvh_node.h"
 
 // Materials
-#include "rt/materials/material.h"
-#include "rt/materials/pdf.h"
-#include "rt/materials/texture.h"
+#include "rt/materials/materials.h"
+#include "rt/materials/common/pdf.h"
+#include "rt/materials/textures/texture.h"
 
 // Rendering
 #include "rt/render/camera.h"

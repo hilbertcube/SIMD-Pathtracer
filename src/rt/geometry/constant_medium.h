@@ -1,8 +1,8 @@
 #pragma once
 
 #include "rt/geometry/hittable.h"
-#include "rt/materials/material.h"
-#include "rt/materials/texture.h"
+#include "rt/materials/media/isotropic.h"
+#include "rt/materials/textures/texture.h"
 
 namespace rt
 {
