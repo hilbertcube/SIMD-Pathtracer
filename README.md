@@ -10,6 +10,7 @@ A CPU path tracer in C++17 with OpenMP. It started from Peter Shirley's [*Ray Tr
 ![Neon Stage](images/neon_stage.png)
 ![Golden Dragon](images/dragon.png)
 ![Campfire](images/bunny_campfire.png)
+![Towers](images/building.png)
 
 ## Features
 
