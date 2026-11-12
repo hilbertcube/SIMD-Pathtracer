@@ -77,6 +77,19 @@ Run from the repository root, since the scenes load `models/` and `texture/` fro
 | 8 | Book 2 final scene | 17 | Kitchen |
 | 9 | Teapot (default) | 18 | Mustang |
 
+## Profiling
+
+`tools/profile.sh` renders a scene under Linux [perf](https://perfwiki.github.io/) and draws a flame graph of where the time goes. It needs `perf` and Perl.
+
+```bash
+tools/profile.sh                  # scene 9 at 32 samples per pixel
+tools/profile.sh 11 --spp 16      # any scene, with any options for main
+```
+
+It builds a separate binary with frame pointers and debug symbols in `build-profile/`, then writes `profile/scene_<N>.svg` and prints the functions with the most self time. Open the SVG in a browser: click a frame to zoom into it, hover for sample counts, and press Ctrl+F to search for a function.
+
+The graph is drawn by Brendan Gregg's [FlameGraph](https://github.com/brendangregg/FlameGraph) scripts. Download them once with `tools/fetch_flamegraph.sh`, which puts them in `third_party/FlameGraph/` (not committed).
+
 ## Credits
 
 [stb](https://github.com/nothings/stb) (image loading and writing) and [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) are included in `third_party/`. The Christmas models are from [Kenney](https://kenney.nl/) (CC0), and several others come from the [common 3D test models](https://github.com/alecjacobson/common-3d-test-models) collection.
