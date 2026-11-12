@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <algorithm>
-#include <fstream>
 #include <cctype>
 #include <stdexcept>
 #include <string>
@@ -20,20 +19,6 @@ namespace rt
 inline float sanitize(float x)
 {
     return (x != x) ? 0.0f : x;
-}
-
-inline void write_color_ppm(std::ostream& stream, const color& pixel_color)
-{
-    auto red   = linear_to_gamma(sanitize(pixel_color.r()));
-    auto green = linear_to_gamma(sanitize(pixel_color.g()));
-    auto blue  = linear_to_gamma(sanitize(pixel_color.b()));
-
-    static const interval intensity(0.000f, 0.999f);
-    int red_byte   = static_cast<int>(256 * intensity.clamp(red));
-    int green_byte = static_cast<int>(256 * intensity.clamp(green));
-    int blue_byte  = static_cast<int>(256 * intensity.clamp(blue));
-
-    stream << red_byte << ' ' << green_byte << ' ' << blue_byte << '\n';
 }
 
 // The file extension in lower case, or "" if there is none
@@ -59,29 +44,13 @@ inline std::string extract_file_format(const std::string& filename)
 }
 
 /*
- * Writes the framebuffer; the extension picks the format (png, jpg/jpeg, bmp, tga, ppm).
+ * Writes the framebuffer; the extension picks the format (png, jpg/jpeg, bmp, tga).
  * Throws std::runtime_error for an unknown format or a failed write.
  */
 inline void save_framebuffer(const std::vector<color>& framebuffer, const int width,
                              const int height, const std::string& filename)
 {
     const std::string format = extract_file_format(filename);
-
-    // Slow and produces very large files
-    if (format == "ppm")
-    {
-        std::ofstream file(filename);
-        file << "P3\n" << width << " " << height << "\n255\n";
-        for (const color& pixel : framebuffer)
-        {
-            write_color_ppm(file, pixel);
-        }
-        if (!file)
-        {
-            throw std::runtime_error("could not write '" + filename + "'");
-        }
-        return;
-    }
 
     std::vector<unsigned char> image_buffer(width * height * 3);
     static const interval intensity(0.000f, 0.999f);
@@ -129,7 +98,7 @@ inline void save_framebuffer(const std::vector<color>& framebuffer, const int wi
     else
     {
         throw std::runtime_error("unsupported image format '" + format + "' for '" + filename +
-                                 "' (use png, jpg, bmp, tga or ppm)");
+                                 "' (use png, jpg, bmp or tga)");
     }
 
     if (written == 0)

@@ -1,6 +1,5 @@
 build/
 .vscode/
-images/ppm/
 benchmark.txt
 OPTIMIZATIONS.md
 third_party/oidn/

@@ -18,7 +18,7 @@ A CPU path tracer in C++17 with OpenMP. It started from Peter Shirley's [*Ray Tr
 - **Models:** OBJ loading with textures, normals, smooth shading and per-part materials, with scenes of up to 700k triangles
 - **Speed:** a 4-wide SSE BVH built with the surface area heuristic, and OpenMP across all cores
 - **Denoising:** optional [Intel Open Image Denoise](https://www.openimagedenoise.org/), so a 64-sample render looks close to a 1000-sample one
-- **Output:** PNG, JPEG, BMP, TGA or PPM
+- **Output:** PNG, JPEG, BMP or TGA
 
 ## Build
 
