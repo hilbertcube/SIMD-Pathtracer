@@ -10,6 +10,8 @@ From the [Stanford Computer Graphics Laboratory](http://graphics.stanford.edu/da
 - `happy.obj`: Happy Buddha
 - `lucy.obj`: Lucy
 - `stanford-bunny.obj`: Stanford Bunny
+- `dragon.obj`: reduced Stanford Dragon
+
 
 ## Other scans
 
@@ -41,7 +43,6 @@ From the [Stanford Computer Graphics Laboratory](http://graphics.stanford.edu/da
 
 The files below carry no author information. Credits will be added once their origin is found.
 
-- `dragon.obj`: likely a reduced Stanford Dragon
 - `lionstatue.obj`
 - `demosthenes-low-res.obj`
 - `new+kitchen.obj`: exported from Blender
