@@ -92,7 +92,33 @@ The graph is drawn by Brendan Gregg's [FlameGraph](https://github.com/brendangre
 
 ## Credits
 
-[stb](https://github.com/nothings/stb) (image loading and writing) and [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) are included in `third_party/`. The Christmas models are from [Kenney](https://kenney.nl/) (CC0), and several others come from the [common 3D test models](https://github.com/alecjacobson/common-3d-test-models) collection.
+### Books
+
+- Peter Shirley, Trevor David Black and Steve Hollasch, [*Ray Tracing in One Weekend*](https://raytracing.github.io/) series: the starting point of this project
+- Matt Pharr, Wenzel Jakob and Greg Humphreys, [*Physically Based Rendering*](https://pbr-book.org/): the BVH chapter (SAH buckets, flattened tree, ordered traversal) and the material and sampling chapters
+
+### BVH and SIMD traversal
+
+- Goldsmith & Salmon (1987) and MacDonald & Booth (1990): the surface area heuristic
+- Ingo Wald (2007), "On fast Construction of SAH-based Bounding Volume Hierarchies": binned SAH building
+- Dammertz, Hanika & Keller (2008), "Shallow Bounding Volume Hierarchies for Fast SIMD Ray Tracing of Incoherent Rays", and Ernst & Greiner (2008), "Multi Bounding Volume Hierarchies": the 4-wide SIMD BVH
+- Williams, Barrus, Morley & Shirley (2005), "An Efficient and Robust Ray–Box Intersection Algorithm": picking the near and far slab from the ray direction's sign
+- Thiago Ize (2013), "Robust BVH Ray Traversal" (JCGT): floating-point robustness of slab tests
+- Tavian Barnes, [Fast, Branchless Ray/Bounding Box Intersections](https://tavianator.com/): NaN and infinity handling with SSE min/max
+- Jacco Bikker, [How to build a BVH](https://jacco.ompf2.com/) blog series and [tinybvh](https://github.com/jbikker/tinybvh)
+- Intel [Embree](https://github.com/RenderKit/embree): a production example of wide SIMD BVHs
+
+### Third-party libraries and tools
+
+- [stb](https://github.com/nothings/stb): image loading and writing (in `third_party/`)
+- [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader): OBJ loading (in `third_party/`)
+- [Intel Open Image Denoise](https://www.openimagedenoise.org/): the optional `--denoise` step
+- [OpenMP](https://www.openmp.org/): multithreading
+- Brendan Gregg's [FlameGraph](https://github.com/brendangregg/FlameGraph): profiling graphs
+
+### Models
+
+- See [models/README.md](models/README.md) for the origin of each model, grouped by source
 
 ## Future plans
 
