@@ -48,7 +48,8 @@ void Camera::render_guides(const hittable& world, std::vector<color>& albedo,
                     hit_record record;
                     if (!world.hit(current, interval(0.001f, INF), record))
                     {
-                        albedo_sum += throughput * clamp_unit(background);
+                        albedo_sum += throughput * clamp_unit(sky ? sky->value(current.direction())
+                                                                  : background);
                         break;
                     }
 

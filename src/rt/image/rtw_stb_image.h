@@ -96,6 +96,14 @@ public:
 
     int height() const { return (float_data == nullptr) ? 0 : image_height; }
 
+    // Linear RGB floats at (x, y), clamped to the image, unclipped (for HDR); needs width() > 0
+    const float* float_pixel(int x, int y) const
+    {
+        x = clamp(x, 0, image_width);
+        y = clamp(y, 0, image_height);
+        return float_data + (static_cast<size_t>(y) * image_width + x) * bytes_per_pixel;
+    }
+
     const unsigned char* pixel_data(int x, int y) const
     {
         // Three RGB bytes at (x, y), or magenta when no image is loaded.

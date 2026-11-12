@@ -71,6 +71,9 @@ public:
         return color(0, 0, 0);
     }
 
+    /// @brief True where the surface is cut away at (u, v); textured triangles then report no hit.
+    virtual bool masked_out(float u, float v) const { return false; }
+
     /// @brief Whether scatter() or emitted() read the hit's (u, v) texture coordinates.
     /// Objects can skip computing them when not; the default is the safe answer.
     virtual bool needs_uv() const { return true; }

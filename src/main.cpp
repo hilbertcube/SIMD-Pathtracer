@@ -100,9 +100,12 @@ int main(int argc, char** argv)
             case 18:
                 scenes::mustang(output_directory / "mustang.png");
                 break;
+            case 19:
+                scenes::building(output_directory / "building.png");
+                break;
             default:
                 throw std::runtime_error("unknown scene " + std::to_string(scene) +
-                                         " (scenes are numbered 1 to 18)");
+                                         " (scenes are numbered 1 to 19)");
         }
     }
     catch (const std::exception& error)

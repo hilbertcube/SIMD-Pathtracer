@@ -73,4 +73,8 @@ void kitchen(const std::filesystem::path& output_path);
 // material chosen for each part by name
 void mustang(const std::filesystem::path& output_path);
 
+// Three Art Deco towers (a 400k-triangle model) in a park of tens of thousands of trees, under
+// a pink sunset sky
+void building(const std::filesystem::path& output_path);
+
 } // namespace scenes

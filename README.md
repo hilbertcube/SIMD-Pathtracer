@@ -77,6 +77,7 @@ Run from the repository root, since the scenes load `models/` and `texture/` fro
 | 7 | Cornell box | 16 | Material showcase |
 | 8 | Book 2 final scene | 17 | Kitchen |
 | 9 | Teapot (default) | 18 | Mustang |
+| | | 19 | Art Deco towers |
 
 ## Profiling
 
@@ -120,6 +121,10 @@ The graph is drawn by Brendan Gregg's [FlameGraph](https://github.com/brendangre
 ### Models
 
 - See [models/README.md](models/README.md) for the origin of each model, grouped by source
+
+### Textures
+
+- [Poly Haven](https://polyhaven.com/) (CC0): the Belfast Sunset (Pure Sky) sky and the Aerial Grass Rock texture in `texture/`, used by the Art Deco towers scene
 
 ## Future plans
 

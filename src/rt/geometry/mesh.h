@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 
+#include "rt/materials/material.h" // for masked_out()
 #include "rt/math/vector.h"
 
 #include "tinyobjloader/tiny_obj_loader.h"
@@ -146,7 +147,18 @@ public:
             return false;
         }
 
-        const float weight0  = 1.0f - barycentric_u - barycentric_v;
+        const float weight0 = 1.0f - barycentric_u - barycentric_v;
+        const float u =
+            weight0 * texture_u[0] + barycentric_u * texture_u[1] + barycentric_v * texture_u[2];
+        const float v =
+            weight0 * texture_v[0] + barycentric_u * texture_v[1] + barycentric_v * texture_v[2];
+
+        // A cut-out texel is no hit. Checked before writing `record`, which may hold a closer hit.
+        if (surface_material->masked_out(u, v))
+        {
+            return false;
+        }
+
         vec3f outward_normal = unit_vector(cross(vertex1 - vertex0, vertex2 - vertex0));
         if (has_normals)
         {
@@ -157,10 +169,8 @@ public:
         record.t     = t;
         record.point = incoming.at(t);
         record.set_face_normal(incoming, outward_normal);
-        record.u =
-            weight0 * texture_u[0] + barycentric_u * texture_u[1] + barycentric_v * texture_u[2];
-        record.v =
-            weight0 * texture_v[0] + barycentric_u * texture_v[1] + barycentric_v * texture_v[2];
+        record.u                = u;
+        record.v                = v;
         record.surface_material = surface_material.get();
         return true;
     }

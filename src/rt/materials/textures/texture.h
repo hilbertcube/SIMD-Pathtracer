@@ -93,6 +93,29 @@ private:
     rtw_image image;
 };
 
+// Repeats another texture `repeats_u` by `repeats_v` times over the (u, v) square
+class tiled_texture : public texture
+{
+public:
+    tiled_texture(shared_ptr<texture> tile, float repeats_u, float repeats_v)
+        : tile(tile), repeats_u(repeats_u), repeats_v(repeats_v)
+    {
+    }
+
+    color value(float u, float v, const point3f& point) const override
+    {
+        u *= repeats_u;
+        v *= repeats_v;
+        return tile->value(u - std::floor(u), v - std::floor(v), point);
+    }
+
+    bool needs_uv() const override { return true; }
+
+private:
+    shared_ptr<texture> tile;
+    float repeats_u, repeats_v;
+};
+
 class noise_texture : public texture
 {
 public:

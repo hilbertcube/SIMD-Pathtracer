@@ -115,8 +115,7 @@ public:
             return 1.0f / (4.0f * PI);
         }
 
-        float cos_theta_max = std::sqrt(1.0f - radius * radius / distance_squared);
-        float solid_angle   = 2.0f * PI * (1.0f - cos_theta_max);
+        float solid_angle = 2.0f * PI * cone_height(radius, distance_squared);
         return 1.0f / solid_angle;
     }
 
@@ -136,18 +135,30 @@ public:
     AABB bounding_box() const override { return bounds; }
 
 private:
+    /*
+     * 1 - cos(theta_max) of the cone the sphere subtends, as x / (1 + sqrt(1 - x)) with
+     * x = r^2 / d^2. The direct 1 - sqrt(1 - x) loses its precision in float for small, distant
+     * spheres.
+     */
+    static float cone_height(float radius, float distance_squared)
+    {
+        const float x = radius * radius / distance_squared;
+        return x / (1.0f + std::sqrt(1.0f - x));
+    }
+
     // Random direction inside the cone (around +z) that a sphere of `radius`
     // at `distance_squared` subtends.
     static vec3f random_to_sphere(float radius, float distance_squared)
     {
         float first_sample  = random_float();
         float second_sample = random_float();
-        float z =
-            1.0f + second_sample * (std::sqrt(1.0f - radius * radius / distance_squared) - 1.0f);
+        float w             = second_sample * cone_height(radius, distance_squared); // 1 - z
+        float z             = 1.0f - w;
+        float sin_theta     = std::sqrt(w * (2.0f - w)); // sqrt(1 - z^2), stably
 
         float phi = 2.0f * PI * first_sample;
-        float x   = std::cos(phi) * std::sqrt(1.0f - z * z);
-        float y   = std::sin(phi) * std::sqrt(1.0f - z * z);
+        float x   = std::cos(phi) * sin_theta;
+        float y   = std::sin(phi) * sin_theta;
 
         return vec3f(x, y, z);
     }

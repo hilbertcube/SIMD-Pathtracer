@@ -22,6 +22,7 @@
 #include "rt/materials/common/pdf.h"
 #include "rt/image/save_file.h"
 #include "rt/render/render_settings.h"
+#include "rt/render/sky.h"
 #include "rt/util/progress.h"
 #include "rt/util/timer.h"
 
@@ -35,6 +36,7 @@ public:
     int samples_per_pixel = 10;
     int max_depth         = 10; // Maximum bounces per path
     color background;
+    shared_ptr<const sky_image> sky; // replaces `background` when set
 
     float field_of_view = 90.0f; // Vertical, in degrees
     point3f look_from   = point3f(0, 0, 0);
@@ -268,7 +270,7 @@ private:
         hit_record record;
         if (!world.hit(incoming, interval(0.001f, INF), record))
         {
-            return background;
+            return sky ? sky->value(incoming.direction()) : background;
         }
 
         scatter_record scattering;
