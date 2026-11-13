@@ -26,8 +26,8 @@ A CPU path tracer in C++17 with OpenMP. Started from Peter Shirley's [*Ray Traci
 Requirements: a C++17 compiler (GCC 9+ or Clang 10+), [CMake](https://cmake.org/) 3.18+ and OpenMP. The BVH uses SSE, so it builds for x86-64 only.
 
 ```bash
-git clone https://github.com/hilbertcube/SIMD-Pathtracer.git
-cd SIMD-Pathtracer
+git clone https://github.com/hilbertcube/Yet-Another-Path-Tracer.git
+cd Yet-Another-Path-Tracer
 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
