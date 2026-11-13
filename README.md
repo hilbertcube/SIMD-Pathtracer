@@ -45,48 +45,46 @@ Download the Linux tarball from the [Open Image Denoise releases](https://github
 
 ## Run
 
-Run from the repository root, since the scenes load `models/` and `texture/` from there. Scenes 9 to 19 need models, which are not in the repository: [models/README.md](models/README.md) says where to get each one.
+Run from the repository root, since the scenes load `models/` and `texture/` from there. The scenes with models need them downloaded, since they are not in the repository: [models/README.md](models/README.md) says where to get each one.
 
 ```bash
-./build/main [scene] [output_directory] [--spp N] [--denoise]
+./build/main scene.lua [output_directory] [--spp N] [--width N] [--denoise]
 ```
 
 ```bash
-./build/main 18                        # render scene 18 (the Mustang) to images/mustang.png
-./build/main 18 renders                # same, but into renders/
-./build/main 18 --spp 64 --denoise     # a quick, clean preview
+./build/main scenes/18_mustang.lua                                  # render to images/mustang.png
+./build/main scenes/18_mustang.lua renders                          # same, but into renders/
+./build/main scenes/18_mustang.lua --spp 64 --denoise               # a quick, clean preview
+./build/main scenes/18_mustang.lua --width 320 --spp 16 --denoise   # a rough one, to check a layout
 ```
-
-- `scene`: the scene number from the table below (default 9)
-- `output_directory`: where the image goes (default `images/`, created if missing; an existing image of the same name is replaced)
-- `--spp N`: samples per pixel, instead of the scene's own (more is cleaner and slower)
-- `--denoise`: clean the image with the denoiser
 
 ### Scenes
 
-| # | Scene | # | Scene |
+| Script | Scene | Script | Scene |
 | --- | --- | --- | --- |
-| 1 | Spheres | 10 | Multiple models |
-| 2 | Checkered spheres | 11 | Dragon (250k triangles) |
-| 3 | Earth | 12 | Sculpture gallery |
-| 4 | Perlin spheres | 13 | Neon stage |
-| 5 | Quads | 14 | Bunny campfire |
-| 6 | Simple light | 15 | Christmas |
-| 7 | Cornell box | 16 | Material showcase |
-| 8 | Book 2 final scene | 17 | Kitchen |
-| 9 | Teapot (default) | 18 | Mustang |
-| | | 19 | Art Deco towers |
+| `01_spheres.lua` | Spheres | `10_multiple_models.lua` | Multiple models |
+| `02_checkered_spheres.lua` | Checkered spheres | `11_dragon.lua` | Dragon (250k triangles) |
+| `03_earth.lua` | Earth | `12_sculpture_gallery.lua` | Sculpture gallery |
+| `04_perlin_spheres.lua` | Perlin spheres | `13_neon_stage.lua` | Neon stage |
+| `05_quads.lua` | Quads | `14_bunny_campfire.lua` | Bunny campfire |
+| `06_simple_light.lua` | Simple light | `15_christmas.lua` | Christmas |
+| `07_cornell_box.lua` | Cornell box | `16_material_showcase.lua` | Material showcase |
+| `08_final_scene.lua` | Book 2 final scene | `17_kitchen.lua` | Kitchen |
+| `09_teapot.lua` | Teapot | `18_mustang.lua` | Mustang |
+| | | `19_building.lua` | Art Deco towers |
+
+The scripts from `09_teapot.lua` on need models.
 
 ## Profiling
 
 `tools/profile.sh` renders a scene under Linux [perf](https://perfwiki.github.io/) and draws a flame graph of where the time goes. It needs `perf` and Perl.
 
 ```bash
-tools/profile.sh                  # scene 9 at 32 samples per pixel
-tools/profile.sh 11 --spp 16      # any scene, with any options for main
+tools/profile.sh                                   # scenes/09_teapot.lua at 32 samples per pixel
+tools/profile.sh scenes/11_dragon.lua --spp 16     # any scene, with any options for main
 ```
 
-It builds a separate binary with frame pointers and debug symbols in `build-profile/`, then writes `profile/scene_<N>.svg` and prints the functions with the most self time. Open the SVG in a browser: click a frame to zoom into it, hover for sample counts, and press Ctrl+F to search for a function.
+It builds a separate binary with frame pointers and debug symbols in `build-profile/`, then writes `profile/<scene>.svg` and prints the functions with the most self time. Open the SVG in a browser: click a frame to zoom into it, hover for sample counts, and press Ctrl+F to search for a function.
 
 The graph is drawn by Brendan Gregg's [FlameGraph](https://github.com/brendangregg/FlameGraph) scripts. Download them once with `tools/fetch_flamegraph.sh`, which puts them in `third_party/FlameGraph/` (not committed).
 
@@ -112,6 +110,8 @@ The graph is drawn by Brendan Gregg's [FlameGraph](https://github.com/brendangre
 
 - [stb](https://github.com/nothings/stb): image loading and writing (in `third_party/`)
 - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader): OBJ loading (in `third_party/`)
+- [Lua](https://www.lua.org) 5.4: runs the scene scripts (in `third_party/lua/`, MIT license)
+- [sol2](https://github.com/ThePhD/sol2) 3.3.0: binds the renderer to Lua (in `third_party/sol2/`, MIT license)
 - [Intel Open Image Denoise](https://www.openimagedenoise.org/): the optional `--denoise` step
 - [OpenMP](https://www.openmp.org/): multithreading
 - Brendan Gregg's [FlameGraph](https://github.com/brendangregg/FlameGraph): profiling graphs
