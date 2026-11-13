@@ -1,6 +1,6 @@
 # Path Tracer in C++
 
-A CPU path tracer in C++17 with OpenMP. It started from Peter Shirley's [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) series ([book 2](https://raytracing.github.io/books/RayTracingTheNextWeek.html), [book 3](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)) and goes well beyond it.
+A CPU path tracer in C++17 with OpenMP. Started from Peter Shirley's [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) series ([book 2](https://raytracing.github.io/books/RayTracingTheNextWeek.html), [book 3](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)) then goes well beyond it.
 
 ![Kitchen](images/kitchen.png)
 ![Teapot Gallery](images/material_showcase.png)
@@ -23,7 +23,7 @@ A CPU path tracer in C++17 with OpenMP. It started from Peter Shirley's [*Ray Tr
 
 ## Build
 
-You need a C++17 compiler (GCC 9+ or Clang 10+), [CMake](https://cmake.org/) 3.18+ and OpenMP. The BVH uses SSE, so it builds for x86-64 only.
+Requirements: a C++17 compiler (GCC 9+ or Clang 10+), [CMake](https://cmake.org/) 3.18+ and OpenMP. The BVH uses SSE, so it builds for x86-64 only.
 
 ```bash
 git clone https://github.com/hilbertcube/SIMD-Pathtracer.git
@@ -38,8 +38,6 @@ cmake --build build -j
 ```bash
 grep CMAKE_BUILD_TYPE build/CMakeCache.txt     # should say Release
 ```
-
-If it says Debug, run the configure command above again. (The VS Code CMake Tools extension configures Debug by default: pick the Release variant, or set `"cmake.buildType": "Release"` in `.vscode/settings.json`.)
 
 ### Optional: denoiser
 
