@@ -47,7 +47,7 @@ Download the Linux tarball from the [Open Image Denoise releases](https://github
 
 ## Run
 
-Run from the repository root, since the scenes load `models/` and `texture/` from there.
+Run from the repository root, since the scenes load `models/` and `texture/` from there. Scenes 9 to 19 need models, which are not in the repository: [models/README.md](models/README.md) says where to get each one.
 
 ```bash
 ./build/main [scene] [output_directory] [--spp N] [--denoise]

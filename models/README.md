@@ -1,49 +1,50 @@
 # Models
 
-The models in this folder come from these sources. Most were taken from Alec Jacobson's [common 3D test models](https://github.com/alecjacobson/common-3d-test-models) collection, which credits the original authors below.
+The models are not in this repository: they are too large, and some may not be redistributed. Download the ones you need into this folder, under the names below. Scenes without models (1 to 8) work without any.
 
-## Stanford 3D Scanning Repository
+## Test models (scenes 9 to 14 and 16)
 
-From the [Stanford Computer Graphics Laboratory](http://graphics.stanford.edu/data/3Dscanrep/):
+From Alec Jacobson's [common 3D test models](https://github.com/alecjacobson/common-3d-test-models) collection, which credits the original authors. Download them all from the repository root with:
 
-- `armadillo.obj`: Armadillo
-- `happy.obj`: Happy Buddha
-- `lucy.obj`: Lucy
-- `stanford-bunny.obj`: Stanford Bunny
-- `dragon.obj`: reduced Stanford Dragon
+```bash
+for name in armadillo happy horse lucy max-planck nefertiti spot stanford-bunny suzanne teapot; do
+    curl -L -o models/$name.obj \
+        https://raw.githubusercontent.com/alecjacobson/common-3d-test-models/master/data/$name.obj
+done
+```
 
+| File | Model | Original source | Scenes |
+| --- | --- | --- | --- |
+| `armadillo.obj` | Armadillo | [Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) | 13 |
+| `happy.obj` | Happy Buddha | [Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) | 12 |
+| `lucy.obj` | Lucy | [Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) | 12 |
+| `stanford-bunny.obj` | Stanford Bunny | [Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) | 13, 14 |
+| `horse.obj` | Horse | Cyberware | 14 |
+| `max-planck.obj` | Max Planck bust | Max Planck Institute | 12 |
+| `nefertiti.obj` | Nefertiti bust | [Thingiverse](https://www.thingiverse.com/thing:3974391) | 12 |
+| `teapot.obj` | Utah teapot | Martin Newell | 9, 10, 16 |
+| `suzanne.obj` | Suzanne | Blender | 10 |
+| `spot.obj` | Spot | [Keenan Crane](https://www.cs.cmu.edu/~kmcrane/Projects/ModelRepository/#spot) | 10 |
 
-## Other scans
+## Christmas (scene 15)
 
-- `horse.obj`: Cyberware
-- `max-planck.obj`: Max Planck Institute
-- `nefertiti.obj`: scan of the bust in the Egyptian Museum of Berlin ([Thingiverse](https://www.thingiverse.com/thing:3974391))
+The [Kenney Holiday Kit](https://kenney.nl/assets/holiday-kit) (CC0). Download it and copy the OBJ-format models and `colormap.png` into `models/christmas/`.
 
-## Modeled by hand
+## Art Deco towers (scene 19)
 
-- `teapot.obj`: the Utah teapot, by Martin Newell
-- `beetle.obj`: Ivan Sutherland's 1972 Volkswagen Beetle
-- `suzanne.obj`: Suzanne, the Blender monkey
-- `spot.obj`: Spot, by [Keenan Crane](https://www.cs.cmu.edu/~kmcrane/Projects/ModelRepository/#spot)
-- `alligator.obj`: Alec Jacobson
-- `beast.obj`: Autodesk
-- `ogre.obj`: Kiaran Ritchie
-- `cheburashka.obj`: Ilya Baran (attribution uncertain in the collection)
+Two free models from CGTrader (a free account is needed to download). After placing them as below, run `tools/prepare_models.sh` from the repository root (it needs Python 3 and ImageMagick). It splits the models into the files the scene loads, makes 4096-pixel copies of the textures, and removes the cherry tree's flower stalks, which are too thin to see.
 
-## Kenney
+- [Fantasy Art Deco Architecture Classic 01](https://www.cgtrader.com/free-3d-models/exterior/sci-fi-exterior/fantasy-art-deco-architecture-classic-01): put `FC1.obj` in `models/Building/OBJ/`, and unpack `textures.rar` into `models/Building/` so the images end up in `models/Building/textures/`.
+- [Free Realistic Tree Aset Pack](https://www.cgtrader.com/free-3d-models/plant/leaf/free-realistic-tree-aset-pack): put `Realistic+Trees+.obj` in `models/Trees/`, and unpack `texture.zip` there so the images end up in `models/Trees/texture/`.
 
-- `christmas/`: the [Kenney](https://kenney.nl/) Holiday Kit 2.0 (CC0, see `christmas/LICENSE-kenney-holiday-kit.txt`)
+## Sources still to be added
 
-## CGTrader
+These are used by scenes, but where they came from has not been recorded yet:
 
-- `Building/`: [Fantasy Art Deco Architecture Classic 01](https://www.cgtrader.com/free-3d-models/exterior/sci-fi-exterior/fantasy-art-deco-architecture-classic-01), a free model on CGTrader. Only the OBJ and 4096-pixel copies of its FC01 and FC08 textures are kept here (the originals are 8192 pixels).
-- `Trees/`: [Free Realistic Tree Aset Pack](https://www.cgtrader.com/free-3d-models/plant/leaf/free-realistic-tree-aset-pack), a free model on CGTrader. `Trees/OBJ/` holds the trees the towers scene uses, copied out of the pack's single OBJ so that each loads on its own. The cherry tree has its flower stalks removed, which are too thin to see and made the file too large for GitHub.
-
-## Source unknown
-
-The files below carry no author information. Credits will be added once their origin is found.
-
-- `lionstatue.obj`
-- `demosthenes-low-res.obj`
-- `new+kitchen.obj`: exported from Blender
-- `Mustang/`: exported from Blender
+| File | Scenes |
+| --- | --- |
+| `dragon.obj` (a reduced Stanford Dragon) | 11 |
+| `lionstatue.obj` | 12 |
+| `demosthenes-low-res.obj` | 12 |
+| `new+kitchen.obj` | 17 |
+| `Mustang/` (`Mustang.obj` and its two stripe textures) | 18 |

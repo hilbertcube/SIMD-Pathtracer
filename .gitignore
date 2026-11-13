@@ -6,3 +6,7 @@ third_party/oidn/
 build-profile/
 profile/
 third_party/FlameGraph/
+
+# Models are downloaded separately (see models/README.md)
+models/*
+!models/README.md
