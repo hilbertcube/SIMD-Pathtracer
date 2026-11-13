@@ -11,6 +11,7 @@ struct render_settings
 {
     bool denoise = false; // clean the image with Intel Open Image Denoise after rendering
     int samples  = 0;     // samples per pixel for every scene; 0 keeps each scene's own
+    int width    = 0;     // image width for every scene, keeping its aspect; 0 keeps its own
 };
 
 inline render_settings& global_render_settings()

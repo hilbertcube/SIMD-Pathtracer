@@ -6,6 +6,8 @@ third_party/oidn/
 build-profile/
 profile/
 third_party/FlameGraph/
+third_party/lua/
+third_party/sol2/
 
 # Models are downloaded separately (see models/README.md)
 models/*

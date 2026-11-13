@@ -12,7 +12,7 @@
 #include "rt/geometry/mesh.h"
 #include "rt/materials/materials.h"
 
-namespace scenes
+namespace scripting
 {
 
 using material_picker = std::function<rt::shared_ptr<rt::material>(const std::string&)>;
@@ -152,4 +152,4 @@ inline rt::shared_ptr<rt::hittable_list> load_obj_by_material(const std::string&
     return mesh;
 }
 
-} // namespace scenes
+} // namespace scripting

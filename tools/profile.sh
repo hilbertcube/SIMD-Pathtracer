@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 # Profile a scene with perf and draw a flame graph of where the render spends its time.
 #
-#   tools/profile.sh [scene] [--spp N] [other options for main]
+#   tools/profile.sh [scene.lua] [--spp N] [other options for main]
 #
 # Builds an optimized binary with frame pointers and debug symbols in build-profile/, renders the
-# scene under `perf record`, and writes profile/scene_<N>.svg (open it in a browser: click a frame
-# to zoom). Defaults to scene 9 at 32 samples per pixel. Needs Linux perf, and Brendan Gregg's
-# FlameGraph scripts in third_party/FlameGraph (tools/fetch_flamegraph.sh downloads them).
+# scene under `perf record`, and writes profile/<scene>.svg (open it in a browser: click a frame
+# to zoom). Defaults to scenes/09_teapot.lua at 32 samples per pixel. Needs Linux perf, and Brendan
+# Gregg's FlameGraph scripts in third_party/FlameGraph (tools/fetch_flamegraph.sh downloads them).
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
-scene="${1:-9}"
+scene="${1:-scenes/09_teapot.lua}"
 shift || true
+name="$(basename "$scene" .lua)"
 args=("$@")
 if [[ ! " ${args[*]-} " =~ " --spp " ]]; then
     args+=(--spp 32)
@@ -39,14 +40,14 @@ cmake -S . -B build-profile -DCMAKE_BUILD_TYPE=Release \
 cmake --build build-profile -j"$(nproc)" --target main
 
 mkdir -p profile
-data="profile/scene_${scene}.perf.data"
-svg="profile/scene_${scene}.svg"
+data="profile/${name}.perf.data"
+svg="profile/${name}.svg"
 
 perf record -F 499 -g -o "$data" ./build-profile/main "$scene" profile "${args[@]}"
 
 samples="$(perf script -i "$data" -F comm 2>/dev/null | wc -l)"
 perf script --no-inline -i "$data" 2>/dev/null | "$flamegraph/stackcollapse-perf.pl" |
-    "$flamegraph/flamegraph.pl" --title "Scene ${scene} (${args[*]}), ${samples} samples" \
+    "$flamegraph/flamegraph.pl" --title "${name} (${args[*]}), ${samples} samples" \
         --width 1600 >"$svg"
 
 echo

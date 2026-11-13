@@ -49,12 +49,27 @@ if(CLANG_FORMAT)
         COMMENT "Running clang-format")
 endif()
 
+# Lua, which runs the scene scripts. It is compiled as C++, so a Lua error unwinds the renderer's
+# code with an exception (running its destructors) rather than longjmp.
+file(GLOB LUA_SOURCES "${CMAKE_SOURCE_DIR}/third_party/lua/*.c")
+set_source_files_properties(${LUA_SOURCES} PROPERTIES LANGUAGE CXX)
+add_library(lua STATIC ${LUA_SOURCES})
+target_compile_definitions(lua PUBLIC LUA_USE_POSIX)
+target_include_directories(lua PUBLIC "${CMAKE_SOURCE_DIR}/third_party/lua")
+
+# sol2, which binds the renderer to Lua (header-only). It is told Lua is compiled as C++, and not
+# to catch every exception: Lua's own errors are exceptions here, and must pass through it.
+add_library(sol2 INTERFACE)
+target_include_directories(sol2 INTERFACE "${CMAKE_SOURCE_DIR}/third_party/sol2")
+target_compile_definitions(sol2 INTERFACE SOL_USING_CXX_LUA=1 SOL_EXCEPTIONS_CATCH_ALL=0)
+target_link_libraries(sol2 INTERFACE lua)
+
 file(GLOB C_SOURCES "src/*.c")
 file(GLOB CPP_SOURCES "src/*.cpp")
 
-# Compiled into every executable: the scenes (one file each), and the third-party single-header
+# Compiled into every executable: the scene script runner, and the third-party single-header
 # libraries, which are compiled once in src/rt/third_party_impl.cpp
-file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS "src/scenes/*.cpp" "src/rt/*.cpp")
+file(GLOB_RECURSE SHARED_SOURCES CONFIGURE_DEPENDS "src/scripting/*.cpp" "src/rt/*.cpp")
 
 foreach(SOURCE_FILE ${C_SOURCES} ${CPP_SOURCES})
     get_filename_component(TARGET_NAME ${SOURCE_FILE} NAME_WE)
@@ -65,6 +80,7 @@ foreach(SOURCE_FILE ${C_SOURCES} ${CPP_SOURCES})
         "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/third_party")
     target_link_libraries(${TARGET_NAME} PRIVATE
         OpenMP::OpenMP_CXX
+        sol2
     )
     if(OpenImageDenoise_FOUND)
         target_link_libraries(${TARGET_NAME} PRIVATE OpenImageDenoise)

@@ -139,6 +139,10 @@ private:
 
     void initialize()
     {
+        if (global_render_settings().width > 0)
+        {
+            image_width = global_render_settings().width;
+        }
         image_height = static_cast<int>(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
 
