@@ -1,4 +1,4 @@
-# Path Tracer in C++
+# Yet Another C++ Path Tracer
 
 A CPU path tracer in C++17 with OpenMP. Started from Peter Shirley's [*Ray Tracing in One Weekend*](https://raytracing.github.io/books/RayTracingInOneWeekend.html) series ([book 2](https://raytracing.github.io/books/RayTracingTheNextWeek.html), [book 3](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)) then goes well beyond it.
 
